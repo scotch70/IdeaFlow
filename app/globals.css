@@ -1,0 +1,421 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-display: 'Instrument Serif', serif;
+  --font-body:    'DM Sans', sans-serif;
+
+  /* Sky */
+  --sky-deep:     #0a3d7a;
+  --sky-zenith:   #0e52a8;
+  --sky-mid:      #1a6bbf;
+  --sky-horizon:  #4a9fd4;
+  --sky-pale:     #a8d8f0;
+
+  /* Orange accent — uniform across ALL pages */
+  --orange:       #f97316;
+  --orange-hover: #ea6b0a;
+  --orange-glow:  rgba(249, 115, 22, 0.32);
+  --accent:       #f97316;
+
+  /* Page surfaces */
+  --page-bg:      #f8f9fb;
+  --surface:      #ffffff;
+  --border:       rgba(0, 0, 0, 0.07);
+  --border-mid:   rgba(0, 0, 0, 0.12);
+
+  /* Ink */
+  --ink:          #0d1f35;
+  --ink-mid:      #2c4a6e;
+  --ink-light:    #5a7fa8;
+  --ink-faint:    rgba(90, 127, 168, 0.55);  /* very muted text */
+
+  /* Tints — component micro-colors */
+  --tint-border:  rgba(0, 0, 0, 0.07);       /* subtle borders */
+  --tint-bg:      rgba(0, 0, 0, 0.03);       /* subtle fills */
+  --dot-color:    rgba(90, 127, 168, 0.30);   /* separator dots */
+
+  /* Role badges */
+  --badge-admin-bg:    var(--ink);
+  --badge-admin-text:  #ffffff;
+  --badge-member-bg:   rgba(26, 107, 191, 0.08);
+  --badge-member-text: var(--sky-zenith);
+
+  /* Shimmer (loading skeleton) */
+  --shimmer-base: rgba(26, 107, 191, 0.06);
+  --shimmer-peak: rgba(26, 107, 191, 0.12);
+}
+
+/* ── Dark theme — dashboard ─────────────────────────── */
+.dark-theme {
+  --page-bg:      #060e26;
+  --surface:      #0c1635;
+  --border:       rgba(255, 255, 255, 0.08);
+  --border-mid:   rgba(255, 255, 255, 0.13);
+
+  --ink:          rgba(255, 255, 255, 0.90);
+  --ink-mid:      rgba(255, 255, 255, 0.55);
+  --ink-light:    rgba(255, 255, 255, 0.36);
+  --ink-faint:    rgba(255, 255, 255, 0.24);
+
+  --tint-border:  rgba(255, 255, 255, 0.08);
+  --tint-bg:      rgba(255, 255, 255, 0.04);
+  --dot-color:    rgba(255, 255, 255, 0.20);
+
+  --badge-admin-bg:    rgba(255, 255, 255, 0.13);
+  --badge-admin-text:  rgba(255, 255, 255, 0.90);
+  --badge-member-bg:   rgba(26, 107, 191, 0.28);
+  --badge-member-text: #a8d8f0;
+
+  --shimmer-base: rgba(255, 255, 255, 0.04);
+  --shimmer-peak: rgba(255, 255, 255, 0.09);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--page-bg);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, .font-display { font-family: var(--font-display); }
+
+
+/* ══════════════════════════════════════════════
+   SKY HERO  — homepage hero section
+   Deep saturated blue → pale horizon
+   ══════════════════════════════════════════════ */
+.sky-hero {
+  background: linear-gradient(
+    180deg,
+    #082d5e  0%,
+    #0a3d7a  15%,
+    #0e52a8  35%,
+    #1a6bbf  58%,
+    #4a9fd4  78%,
+    #a8d8f0 100%
+  );
+  position: relative;
+  overflow: hidden;
+}
+
+/* ── Clouds ── */
+.cloud {
+  position: absolute;
+  background: #ffffff;
+  border-radius: 60px;
+  pointer-events: none;
+}
+.cloud::before,
+.cloud::after {
+  content: '';
+  position: absolute;
+  background: #ffffff;
+  border-radius: 50%;
+}
+
+/* Large slow clouds */
+.cloud-1 {
+  width: 320px; height: 72px; opacity: 1;
+  top: 8%; animation: drift 44s linear infinite; animation-delay: 0s; left: -350px;
+}
+.cloud-1::before { width: 148px; height: 124px; top: -72px; left: 44px; }
+.cloud-1::after  { width: 104px; height:  90px; top: -54px; left: 154px; }
+
+.cloud-2 {
+  width: 260px; height: 60px; opacity: .97;
+  top: 20%; animation: drift 36s linear infinite; animation-delay: -12s; left: -290px;
+}
+.cloud-2::before { width: 120px; height: 100px; top: -60px; left: 36px; }
+.cloud-2::after  { width:  84px; height:  74px; top: -44px; left: 124px; }
+
+.cloud-3 {
+  width: 280px; height: 66px; opacity: .98;
+  top: 35%; animation: drift 40s linear infinite; animation-delay: -26s; left: -310px;
+}
+.cloud-3::before { width: 130px; height: 108px; top: -64px; left: 40px; }
+.cloud-3::after  { width:  92px; height:  80px; top: -48px; left: 136px; }
+
+/* Medium clouds */
+.cloud-4 {
+  width: 200px; height: 50px; opacity: .94;
+  top: 14%; animation: drift 30s linear infinite; animation-delay: -6s; left: -230px;
+}
+.cloud-4::before { width:  96px; height: 82px; top: -50px; left: 28px; }
+.cloud-4::after  { width:  68px; height: 60px; top: -36px; left: 100px; }
+
+.cloud-5 {
+  width: 180px; height: 46px; opacity: .90;
+  top: 28%; animation: drift 26s linear infinite; animation-delay: -18s; left: -210px;
+}
+.cloud-5::before { width:  88px; height: 74px; top: -46px; left: 24px; }
+.cloud-5::after  { width:  62px; height: 54px; top: -32px; left: 90px; }
+
+.cloud-6 {
+  width: 220px; height: 54px; opacity: .95;
+  top: 50%; animation: drift 34s linear infinite; animation-delay: -8s; left: -250px;
+}
+.cloud-6::before { width: 106px; height: 88px; top: -54px; left: 32px; }
+.cloud-6::after  { width:  74px; height: 64px; top: -38px; left: 110px; }
+
+/* Small / wispy clouds */
+.cloud-7 {
+  width: 140px; height: 36px; opacity: .88;
+  top: 10%; animation: drift 22s linear infinite; animation-delay: -15s; left: -160px;
+}
+.cloud-7::before { width: 70px; height: 58px; top: -36px; left: 18px; }
+.cloud-7::after  { width: 50px; height: 44px; top: -26px; left: 72px; }
+
+.cloud-8 {
+  width: 120px; height: 30px; opacity: .82;
+  top: 42%; animation: drift 20s linear infinite; animation-delay: -4s; left: -140px;
+}
+.cloud-8::before { width: 60px; height: 50px; top: -32px; left: 14px; }
+.cloud-8::after  { width: 44px; height: 38px; top: -22px; left: 62px; }
+
+.cloud-9 {
+  width: 160px; height: 40px; opacity: .86;
+  top: 60%; animation: drift 28s linear infinite; animation-delay: -21s; left: -180px;
+}
+.cloud-9::before { width: 78px; height: 64px; top: -40px; left: 20px; }
+.cloud-9::after  { width: 56px; height: 48px; top: -28px; left: 80px; }
+
+.cloud-10 {
+  width: 100px; height: 26px; opacity: .75;
+  top: 70%; animation: drift 18s linear infinite; animation-delay: -9s; left: -120px;
+  filter: blur(0.5px);
+}
+.cloud-10::before { width: 50px; height: 42px; top: -26px; left: 12px; }
+.cloud-10::after  { width: 36px; height: 32px; top: -18px; left: 52px; }
+
+@keyframes drift { from { left: -350px; } to { left: 110%; } }
+
+
+/* ══════════════════════════════════════════════
+   PAGE STRIPE  — inner pages (no motion)
+   Mirrors the sky palette as a static header.
+   ══════════════════════════════════════════════ */
+.page-stripe {
+  background: linear-gradient(
+    135deg,
+    var(--sky-deep)   0%,
+    var(--sky-zenith) 45%,
+    var(--sky-mid)    80%,
+    var(--sky-horizon) 100%
+  );
+}
+
+
+/* ══════════════════════════════════════════════
+   COMPONENTS
+   ══════════════════════════════════════════════ */
+@layer components {
+
+  /* ── Primary button — orange, sitewide ── */
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-lg px-6 py-2.5 text-sm font-semibold transition-all duration-150;
+    background: var(--orange);
+    color: #fff;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08), 0 2px 8px rgba(249,115,22,0.22);
+  }
+  .btn-primary:hover {
+    background: var(--orange-hover);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.10), 0 4px 12px rgba(249,115,22,0.30);
+    transform: translateY(-1px);
+  }
+  .btn-primary:active { transform: translateY(0); }
+
+  /* ── Secondary button ── */
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-full px-6 py-2.5 text-sm font-semibold transition-all duration-150;
+    background: var(--surface);
+    border: 1.5px solid var(--border-mid);
+    color: var(--ink);
+  }
+  .btn-secondary:hover {
+    border-color: var(--orange);
+    color: var(--orange);
+    transform: translateY(-1px);
+  }
+
+  /* ── Ghost button ── */
+  .btn-ghost {
+    @apply inline-flex items-center justify-center rounded-full px-6 py-2.5 text-sm font-semibold transition-all duration-150;
+    border: 1.5px solid rgba(255,255,255,0.40);
+    color: rgba(255,255,255,0.90);
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(8px);
+  }
+  .btn-ghost:hover {
+    background: rgba(255,255,255,0.18);
+    border-color: rgba(255,255,255,0.70);
+    color: #fff;
+  }
+
+  /* ── Ghost dark (on light backgrounds) ── */
+  .btn-ghost-dark {
+    @apply inline-flex items-center justify-center rounded-full px-6 py-2.5 text-sm font-semibold transition-all duration-150;
+    border: 1.5px solid var(--border-mid);
+    color: var(--ink-mid);
+  }
+  .btn-ghost-dark:hover {
+    background: rgba(26,107,191,0.06);
+    border-color: var(--sky-zenith);
+    color: var(--ink);
+  }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    transition: box-shadow 0.15s ease;
+  }
+  .dark-theme .card {
+    box-shadow: 0 1px 4px rgba(0,0,0,0.30), 0 4px 20px rgba(0,0,0,0.20);
+  }
+
+  .surface-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  }
+  .dark-theme .surface-card {
+    box-shadow: 0 2px 12px rgba(0,0,0,0.30), 0 1px 3px rgba(0,0,0,0.20);
+  }
+
+  /* ── Inputs ── */
+  .input {
+    @apply w-full rounded-xl px-4 py-2.5 text-sm transition-all duration-150;
+    background: var(--surface);
+    border: 1.5px solid var(--border-mid);
+    color: var(--ink);
+  }
+  .input::placeholder { color: var(--ink-light); opacity: .55; }
+  .input:focus {
+    outline: none;
+    border-color: var(--orange);
+    box-shadow: 0 0 0 3px rgba(249,115,22,0.14);
+  }
+
+  /* ── Badge ── */
+  .badge {
+    @apply inline-flex items-center rounded-full px-3 py-0.5 text-xs font-semibold tracking-wide;
+    background: rgba(249,115,22,0.10);
+    color: var(--orange);
+  }
+  .badge-blue {
+    @apply inline-flex items-center rounded-full px-3 py-0.5 text-xs font-semibold tracking-wide;
+    background: rgba(26,107,191,0.09);
+    color: var(--sky-zenith);
+  }
+
+  /* ── Divider ── */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 0;
+  }
+}
+
+/* ── Hover lift ── */
+.hover-lift {
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(26,107,191,0.11);
+}
+
+/* ── Fade-up entrance ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fade-up   { animation: fadeUp 0.55s ease both; }
+.fade-up-1 { animation-delay: 0.08s; }
+.fade-up-2 { animation-delay: 0.18s; }
+.fade-up-3 { animation-delay: 0.30s; }
+.fade-up-4 { animation-delay: 0.44s; }
+
+/* ── Card hover glow ── */
+.card:hover {
+  box-shadow: 0 4px 20px rgba(26,107,191,0.09), 0 1px 3px rgba(0,0,0,0.06);
+}
+.dark-theme .card:hover {
+  box-shadow: 0 4px 20px rgba(0,0,0,0.40), 0 8px 32px rgba(0,0,0,0.25);
+}
+
+/* ── Stagger grid — apply to grid parent, children get auto-delayed fade-up ── */
+.stagger-grid > * { animation: fadeUp 0.5s ease both; }
+.stagger-grid > *:nth-child(1) { animation-delay: 0.04s; }
+.stagger-grid > *:nth-child(2) { animation-delay: 0.10s; }
+.stagger-grid > *:nth-child(3) { animation-delay: 0.16s; }
+.stagger-grid > *:nth-child(4) { animation-delay: 0.22s; }
+.stagger-grid > *:nth-child(5) { animation-delay: 0.28s; }
+.stagger-grid > *:nth-child(6) { animation-delay: 0.34s; }
+
+/* ── Pulse for live status indicators ── */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.55; transform: scale(1.4); }
+}
+.pulse-dot { animation: pulse-dot 2.2s ease-in-out infinite; }
+
+/* ── CTA dark surface ── */
+.cta-dark {
+  background: linear-gradient(145deg, #04091a 0%, #071e4a 45%, #0e3d84 80%, #1557a6 100%);
+  position: relative;
+  overflow: hidden;
+}
+.cta-dark::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 80% 60% at 50% 100%, rgba(74,159,212,0.15) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* ── Nav link — replaces hover:bg-slate-100 ── */
+.nav-link {
+  border-radius: 0.5rem;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--ink-light);
+  text-decoration: none;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+.nav-link:hover {
+  color: var(--ink);
+  background: rgba(26,107,191,0.07);
+}
+
+/* ── Feature grid cell hover ── */
+.feature-cell {
+  transition: background 0.15s ease;
+}
+.feature-cell:hover {
+  background: rgba(249,115,22,0.025) !important;
+}
+
+/* ── Focus rings for interactive elements ── */
+.btn-primary:focus-visible,
+.btn-secondary:focus-visible,
+.btn-ghost:focus-visible,
+.btn-ghost-dark:focus-visible {
+  outline: 2px solid var(--orange);
+  outline-offset: 2px;
+}
+input.input:focus-visible,
+textarea.input:focus-visible { outline: none; }
