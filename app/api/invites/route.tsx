@@ -123,7 +123,7 @@ if (
 
     if (email?.trim()) {
       const { error: emailError } = await resend.emails.send({
-        from: 'IdeaFlow <onboarding@yourdomain.com>',
+        from: 'IdeaFlow <hello@ideaflow.com>',
         to: [email.trim()],
         subject: `You are invited to join ${company.name} on IdeaFlow`,
         html: `
