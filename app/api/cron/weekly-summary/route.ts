@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendWeeklySummary } from '@/lib/email/weeklySummary'
+export const dynamic = 'force-dynamic'
 
 export async function GET() {
   const supabase = createAdminClient()
