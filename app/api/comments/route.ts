@@ -115,15 +115,15 @@ export async function POST(request: NextRequest) {
     }
 
     const { data: comment, error: insertError } = await supabase
-      .from('comments')
-      .insert({
-        idea_id:    ideaId,
-        user_id:    user.id,
-        company_id: profile.company_id,
-        content:    content.trim(),
-      })
-      .select('id, idea_id, user_id, company_id, content, created_at, profiles(full_name)')
-      .single() as unknown as { data: CommentResult | null; error: { message: string } | null }
+  .from('comments')
+  .insert({
+    idea_id:    ideaId,
+    user_id:    user.id,
+    company_id: profile.company_id,
+    content:    content.trim(),
+  } as any)
+  .select('id, idea_id, user_id, company_id, content, created_at, profiles(full_name)')
+  .single() as unknown as { data: CommentResult | null; error: { message: string } | null }
 
     if (insertError) {
       return NextResponse.json({ error: insertError.message }, { status: 500 })

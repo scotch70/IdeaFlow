@@ -140,21 +140,20 @@ export async function POST(request: NextRequest) {
     const statusChanged = idea.status !== status
 
     // ── Update via admin client (bypasses RLS) ───────────────────────────────
-    const { data: updated, error: updateError } = (await adminClient
-      .from('ideas')
-      .update({
-        status,
-        status_note:        noteStr || null,
-        status_changed_at:  new Date().toISOString(),
-        status_changed_by:  user.id,
-        // Impact fields — only populated for implemented, cleared otherwise
-        impact_summary: status === 'implemented' ? impactSummaryStr : null,
-        impact_type:    status === 'implemented' ? (impactTypeStr || null) : null,
-        impact_link:    status === 'implemented' ? (impactLinkStr || null) : null,
-      })
-      .eq('id', ideaId)
-      .select()
-      .single()) as unknown as { data: unknown; error: { message: string } | null }
+    const { data: updated, error: updateError } = (await (adminClient as any)
+  .from('ideas')
+  .update({
+    status,
+    status_note:       noteStr || null,
+    status_changed_at: new Date().toISOString(),
+    status_changed_by: user.id,
+    impact_summary: status === 'implemented' ? impactSummaryStr : null,
+    impact_type:    status === 'implemented' ? (impactTypeStr || null) : null,
+    impact_link:    status === 'implemented' ? (impactLinkStr || null) : null,
+  })
+  .eq('id', ideaId)
+  .select()
+  .single()) as unknown as { data: unknown; error: { message: string } | null }
 
     if (updateError) {
       return NextResponse.json({ error: updateError.message }, { status: 500 })

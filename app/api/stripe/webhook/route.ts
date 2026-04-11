@@ -52,14 +52,13 @@ export async function POST(req: Request) {
         return NextResponse.json({ received: true })
       }
 
-      const { error } = await adminClient
-        .from('companies')
-        .update({
-          plan:                   'pro',
-          stripe_customer_id:     customerId,
-          stripe_subscription_id: subscriptionId,
-        })
-        .eq('id', companyId)
+      const { error } = await (adminClient as any)
+  .from('companies')
+  .update({
+    plan: 'pro',
+    stripe_customer_id: customerId,
+    stripe_subscription_id: subscriptionId,
+  })
 
       if (error) {
         console.error('[stripe/webhook] failed to upgrade company:', error)
@@ -77,10 +76,10 @@ export async function POST(req: Request) {
       const subscription = event.data.object as Stripe.Subscription
       const isActive     = ['active', 'trialing'].includes(subscription.status)
 
-      const { error } = await adminClient
-        .from('companies')
-        .update({ plan: isActive ? 'pro' : 'free' })
-        .eq('stripe_subscription_id', subscription.id)
+      const { error } = await (adminClient as any)
+  .from('companies')
+  .update({ plan: isActive ? 'pro' : 'free' })
+  .eq('stripe_subscription_id', subscription.id)
 
       if (error) {
         console.error('[stripe/webhook] subscription.updated DB error:', error)
@@ -93,13 +92,13 @@ export async function POST(req: Request) {
     if (event.type === 'customer.subscription.deleted') {
       const subscription = event.data.object as Stripe.Subscription
 
-      const { error } = await adminClient
-        .from('companies')
-        .update({
-          plan:                   'free',
-          stripe_subscription_id: null,
-        })
-        .eq('stripe_subscription_id', subscription.id)
+      const { error } = await (adminClient as any)
+  .from('companies')
+  .update({
+    plan: 'free',
+    stripe_subscription_id: null,
+  })
+  .eq('stripe_subscription_id', subscription.id)
 
       if (error) {
         console.error('[stripe/webhook] subscription.deleted DB error:', error)
