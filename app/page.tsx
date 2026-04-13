@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import LogoMark from '@/components/LogoMark'
+import PageContainer from '@/components/PageContainer'
 
 export default async function HomePage() {
   const supabase = createClient()
@@ -257,8 +258,8 @@ export default async function HomePage() {
       {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
           HOW IT WORKS — clean white, numbered steps
       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-      <section id="how-it-works" style={{ background: '#ffffff', padding: 'clamp(5rem,9vw,7rem) 2.5rem', borderTop: '1px solid rgba(0,0,0,0.06)' }}>
-        <div style={{ maxWidth: '80rem', margin: '0 auto' }}>
+      <section id="how-it-works" style={{ background: '#ffffff', padding: 'clamp(5rem,9vw,7rem) 0', borderTop: '1px solid rgba(0,0,0,0.06)' }}>
+        <PageContainer>
           <div style={{ maxWidth: '32rem', marginBottom: '4rem' }}>
             <p style={{ fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#f97316', marginBottom: '1rem' }}>
               How it works
@@ -333,15 +334,15 @@ export default async function HomePage() {
               </div>
             ))}
           </div>
-        </div>
+        </PageContainer>
       </section>
 
 
       {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
           FEATURES — tinted grid
       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-      <section id="features" style={{ background: '#f8f9fb', padding: 'clamp(5rem,9vw,7rem) 2.5rem', borderTop: '1px solid rgba(0,0,0,0.06)' }}>
-        <div style={{ maxWidth: '80rem', margin: '0 auto' }}>
+      <section id="features" style={{ background: '#f8f9fb', padding: 'clamp(5rem,9vw,7rem) 0', borderTop: '1px solid rgba(0,0,0,0.06)' }}>
+        <PageContainer>
 
           <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1.5rem', marginBottom: '3.5rem' }}>
             <div>
@@ -397,15 +398,15 @@ export default async function HomePage() {
               </div>
             ))}
           </div>
-        </div>
+        </PageContainer>
       </section>
 
 
       {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
           ANALYTICS SPOTLIGHT
       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-      <section style={{ background: '#ffffff', borderTop: '1px solid rgba(0,0,0,0.06)', padding: 'clamp(5rem,9vw,7rem) 2.5rem' }}>
-        <div style={{ maxWidth: '80rem', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '5rem', alignItems: 'center' }}>
+      <section style={{ background: '#ffffff', borderTop: '1px solid rgba(0,0,0,0.06)', padding: 'clamp(5rem,9vw,7rem) 0' }}>
+        <PageContainer style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '5rem', alignItems: 'center' }}>
 
           <div style={{ maxWidth: '29rem' }}>
             <p style={{ fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#f97316', marginBottom: '0.875rem' }}>Analytics</p>
@@ -481,14 +482,14 @@ export default async function HomePage() {
               ))}
             </div>
           </div>
-        </div>
+        </PageContainer>
       </section>
 
 
       {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
           FINAL CTA
       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-      <section className="cta-dark" style={{ padding: 'clamp(5rem,10vw,8rem) 2.5rem' }}>
+      <section className="cta-dark" style={{ padding: 'clamp(5rem,10vw,8rem) 0' }}>
         <div style={{ maxWidth: '40rem', margin: '0 auto', textAlign: 'center', position: 'relative', zIndex: 1 }}>
           <p
             className="fade-up"
@@ -534,8 +535,8 @@ export default async function HomePage() {
       {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
           FOOTER
       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-      <footer style={{ background: '#04091a', borderTop: '1px solid rgba(255,255,255,0.06)', padding: '2rem 2.5rem' }}>
-        <div style={{ maxWidth: '80rem', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+      <footer style={{ background: '#04091a', borderTop: '1px solid rgba(255,255,255,0.06)', padding: '2rem 0' }}>
+        <PageContainer style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
             <LogoMark size={22} />
             <span style={{ fontSize: '0.875rem', fontWeight: 700, color: 'rgba(255,255,255,0.55)', letterSpacing: '-0.01em' }}>IdeaFlow</span>
@@ -548,7 +549,7 @@ export default async function HomePage() {
               </Link>
             ))}
           </div>
-        </div>
+        </PageContainer>
       </footer>
 
     </main>

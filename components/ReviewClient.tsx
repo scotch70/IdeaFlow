@@ -1,10 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
 import type { Idea } from '@/types/database'
 import StatusBadge from './StatusBadge'
 import StatusModal from './StatusModal'
+import InnerPageHeader from './InnerPageHeader'
+import PageContainer from './PageContainer'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -48,51 +49,41 @@ export default function ReviewClient({ ideas }: ReviewClientProps) {
   const hasStale     = staleIdeas.length > 0
   const totalActive  = ideas.length
 
+  const headerRight = (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+      {hasStale && (
+        <span style={{
+          fontSize: '0.72rem',
+          fontWeight: 700,
+          color: '#b91c1c',
+          background: 'rgba(220,38,38,0.07)',
+          border: '1px solid rgba(220,38,38,0.18)',
+          borderRadius: '999px',
+          padding: '0.25rem 0.7rem',
+        }}>
+          {staleIdeas.length} need{staleIdeas.length === 1 ? 's' : ''} attention
+        </span>
+      )}
+      <span style={{ fontSize: '0.8rem', color: '#9ab0c8', fontWeight: 500 }}>
+        {totalActive} active idea{totalActive !== 1 ? 's' : ''}
+      </span>
+    </div>
+  )
+
   return (
     <div style={{ minHeight: '100vh', background: 'var(--page-bg)' }}>
 
       {/* ── Page header ─────────────────────────────────────────────────── */}
-      <div style={{ background: '#ffffff', borderBottom: '1px solid rgba(26,107,191,0.09)' }}>
-        <div style={{ maxWidth: '52rem', margin: '0 auto', padding: '1.5rem 2rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
-
-            <div>
-              <Link
-                href="/dashboard"
-                style={{ fontSize: '0.72rem', fontWeight: 600, color: '#9ab0c8', textDecoration: 'none', letterSpacing: '0.04em', display: 'inline-block', marginBottom: '0.35rem' }}
-              >
-                ← Dashboard
-              </Link>
-              <h1 style={{ fontSize: '1.375rem', fontWeight: 800, color: '#0d1f35', letterSpacing: '-0.02em', lineHeight: 1.2 }}>
-                Review inbox
-              </h1>
-            </div>
-
-            {/* Status chips */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-              {hasStale && (
-                <span style={{
-                  fontSize: '0.72rem',
-                  fontWeight: 700,
-                  color: '#b91c1c',
-                  background: 'rgba(220,38,38,0.07)',
-                  border: '1px solid rgba(220,38,38,0.18)',
-                  borderRadius: '999px',
-                  padding: '0.25rem 0.7rem',
-                }}>
-                  {staleIdeas.length} need{staleIdeas.length === 1 ? 's' : ''} attention
-                </span>
-              )}
-              <span style={{ fontSize: '0.8rem', color: '#9ab0c8', fontWeight: 500 }}>
-                {totalActive} active idea{totalActive !== 1 ? 's' : ''}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
+      <InnerPageHeader
+        title="Review inbox"
+        backHref="/dashboard"
+        backLabel="Dashboard"
+        right={headerRight}
+      />
 
       {/* ── Main content ─────────────────────────────────────────────────── */}
-      <main style={{ maxWidth: '52rem', margin: '0 auto', padding: '2rem' }}>
+      <main>
+      <PageContainer style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
 
         {/* All caught up */}
         {totalActive === 0 && (
@@ -146,6 +137,7 @@ export default function ReviewClient({ ideas }: ReviewClientProps) {
             </div>
           </section>
         )}
+      </PageContainer>
       </main>
 
       {/* ── Status modal ─────────────────────────────────────────────────── */}

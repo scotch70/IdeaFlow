@@ -1,10 +1,10 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import LogoMark from '@/components/LogoMark'
+import InnerPageHeader from '@/components/InnerPageHeader'
+import PageContainer from '@/components/PageContainer'
 
 interface Props {
   userId: string
@@ -110,7 +110,7 @@ export default function SettingsForm({
   const displayName = [firstName, lastName].filter(Boolean).join(' ') || email
 
   return (
-    <main style={{ minHeight: '100vh', background: '#f4f8fc', fontFamily: "'DM Sans', sans-serif" }}>
+    <main style={{ minHeight: '100vh', background: 'var(--page-bg)', fontFamily: "'DM Sans', sans-serif" }}>
 
       {/* Toast */}
       {toast && (
@@ -128,24 +128,14 @@ export default function SettingsForm({
       )}
 
       {/* Top bar */}
-      <div style={{ background: '#fff', borderBottom: '1px solid rgba(26,107,191,0.09)', padding: '0 1.5rem' }}>
-        <div style={{ maxWidth: '48rem', margin: '0 auto', height: '3.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Link href="/dashboard" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem', fontWeight: 600, color: '#5a7fa8', textDecoration: 'none' }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M19 12H5M12 5l-7 7 7 7"/>
-            </svg>
-            Dashboard
-          </Link>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <LogoMark size={22} />
-            <span style={{ fontSize: '0.9rem', fontWeight: 800, color: '#0d1f35', letterSpacing: '-0.02em' }}>
-              Idea<span style={{ color: '#f97316' }}>Flow</span>
-            </span>
-          </div>
-        </div>
-      </div>
+      <InnerPageHeader
+        title="Account settings"
+        backHref="/dashboard"
+        backLabel="Dashboard"
+        size="narrow"
+      />
 
-      <div style={{ maxWidth: '48rem', margin: '0 auto', padding: '2.5rem 1.5rem 4rem' }}>
+      <PageContainer size="narrow" style={{ paddingTop: '2.5rem', paddingBottom: '4rem' }}>
 
         {/* Page heading */}
         <div style={{ marginBottom: '2rem' }}>
@@ -300,7 +290,7 @@ export default function SettingsForm({
           </div>
 
         </form>
-      </div>
+      </PageContainer>
     </main>
   )
 }

@@ -54,7 +54,7 @@ export default function AuthPage() {
         alignItems: 'center',
         justifyContent: 'center',
         padding: '2rem 1rem',
-        background: '#f4f8fc',
+        background: 'var(--page-bg)',
         position: 'relative',
         overflow: 'hidden',
       }}

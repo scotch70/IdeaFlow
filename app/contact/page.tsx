@@ -1,6 +1,9 @@
 import Link from 'next/link'
 import LogoMark from '@/components/LogoMark'
 
+// Exact same container class as SiteHeader — guarantees pixel-perfect alignment
+const NAV_CONTAINER = 'mx-auto w-full max-w-7xl px-6 lg:px-10'
+
 export const metadata = {
   title: 'Contact — IdeaFlow',
   description: 'Get in touch to see how IdeaFlow can work for your team.',
@@ -16,7 +19,7 @@ export default function ContactPage() {
           background: '#ffffff',
           position: 'relative',
           overflow: 'hidden',
-          padding: '5rem 1.5rem 4rem',
+          padding: '5rem 0 4rem',
           borderBottom: '1px solid rgba(26,107,191,0.08)',
         }}
       >
@@ -25,7 +28,7 @@ export default function ContactPage() {
           background: 'radial-gradient(ellipse 55% 60% at 10% 90%, rgba(249,115,22,0.06) 0%, transparent 60%), radial-gradient(ellipse 50% 50% at 85% 10%, rgba(26,107,191,0.05) 0%, transparent 55%)',
         }} />
 
-        <div style={{ maxWidth: '44rem', margin: '0 auto', position: 'relative', zIndex: 1 }}>
+        <div className={NAV_CONTAINER} style={{ position: 'relative', zIndex: 1 }}>
           {/* Badge */}
           <span style={{
             display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
@@ -67,145 +70,152 @@ export default function ContactPage() {
       </section>
 
       {/* ── Two-column contact + info ── */}
-      <section style={{ maxWidth: '56rem', margin: '0 auto', padding: '4rem 1.5rem', display: 'grid', gap: '2rem', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
+      <section style={{ padding: '4rem 0' }}>
+        <div className={NAV_CONTAINER}>
+          <div style={{ display: 'grid', gap: '2rem', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))' }}>
 
-        {/* Contact card */}
-        <div style={{
-          borderRadius: '1.25rem',
-          border: '1px solid rgba(26,107,191,0.11)',
-          background: '#fff',
-          boxShadow: '0 4px 24px rgba(6,14,38,0.07)',
-          padding: '2rem',
-        }}>
-          <div style={{
-            width: '2.75rem', height: '2.75rem', borderRadius: '0.75rem',
-            background: 'rgba(249,115,22,0.09)', border: '1px solid rgba(249,115,22,0.16)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            marginBottom: '1.25rem',
-          }}>
-            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#f06800" strokeWidth={1.8}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
+            {/* Contact card */}
+            <div style={{
+              borderRadius: '1.25rem',
+              border: '1px solid rgba(26,107,191,0.11)',
+              background: '#fff',
+              boxShadow: '0 4px 24px rgba(6,14,38,0.07)',
+              padding: '2rem',
+            }}>
+              <div style={{
+                width: '2.75rem', height: '2.75rem', borderRadius: '0.75rem',
+                background: 'rgba(249,115,22,0.09)', border: '1px solid rgba(249,115,22,0.16)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                marginBottom: '1.25rem',
+              }}>
+                <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#f06800" strokeWidth={1.8}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+              </div>
+
+              <h2 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0d1f35', marginBottom: '0.4rem', letterSpacing: '-0.01em' }}>
+                Send me an email
+              </h2>
+              <p style={{ fontSize: '0.875rem', color: '#5a7fa8', lineHeight: 1.65, marginBottom: '1.5rem' }}>
+                I personally read every message. No sales team, no auto-responders — just a direct line.
+              </p>
+
+              <p style={{ fontSize: '0.875rem', fontWeight: 600, color: '#0d1f35', marginBottom: '1.25rem' }}>
+                lars_neeft@live.nl
+              </p>
+
+              <a
+                href="mailto:lars_neeft@live.nl?subject=IdeaFlow%20Demo%20Request&body=Hi%20Lars%2C%0A%0AI'm%20interested%20in%20IdeaFlow%20for%20my%20company.%0A%0ACompany%20name%3A%0ATeam%20size%3A%0AWhat%20we%20want%20to%20improve%3A%0A"
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
+                  background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
+                  color: '#fff', fontWeight: 700, fontSize: '0.875rem',
+                  borderRadius: '0.625rem', padding: '0.625rem 1.25rem',
+                  textDecoration: 'none', letterSpacing: '-0.01em',
+                }}
+              >
+                Open email
+                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </a>
+            </div>
+
+            {/* What to include card */}
+            <div style={{
+              borderRadius: '1.25rem',
+              border: '1px solid rgba(26,107,191,0.11)',
+              background: '#fff',
+              boxShadow: '0 4px 24px rgba(6,14,38,0.07)',
+              padding: '2rem',
+            }}>
+              <div style={{
+                width: '2.75rem', height: '2.75rem', borderRadius: '0.75rem',
+                background: 'rgba(26,107,191,0.08)', border: '1px solid rgba(26,107,191,0.15)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                marginBottom: '1.25rem',
+              }}>
+                <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#1a6bbf" strokeWidth={1.8}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+              </div>
+
+              <h2 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0d1f35', marginBottom: '0.4rem', letterSpacing: '-0.01em' }}>
+                What to include
+              </h2>
+              <p style={{ fontSize: '0.875rem', color: '#5a7fa8', lineHeight: 1.65, marginBottom: '1.5rem' }}>
+                A little context helps me give you a useful reply right away.
+              </p>
+
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.7rem' }}>
+                {[
+                  { icon: '🏢', label: 'Company name & industry' },
+                  { icon: '👥', label: 'Team size (rough estimate)' },
+                  { icon: '💡', label: 'What you want to improve' },
+                  { icon: '📅', label: 'Your preferred timeline' },
+                ].map(({ icon, label }) => (
+                  <li key={label} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.875rem', color: '#0d1f35' }}>
+                    <span style={{ fontSize: '1rem', flexShrink: 0 }}>{icon}</span>
+                    {label}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
           </div>
-
-          <h2 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0d1f35', marginBottom: '0.4rem', letterSpacing: '-0.01em' }}>
-            Send me an email
-          </h2>
-          <p style={{ fontSize: '0.875rem', color: '#5a7fa8', lineHeight: 1.65, marginBottom: '1.5rem' }}>
-            I personally read every message. No sales team, no auto-responders — just a direct line.
-          </p>
-
-          <p style={{ fontSize: '0.875rem', fontWeight: 600, color: '#0d1f35', marginBottom: '1.25rem' }}>
-            lars_neeft@live.nl
-          </p>
-
-          <a
-            href="mailto:lars_neeft@live.nl?subject=IdeaFlow%20Demo%20Request&body=Hi%20Lars%2C%0A%0AI'm%20interested%20in%20IdeaFlow%20for%20my%20company.%0A%0ACompany%20name%3A%0ATeam%20size%3A%0AWhat%20we%20want%20to%20improve%3A%0A"
-            style={{
-              display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
-              background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
-              color: '#fff', fontWeight: 700, fontSize: '0.875rem',
-              borderRadius: '0.625rem', padding: '0.625rem 1.25rem',
-              textDecoration: 'none', letterSpacing: '-0.01em',
-            }}
-          >
-            Open email
-            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-            </svg>
-          </a>
-        </div>
-
-        {/* What to include card */}
-        <div style={{
-          borderRadius: '1.25rem',
-          border: '1px solid rgba(26,107,191,0.11)',
-          background: '#fff',
-          boxShadow: '0 4px 24px rgba(6,14,38,0.07)',
-          padding: '2rem',
-        }}>
-          <div style={{
-            width: '2.75rem', height: '2.75rem', borderRadius: '0.75rem',
-            background: 'rgba(26,107,191,0.08)', border: '1px solid rgba(26,107,191,0.15)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            marginBottom: '1.25rem',
-          }}>
-            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#1a6bbf" strokeWidth={1.8}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
-          </div>
-
-          <h2 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0d1f35', marginBottom: '0.4rem', letterSpacing: '-0.01em' }}>
-            What to include
-          </h2>
-          <p style={{ fontSize: '0.875rem', color: '#5a7fa8', lineHeight: 1.65, marginBottom: '1.5rem' }}>
-            A little context helps me give you a useful reply right away.
-          </p>
-
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.7rem' }}>
-            {[
-              { icon: '🏢', label: 'Company name & industry' },
-              { icon: '👥', label: 'Team size (rough estimate)' },
-              { icon: '💡', label: 'What you want to improve' },
-              { icon: '📅', label: 'Your preferred timeline' },
-            ].map(({ icon, label }) => (
-              <li key={label} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.875rem', color: '#0d1f35' }}>
-                <span style={{ fontSize: '1rem', flexShrink: 0 }}>{icon}</span>
-                {label}
-              </li>
-            ))}
-          </ul>
         </div>
       </section>
 
       {/* ── FAQ ── */}
-      <section style={{ maxWidth: '56rem', margin: '0 auto', padding: '0 1.5rem 5rem' }}>
-        <p style={{
-          fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.18em',
-          textTransform: 'uppercase', color: '#1a6bbf', marginBottom: '0.6rem',
-        }}>
-          Common questions
-        </p>
-        <h2 style={{
-          fontFamily: "'DM Serif Display', serif",
-          fontSize: 'clamp(1.5rem, 3vw, 2rem)',
-          color: '#0d1f35', letterSpacing: '-0.02em', marginBottom: '2.5rem',
-        }}>
-          Answers before you ask
-        </h2>
+      <section style={{ paddingBottom: '5rem' }}>
+        <div className={NAV_CONTAINER}>
+          <p style={{
+            fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.18em',
+            textTransform: 'uppercase', color: '#1a6bbf', marginBottom: '0.6rem',
+          }}>
+            Common questions
+          </p>
+          <h2 style={{
+            fontFamily: "'DM Serif Display', serif",
+            fontSize: 'clamp(1.5rem, 3vw, 2rem)',
+            color: '#0d1f35', letterSpacing: '-0.02em', marginBottom: '2.5rem',
+          }}>
+            Answers before you ask
+          </h2>
 
-        <div style={{ display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))' }}>
-          {[
-            {
-              q: 'How long does it take to get started?',
-              a: 'Most teams are up and running within a day. You create your workspace, invite your team with a code, and you\'re live.',
-            },
-            {
-              q: 'Do you offer a free trial?',
-              a: 'Yes — IdeaFlow is free to try with your first team. No credit card needed until you\'re ready to scale.',
-            },
-            {
-              q: 'How big does my team need to be?',
-              a: 'IdeaFlow works great for teams as small as 5 and organisations with thousands of employees alike.',
-            },
-            {
-              q: 'Is my company\'s data kept private?',
-              a: 'Absolutely. Each workspace is fully isolated. Your ideas never leave your organisation\'s account.',
-            },
-          ].map(({ q, a }) => (
-            <div
-              key={q}
-              style={{
-                borderRadius: '1rem',
-                border: '1px solid rgba(26,107,191,0.11)',
-                background: '#f4f8fc',
-                padding: '1.5rem',
-              }}
-            >
-              <p style={{ fontSize: '0.9rem', fontWeight: 700, color: '#0d1f35', marginBottom: '0.5rem', lineHeight: 1.4 }}>{q}</p>
-              <p style={{ fontSize: '0.875rem', color: '#5a7fa8', lineHeight: 1.65 }}>{a}</p>
-            </div>
-          ))}
+          <div style={{ display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))' }}>
+            {[
+              {
+                q: 'How long does it take to get started?',
+                a: 'Most teams are up and running within a day. You create your workspace, invite your team with a code, and you\'re live.',
+              },
+              {
+                q: 'Do you offer a free trial?',
+                a: 'Yes — IdeaFlow is free to try with your first team. No credit card needed until you\'re ready to scale.',
+              },
+              {
+                q: 'How big does my team need to be?',
+                a: 'IdeaFlow works great for teams as small as 5 and organisations with thousands of employees alike.',
+              },
+              {
+                q: 'Is my company\'s data kept private?',
+                a: 'Absolutely. Each workspace is fully isolated. Your ideas never leave your organisation\'s account.',
+              },
+            ].map(({ q, a }) => (
+              <div
+                key={q}
+                style={{
+                  borderRadius: '1rem',
+                  border: '1px solid rgba(26,107,191,0.11)',
+                  background: '#f4f8fc',
+                  padding: '1.5rem',
+                }}
+              >
+                <p style={{ fontSize: '0.9rem', fontWeight: 700, color: '#0d1f35', marginBottom: '0.5rem', lineHeight: 1.4 }}>{q}</p>
+                <p style={{ fontSize: '0.875rem', color: '#5a7fa8', lineHeight: 1.65 }}>{a}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -213,7 +223,7 @@ export default function ContactPage() {
       <section
         style={{
           background: '#f8faff',
-          padding: '4rem 1.5rem',
+          padding: '4rem 0',
           textAlign: 'center',
           position: 'relative',
           overflow: 'hidden',
@@ -223,7 +233,7 @@ export default function ContactPage() {
         <div aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none',
           background: 'radial-gradient(ellipse 50% 80% at 50% 50%, rgba(249,115,22,0.06) 0%, transparent 65%)',
         }} />
-        <div style={{ position: 'relative', zIndex: 1 }}>
+        <div className={NAV_CONTAINER} style={{ position: 'relative', zIndex: 1 }}>
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.25rem' }}>
             <div style={{ filter: 'drop-shadow(0 4px 16px rgba(240,104,0,0.28))' }}>
               <LogoMark size={44} />

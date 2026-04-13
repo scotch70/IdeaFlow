@@ -11,6 +11,7 @@ import type { DailyPoint, Contributor } from '@/components/AnalyticsPanel'
 import UpgradeButton from '@/components/UpgradeButton'
 import ManagerQueue from '@/components/ManagerQueue'
 import ImplementedIdeas from '@/components/ImplementedIdeas'
+import PageContainer from '@/components/PageContainer'
 
 
 // Supabase's select-string type inference can return `never` for partial column
@@ -174,7 +175,7 @@ const trialActive = company?.plan === 'free' && trialDaysLeft > 0
         background: '#ffffff',
         borderBottom: '1px solid rgba(26,107,191,0.09)',
       }}>
-        <div style={{ maxWidth: '80rem', margin: '0 auto', padding: '1.5rem 2.5rem' }}>
+        <PageContainer style={{ paddingTop: '1.5rem', paddingBottom: '1.5rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
             <div>
               <p style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#9ab0c8', marginBottom: '0.3rem' }}>
@@ -188,7 +189,7 @@ const trialActive = company?.plan === 'free' && trialDaysLeft > 0
               {memberCount} member{memberCount !== 1 ? 's' : ''} · {ideasWithLikeStatus.length} idea{ideasWithLikeStatus.length !== 1 ? 's' : ''}
             </p>
           </div>
-        </div>
+        </PageContainer>
       </div>
 
       <main className="mx-auto max-w-7xl px-6 py-8">
