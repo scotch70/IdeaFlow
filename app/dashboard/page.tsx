@@ -36,7 +36,7 @@ type IdeaJoinResult = Database['public']['Tables']['ideas']['Row'] & {
 
 type CompanyResult = Pick<
   Database['public']['Tables']['companies']['Row'],
-  'plan' | 'trial_ends_at'
+  'plan' | 'trial_ends_at' | 'custom_idea_prompt'
 >
 
 export const dynamic = 'force-dynamic'
@@ -190,7 +190,7 @@ export default async function DashboardPage({
 
   const { data: company } = (await supabase
     .from('companies')
-    .select('plan, trial_ends_at')
+    .select('plan, trial_ends_at, custom_idea_prompt')
     .eq('id', profile.company_id)
     .single()) as unknown as {
     data: CompanyResult | null
@@ -412,6 +412,7 @@ export default async function DashboardPage({
                   userId={user.id}
                   companyId={profile.company_id}
                   isAdmin={profile.role === 'admin'}
+                  customPrompt={company?.custom_idea_prompt ?? null}
                 />
               </div>
 

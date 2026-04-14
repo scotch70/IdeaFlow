@@ -18,6 +18,7 @@ export interface Database {
     trial_ends_at: string | null
     stripe_customer_id: string | null
     stripe_subscription_id: string | null
+    custom_idea_prompt: string | null
   }
   Insert: {
     id?: string
@@ -27,6 +28,7 @@ export interface Database {
     trial_ends_at?: string | null
     stripe_customer_id?: string | null
     stripe_subscription_id?: string | null
+    custom_idea_prompt?: string | null
   }
   Update: {
     id?: string
@@ -36,6 +38,7 @@ export interface Database {
     trial_ends_at?: string | null
     stripe_customer_id?: string | null
     stripe_subscription_id?: string | null
+    custom_idea_prompt?: string | null
   }
 }
 
