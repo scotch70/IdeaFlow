@@ -46,7 +46,7 @@ export default async function SiteHeader() {
         {/* Desktop navigation — hidden on mobile */}
         <nav className="hidden lg:flex items-center gap-0.5 text-sm font-medium">
           <Link href="/" className="nav-link">Home</Link>
-          <Link href="/#features" className="nav-link">Features</Link>
+          <Link href="/features" className="nav-link">Features</Link>
           <Link href="/contact" className="nav-link">Contact</Link>
 
           {user ? (

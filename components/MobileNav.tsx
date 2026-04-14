@@ -71,7 +71,7 @@ export default function MobileNav({ isLoggedIn, email }: MobileNavProps) {
         >
           <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.125rem' }}>
             <Link href="/" onClick={() => setOpen(false)} style={linkStyle}>Home</Link>
-            <Link href="/#features" onClick={() => setOpen(false)} style={linkStyle}>Features</Link>
+            <Link href="/features" onClick={() => setOpen(false)} style={linkStyle}>Features</Link>
             <Link href="/contact" onClick={() => setOpen(false)} style={linkStyle}>Contact</Link>
 
             {isLoggedIn ? (
