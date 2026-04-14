@@ -6,9 +6,10 @@ import { useRouter } from 'next/navigation'
 interface NewIdeaFormProps {
   userId: string
   companyId: string
+  isAdmin?: boolean
 }
 
-export default function NewIdeaForm({ userId, companyId }: NewIdeaFormProps) {
+export default function NewIdeaForm({ userId, companyId, isAdmin = false }: NewIdeaFormProps) {
   const [open, setOpen] = useState(false)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -50,7 +51,7 @@ export default function NewIdeaForm({ userId, companyId }: NewIdeaFormProps) {
             Share your idea
           </p>
           <h2 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--ink)' }}>
-            What would you like to improve?
+            {isAdmin ? 'What should your team improve?' : 'What would you like to improve?'}
           </h2>
         </div>
 
@@ -90,14 +91,15 @@ export default function NewIdeaForm({ userId, companyId }: NewIdeaFormProps) {
           Share your idea
         </p>
         <h2 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--ink)' }}>
-          What would you like to improve?
+          {isAdmin ? 'What should your team improve?' : 'What would you like to improve?'}
         </h2>
       </div>
 
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
         <input
           className="input"
-          placeholder="What's your idea? (e.g. Better onboarding for new hires)"
+          placeholder={isAdmin ? 'Share an idea your team should work on...' : 'Share a new idea...'}
+          value={title}
           value={title}
           onChange={e => setTitle(e.target.value)}
           required

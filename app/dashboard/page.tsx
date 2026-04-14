@@ -335,7 +335,70 @@ export default async function DashboardPage({
 
           <div className="grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
             <section className="space-y-6">
+
+              {/* ── Onboarding empty state ── */}
+              {ideasWithLikeStatus.length === 0 && (
+                <div style={{
+                  background: '#ffffff',
+                  border: '1px solid rgba(26,107,191,0.10)',
+                  borderRadius: '1.25rem',
+                  padding: '2.5rem 2rem',
+                  textAlign: 'center',
+                  boxShadow: '0 2px 12px rgba(6,14,38,0.05)',
+                }}>
+                  <div style={{
+                    width: '3rem', height: '3rem',
+                    borderRadius: '0.875rem',
+                    background: 'rgba(249,115,22,0.08)',
+                    border: '1px solid rgba(249,115,22,0.15)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    margin: '0 auto 1.25rem',
+                    fontSize: '1.25rem',
+                  }}>
+                    💡
+                  </div>
+                  <h2 style={{
+                    fontSize: '1.05rem', fontWeight: 800,
+                    color: '#0d1f35', letterSpacing: '-0.02em',
+                    marginBottom: '0.4rem',
+                  }}>
+                    No ideas yet
+                  </h2>
+                  <p style={{
+                    fontSize: '0.875rem', color: '#9ab0c8',
+                    lineHeight: 1.6, maxWidth: '22rem',
+                    margin: '0 auto 1.75rem',
+                  }}>
+                    The best ideas come from the people doing the work. Be the first to share one.
+                  </p>
+                  <div style={{ display: 'flex', gap: '0.625rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                    <a
+                      href="#new-idea-form"
+                      className="btn-primary"
+                      style={{ fontSize: '0.85rem', padding: '0.55rem 1.25rem', textDecoration: 'none' }}
+                    >
+                      Post your first idea →
+                    </a>
+                    {profile.role === 'admin' && (
+                      <a
+                        href="#invite-team"
+                        style={{
+                          fontSize: '0.85rem', fontWeight: 600,
+                          color: '#5a7fa8', textDecoration: 'none',
+                          padding: '0.55rem 1.25rem',
+                          border: '1px solid rgba(26,107,191,0.18)',
+                          borderRadius: '0.5rem',
+                        }}
+                      >
+                        Invite your team
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
+
               <div
+                id="new-idea-form"
                 style={{
                   borderRadius: '1.25rem',
                   border: '1px solid rgba(26,107,191,0.11)',
@@ -348,6 +411,7 @@ export default async function DashboardPage({
                 <NewIdeaForm
                   userId={user.id}
                   companyId={profile.company_id}
+                  isAdmin={profile.role === 'admin'}
                 />
               </div>
 
@@ -374,7 +438,11 @@ export default async function DashboardPage({
                 <ActiveInvites invites={invites ?? []} />
               )}
 
-              {profile.role === 'admin' && <InviteMembers />}
+              {profile.role === 'admin' && (
+                <div id="invite-team">
+                  <InviteMembers />
+                </div>
+              )}
             </aside>
           </div>
 
