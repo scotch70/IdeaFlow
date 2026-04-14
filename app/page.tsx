@@ -334,69 +334,15 @@ export default async function HomePage() {
               </div>
             ))}
           </div>
-        </PageContainer>
-      </section>
 
-
-      {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-          FEATURES — tinted grid
-      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-      <section id="features" style={{ background: '#f8f9fb', padding: 'clamp(5rem,9vw,7rem) 0', borderTop: '1px solid rgba(0,0,0,0.06)' }}>
-        <PageContainer>
-
-          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1.5rem', marginBottom: '3.5rem' }}>
-            <div>
-              <p style={{ fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#f97316', marginBottom: '0.875rem' }}>Features</p>
-              <h2 style={{ fontFamily: "'Instrument Serif', serif", fontStyle: 'italic', fontSize: 'clamp(1.875rem, 3.2vw, 2.625rem)', letterSpacing: '-0.02em', color: '#0d1f35', lineHeight: 1.15, maxWidth: '28rem' }}>
-                Everything your team needs to make ideas count
-              </h2>
-            </div>
-            {!user && (
-              <Link href="/auth" style={{ fontSize: '0.825rem', fontWeight: 600, color: '#f97316', textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                Start free →
-              </Link>
-            )}
-          </div>
-
-          <div
-            className="stagger-grid"
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-              gap: '1px',
-              background: 'rgba(0,0,0,0.07)',
-              borderRadius: '1.25rem',
-              overflow: 'hidden',
-              border: '1px solid rgba(0,0,0,0.07)',
-            }}
-          >
-            {[
-              { icon: <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>, title: 'One shared workspace', body: 'All ideas from your whole company in one focused place. No inbox chaos, no separate tools.' },
-              { icon: <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>, title: 'Democratic voting', body: 'Colleagues like ideas they support. The most popular surface automatically — transparent and fair.' },
-              { icon: <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>, title: 'Live priority ranking', body: 'A ranked list sorted by votes gives management instant clarity on what the team cares about most.' },
-              { icon: <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>, title: 'Invite by link', body: 'Admins generate personal invite links for each teammate. No open registrations — full control.' },
-              { icon: <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>, title: 'Built-in analytics', body: 'See idea volume, top contributors, and weekly activity at a glance — without asking anyone for a report.' },
-              { icon: <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>, title: 'Role-based access', body: 'Admins manage the workspace and members. Employees focus on sharing and voting. Just right.' },
-            ].map((f, i) => (
-              <div
-                key={i}
-                className="feature-cell"
-                style={{ padding: '2rem', background: '#ffffff', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}
-              >
-                <div
-                  style={{
-                    width: '2.25rem', height: '2.25rem', borderRadius: '0.625rem',
-                    background: 'rgba(249,115,22,0.07)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    color: '#f97316', marginBottom: '0.625rem',
-                  }}
-                >
-                  {f.icon}
-                </div>
-                <p style={{ fontSize: '0.9375rem', fontWeight: 700, color: '#0d1f35', letterSpacing: '-0.01em' }}>{f.title}</p>
-                <p style={{ fontSize: '0.855rem', lineHeight: 1.7, color: '#7a9ab8' }}>{f.body}</p>
-              </div>
-            ))}
+          {/* ── "See all features" nudge ── */}
+          <div style={{ marginTop: '2.5rem', paddingTop: '2rem', borderTop: '1px solid rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+            <p style={{ fontSize: '0.875rem', color: '#9ab0c8' }}>
+              Status tracking, manager accountability, outcomes, analytics and more.
+            </p>
+            <Link href="/features" style={{ fontSize: '0.875rem', fontWeight: 600, color: '#f97316', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+              See all features →
+            </Link>
           </div>
         </PageContainer>
       </section>
@@ -543,7 +489,7 @@ export default async function HomePage() {
           </div>
           <p style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.22)' }}>© {new Date().getFullYear()} IdeaFlow. All rights reserved.</p>
           <div style={{ display: 'flex', gap: '1.75rem' }}>
-            {([['Home', '/'], ['Features', '/#features'], ['Contact', '/contact']] as [string, string][]).map(([label, href]) => (
+            {([['Home', '/'], ['Features', '/features'], ['Contact', '/contact']] as [string, string][]).map(([label, href]) => (
               <Link key={label} href={href} style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)', textDecoration: 'none', fontWeight: 500, transition: 'color 0.15s' }}>
                 {label}
               </Link>
