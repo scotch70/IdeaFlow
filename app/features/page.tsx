@@ -48,90 +48,105 @@ export default async function FeaturesPage() {
   return (
     <main style={{ fontFamily: "'DM Sans', sans-serif", background: '#f8f9fb', minHeight: '100vh' }}>
 
-      {/* ── HERO ─────────────────────────────────────────────────────────── */}
-      <section style={{
-        background: '#ffffff',
-        padding: '3.5rem 0 3rem',
-        ...DIVIDER,
-      }}>
+      {/* ── HEADER + FEATURE GRID ────────────────────────────────────────── */}
+      <section style={{ background: '#f8f9fb', padding: 'clamp(5rem,9vw,7rem) 0', borderTop: '1px solid rgba(0,0,0,0.06)' }}>
         <PageContainer>
-          <div style={{ maxWidth: '36rem' }}>
-            <Overline>Features</Overline>
-            <h1 style={{
-              fontFamily: "'Instrument Serif', serif", fontStyle: 'italic',
-              fontSize: 'clamp(1.875rem, 3.5vw, 2.75rem)',
-              letterSpacing: '-0.025em', color: '#0d1f35',
-              lineHeight: 1.12, marginBottom: '0.875rem',
-            }}>
-              Everything from first idea to real outcome
-            </h1>
-            <p style={{
-              fontSize: '0.9375rem', lineHeight: 1.75, color: '#7a9ab8',
-              marginBottom: '1.75rem', maxWidth: '28rem',
-            }}>
-              IdeaFlow covers the full loop — capture, prioritise, track, and close out ideas with proof of impact.
-            </p>
-            <div style={{ display: 'flex', gap: '0.625rem', flexWrap: 'wrap', alignItems: 'center' }}>
-              {user ? (
-                <Link href="/dashboard" className="btn-primary"
-                  style={{ textDecoration: 'none', fontSize: '0.875rem', padding: '0.55rem 1.25rem' }}>
-                  Open dashboard →
-                </Link>
-              ) : (
-                <Link href="/auth" className="btn-primary"
-                  style={{ textDecoration: 'none', fontSize: '0.875rem', padding: '0.55rem 1.25rem' }}>
-                  Start for free →
-                </Link>
-              )}
-              <Link href="/contact"
-                style={{ fontSize: '0.875rem', fontWeight: 600, color: '#5a7fa8', textDecoration: 'none' }}>
-                Talk to us
-              </Link>
+
+          {/* Header row: heading left, CTA right */}
+          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1.5rem', marginBottom: '3.5rem' }}>
+            <div>
+              <Overline>Features</Overline>
+              <h1 style={{
+                fontFamily: "'Instrument Serif', serif", fontStyle: 'italic',
+                fontSize: 'clamp(1.875rem, 3.2vw, 2.625rem)',
+                letterSpacing: '-0.02em', color: '#0d1f35',
+                lineHeight: 1.15, maxWidth: '28rem',
+              }}>
+                Everything your team needs to make ideas count
+              </h1>
             </div>
+            {user ? (
+              <Link href="/dashboard" style={{ fontSize: '0.825rem', fontWeight: 600, color: '#f97316', textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                Open dashboard →
+              </Link>
+            ) : (
+              <Link href="/auth" style={{ fontSize: '0.825rem', fontWeight: 600, color: '#f97316', textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                Start free →
+              </Link>
+            )}
           </div>
-        </PageContainer>
-      </section>
 
-
-      {/* ── OVERVIEW GRID — 6 compact tiles ──────────────────────────────── */}
-      <section style={{ padding: '2.5rem 0', ...DIVIDER }}>
-        <PageContainer>
-          <div style={{
+          {/* Feature card grid */}
+          <div className="stagger-grid" style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
             gap: '1px',
             background: 'rgba(0,0,0,0.07)',
-            borderRadius: '1rem',
+            borderRadius: '1.25rem',
             overflow: 'hidden',
             border: '1px solid rgba(0,0,0,0.07)',
           }}>
             {[
-              { icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>, title: 'Idea capture' },
-              { icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>, title: 'Voting & comments' },
-              { icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>, title: 'Status tracking' },
-              { icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>, title: 'Manager tools' },
-              { icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>, title: 'Outcomes & impact' },
-              { icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>, title: 'Notifications' },
-            ].map((f) => (
-              <div key={f.title} className="feature-cell" style={{
-                padding: '1.25rem 1.5rem',
+              {
+                icon: <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>,
+                title: 'Idea capture',
+                body: 'Anyone on the team can post an idea in seconds — no forms, no friction, no separate tool.',
+              },
+              {
+                icon: <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>,
+                title: 'Democratic voting',
+                body: 'Colleagues vote for the ideas they genuinely support. The most popular surface automatically.',
+              },
+              {
+                icon: <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
+                title: 'Status tracking',
+                body: 'Six clear statuses move every idea from open to outcome. Nothing falls through the cracks.',
+              },
+              {
+                icon: <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+                title: 'Manager accountability',
+                body: 'A review inbox flags stale ideas and keeps admins honest. No idea quietly ignored.',
+              },
+              {
+                icon: <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>,
+                title: 'Outcomes & impact',
+                body: 'Implemented ideas log real results — revenue, efficiency, culture. Proof that ideas matter.',
+              },
+              {
+                icon: <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>,
+                title: 'Live priority ranking',
+                body: 'Ideas sort themselves by votes. Leadership always sees what the team cares about most.',
+              },
+              {
+                icon: <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>,
+                title: 'Email notifications',
+                body: 'Authors are notified automatically when their idea moves forward. No log-in required to stay informed.',
+              },
+              {
+                icon: <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
+                title: 'Role-based access',
+                body: 'Admins manage the workspace and members. Employees focus on sharing and voting. Just right.',
+              },
+            ].map((f, i) => (
+              <div key={i} className="feature-cell" style={{
+                padding: '2rem',
                 background: '#ffffff',
-                display: 'flex', alignItems: 'center', gap: '0.75rem',
+                display: 'flex', flexDirection: 'column', gap: '0.5rem',
               }}>
                 <div style={{
-                  width: '1.875rem', height: '1.875rem', borderRadius: '0.5rem', flexShrink: 0,
+                  width: '2.25rem', height: '2.25rem', borderRadius: '0.625rem',
                   background: 'rgba(249,115,22,0.07)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: '#f97316',
+                  color: '#f97316', marginBottom: '0.625rem',
                 }}>
                   {f.icon}
                 </div>
-                <span style={{ fontSize: '0.855rem', fontWeight: 600, color: '#0d1f35', letterSpacing: '-0.01em' }}>
-                  {f.title}
-                </span>
+                <p style={{ fontSize: '0.9375rem', fontWeight: 700, color: '#0d1f35', letterSpacing: '-0.01em' }}>{f.title}</p>
+                <p style={{ fontSize: '0.855rem', lineHeight: 1.7, color: '#7a9ab8' }}>{f.body}</p>
               </div>
             ))}
           </div>
+
         </PageContainer>
       </section>
 
