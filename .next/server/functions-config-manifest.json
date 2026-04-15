@@ -1,1 +1,1 @@
-{"version":1,"functions":{"/dashboard/review":{},"/contact":{},"/settings":{},"/dashboard":{},"/api/cron/weekly-summary":{},"/features":{}}}
+{"version":1,"functions":{"/api/cron/weekly-summary":{},"/contact":{},"/dashboard/review":{},"/settings":{},"/dashboard":{},"/features":{}}}

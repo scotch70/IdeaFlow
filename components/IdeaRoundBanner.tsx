@@ -21,7 +21,7 @@ export default function IdeaRoundBanner({
   autoExpired = false,
   endsAt,
 }: IdeaRoundBannerProps) {
-  const displayName = name?.trim() || 'Idea Round'
+  const displayName = name?.trim() || 'IdeaFlow'
   const effectivelyClosed = status === 'closed' || autoExpired
 
   // ── Closed / expired ──────────────────────────────────────────────────────
@@ -41,7 +41,7 @@ export default function IdeaRoundBanner({
             {displayName} is closed
           </p>
           <p style={{ fontSize: '0.775rem', color: '#b91c1c', marginTop: '0.125rem' }}>
-            Idea submission has ended for this round.
+            Idea submission has ended for this IdeaFlow.
           </p>
         </div>
       </div>
@@ -71,9 +71,9 @@ export default function IdeaRoundBanner({
         <p style={{ fontSize: '0.775rem', color: '#065f46', marginTop: '0.125rem' }}>
           {daysLeft !== null
             ? daysLeft > 0
-              ? `Share your ideas — round closes in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}.`
-              : 'This round closes today.'
-            : 'Share your ideas — round is now open.'}
+              ? `Share your ideas — IdeaFlow closes in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}.`
+              : 'IdeaFlow closes today.'
+            : 'Share your ideas — IdeaFlow is now open.'}
         </p>
       </div>
       {/* Pulsing active indicator */}
