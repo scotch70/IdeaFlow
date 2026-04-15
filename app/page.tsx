@@ -85,8 +85,8 @@ export default async function HomePage() {
                 marginBottom: '1.5rem',
               }}
             >
-              Your best ideas<br />
-              die in Slack threads.{' '}
+              Stop sending surveys.<br />
+              Start collecting ideas.{' '}
               <span
                 style={{
                   background: 'linear-gradient(92deg, #f97316 10%, #fbbf24 90%)',
