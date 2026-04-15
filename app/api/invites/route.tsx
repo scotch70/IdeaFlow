@@ -32,6 +32,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Name is required' }, { status: 400 })
     }
 
+    if (!email?.trim()) {
+      return NextResponse.json({ error: 'Email is required' }, { status: 400 })
+    }
+
     const { data: profile, error: profileError } = await (supabase as any)
       .from('profiles')
       .select('id, role, company_id')
@@ -123,7 +127,7 @@ if (
 
     if (email?.trim()) {
       const { error: emailError } = await resend.emails.send({
-        from: 'IdeaFlow <hello@ideaflow.com>',
+        from: process.env.RESEND_FROM_EMAIL!,
         to: [email.trim()],
         subject: `You are invited to join ${company.name} on IdeaFlow`,
         html: `

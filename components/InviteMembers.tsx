@@ -21,6 +21,12 @@ export default function InviteMembers() {
       return
     }
 
+    if (!email.trim()) {
+      setError('Email is required')
+      setSuccess('')
+      return
+    }
+
     setLoading(true)
     setError('')
     setSuccess('')
@@ -64,7 +70,8 @@ export default function InviteMembers() {
 
   async function handleCopy() {
     try {
-      await navigator.clipboard.writeText(`${window.location.origin}${joinUrl}`)
+      // joinUrl is already an absolute URL returned from the API — do not prepend origin
+      await navigator.clipboard.writeText(joinUrl)
       setCopied(true)
       setTimeout(() => setCopied(false), 1800)
     } catch {
@@ -112,10 +119,12 @@ export default function InviteMembers() {
 
         <input
           className="input"
-          placeholder="Email address (optional)"
+          type="email"
+          placeholder="Email address"
           value={email}
           onChange={e => setEmail(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && handleGenerateInvite()}
+          required
         />
       </div>
 

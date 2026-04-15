@@ -36,15 +36,16 @@ type IdeaJoinResult = Database['public']['Tables']['ideas']['Row'] & {
   profiles: { full_name: string | null } | null
 }
 
+// Core billing data — always exists; never depends on optional migrations.
 type CompanyResult = Pick<
   Database['public']['Tables']['companies']['Row'],
-  | 'plan'
-  | 'trial_ends_at'
-  | 'custom_idea_prompt'
-  | 'idea_round_name'
-  | 'idea_round_status'
-  | 'idea_round_starts_at'
-  | 'idea_round_ends_at'
+  'plan' | 'trial_ends_at' | 'custom_idea_prompt'
+>
+
+// Round data — only present after the add_idea_round migration has been applied.
+type RoundDataResult = Pick<
+  Database['public']['Tables']['companies']['Row'],
+  'idea_round_name' | 'idea_round_status' | 'idea_round_starts_at' | 'idea_round_ends_at'
 >
 
 export const dynamic = 'force-dynamic'
@@ -196,12 +197,23 @@ export default async function DashboardPage({
         }
       : null
 
+  // Billing query — always reliable; never includes optional migrated columns.
   const { data: company } = (await supabase
     .from('companies')
-    .select('plan, trial_ends_at, custom_idea_prompt, idea_round_name, idea_round_status, idea_round_starts_at, idea_round_ends_at')
+    .select('plan, trial_ends_at, custom_idea_prompt')
     .eq('id', profile.company_id)
     .single()) as unknown as {
     data: CompanyResult | null
+  }
+
+  // Round query — isolated so a missing migration cannot break billing data.
+  // Falls back to null gracefully if the columns don't exist yet.
+  const { data: roundData } = (await supabase
+    .from('companies')
+    .select('idea_round_name, idea_round_status, idea_round_starts_at, idea_round_ends_at')
+    .eq('id', profile.company_id)
+    .single()) as unknown as {
+    data: RoundDataResult | null
   }
 
   // ── Idea round logic ──────────────────────────────────────────────────────
@@ -209,8 +221,8 @@ export default async function DashboardPage({
   // 'draft'     = being configured; employees cannot submit
   // 'active'    = open, unless the end date has already passed
   // 'closed'    = explicitly closed by admin
-  const roundStatus  = company?.idea_round_status  ?? null
-  const roundEndsAt  = company?.idea_round_ends_at ?? null
+  const roundStatus  = roundData?.idea_round_status  ?? null
+  const roundEndsAt  = roundData?.idea_round_ends_at ?? null
   const roundExpired = roundStatus === 'active' && roundEndsAt !== null && new Date(roundEndsAt) < new Date()
   const isRoundActive     = roundStatus === null || (roundStatus === 'active' && !roundExpired)
   const showRoundBanner   = roundStatus === 'active' || roundStatus === 'closed' || roundExpired
@@ -355,7 +367,7 @@ export default async function DashboardPage({
           {/* ── Idea round banner (all users, active / closed / expired) ── */}
           {showRoundBanner && (
             <IdeaRoundBanner
-              name={company?.idea_round_name ?? null}
+              name={roundData?.idea_round_name ?? null}
               status={roundExpired ? 'closed' : (roundStatus as 'active' | 'closed')}
               autoExpired={roundExpired}
               endsAt={roundEndsAt}
@@ -443,7 +455,7 @@ export default async function DashboardPage({
                   isAdmin={profile.role === 'admin'}
                   customPrompt={company?.custom_idea_prompt ?? null}
                   roundActive={isRoundActive}
-                  roundName={company?.idea_round_name ?? null}
+                  roundName={roundData?.idea_round_name ?? null}
                 />
               </div>
 
@@ -463,10 +475,10 @@ export default async function DashboardPage({
               {profile.role === 'admin' && (
                 <IdeaRoundAdmin
                   companyId={profile.company_id}
-                  initialName={company?.idea_round_name ?? null}
-                  initialStatus={company?.idea_round_status ?? null}
-                  initialStartsAt={company?.idea_round_starts_at ?? null}
-                  initialEndsAt={company?.idea_round_ends_at ?? null}
+                  initialName={roundData?.idea_round_name ?? null}
+                  initialStatus={roundData?.idea_round_status ?? null}
+                  initialStartsAt={roundData?.idea_round_starts_at ?? null}
+                  initialEndsAt={roundData?.idea_round_ends_at ?? null}
                 />
               )}
 
