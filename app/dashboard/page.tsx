@@ -12,6 +12,8 @@ import UpgradeButton from '@/components/UpgradeButton'
 import ManagerQueue from '@/components/ManagerQueue'
 import ImplementedIdeas from '@/components/ImplementedIdeas'
 import PageContainer from '@/components/PageContainer'
+import IdeaRoundAdmin from '@/components/IdeaRoundAdmin'
+import IdeaRoundBanner from '@/components/IdeaRoundBanner'
 
 type ProfileResult = Pick<
   Database['public']['Tables']['profiles']['Row'],
@@ -36,7 +38,13 @@ type IdeaJoinResult = Database['public']['Tables']['ideas']['Row'] & {
 
 type CompanyResult = Pick<
   Database['public']['Tables']['companies']['Row'],
-  'plan' | 'trial_ends_at' | 'custom_idea_prompt'
+  | 'plan'
+  | 'trial_ends_at'
+  | 'custom_idea_prompt'
+  | 'idea_round_name'
+  | 'idea_round_status'
+  | 'idea_round_starts_at'
+  | 'idea_round_ends_at'
 >
 
 export const dynamic = 'force-dynamic'
@@ -190,11 +198,22 @@ export default async function DashboardPage({
 
   const { data: company } = (await supabase
     .from('companies')
-    .select('plan, trial_ends_at, custom_idea_prompt')
+    .select('plan, trial_ends_at, custom_idea_prompt, idea_round_name, idea_round_status, idea_round_starts_at, idea_round_ends_at')
     .eq('id', profile.company_id)
     .single()) as unknown as {
     data: CompanyResult | null
   }
+
+  // ── Idea round logic ──────────────────────────────────────────────────────
+  // null status = feature not activated → always open (backward-compat)
+  // 'draft'     = being configured; employees cannot submit
+  // 'active'    = open, unless the end date has already passed
+  // 'closed'    = explicitly closed by admin
+  const roundStatus  = company?.idea_round_status  ?? null
+  const roundEndsAt  = company?.idea_round_ends_at ?? null
+  const roundExpired = roundStatus === 'active' && roundEndsAt !== null && new Date(roundEndsAt) < new Date()
+  const isRoundActive     = roundStatus === null || (roundStatus === 'active' && !roundExpired)
+  const showRoundBanner   = roundStatus === 'active' || roundStatus === 'closed' || roundExpired
 
   const trialEndsAt = company?.trial_ends_at
   const trialDaysLeft = trialEndsAt
@@ -333,6 +352,16 @@ export default async function DashboardPage({
             </div>
           )}
 
+          {/* ── Idea round banner (all users, active / closed / expired) ── */}
+          {showRoundBanner && (
+            <IdeaRoundBanner
+              name={company?.idea_round_name ?? null}
+              status={roundExpired ? 'closed' : (roundStatus as 'active' | 'closed')}
+              autoExpired={roundExpired}
+              endsAt={roundEndsAt}
+            />
+          )}
+
           <div className="grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
             <section className="space-y-6">
 
@@ -412,6 +441,9 @@ export default async function DashboardPage({
                   userId={user.id}
                   companyId={profile.company_id}
                   isAdmin={profile.role === 'admin'}
+                  customPrompt={company?.custom_idea_prompt ?? null}
+                  roundActive={isRoundActive}
+                  roundName={company?.idea_round_name ?? null}
                 />
               </div>
 
@@ -426,6 +458,16 @@ export default async function DashboardPage({
             <aside className="space-y-6 self-start lg:sticky lg:top-24">
               {profile.role === 'admin' && (
                 <ManagerQueue ideas={ideasWithLikeStatus} />
+              )}
+
+              {profile.role === 'admin' && (
+                <IdeaRoundAdmin
+                  companyId={profile.company_id}
+                  initialName={company?.idea_round_name ?? null}
+                  initialStatus={company?.idea_round_status ?? null}
+                  initialStartsAt={company?.idea_round_starts_at ?? null}
+                  initialEndsAt={company?.idea_round_ends_at ?? null}
+                />
               )}
 
               <TeamMembers
