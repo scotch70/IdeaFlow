@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation'
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type RoundStatus = 'draft' | 'active' | 'closed'
+type ConfirmAction = 'close' | 'archive'
+type ModalView = 'main' | 'new-form'
 
 export interface IdeaRoundAdminProps {
   companyId: string
@@ -15,7 +17,7 @@ export interface IdeaRoundAdminProps {
   initialEndsAt: string | null
 }
 
-// ── Shared constants ──────────────────────────────────────────────────────────
+// ── Status badge ──────────────────────────────────────────────────────────────
 
 const STATUS_STYLE: Record<RoundStatus, { bg: string; color: string; label: string }> = {
   draft:  { bg: 'rgba(0,0,0,0.05)',        color: '#64748b', label: 'Draft'  },
@@ -42,49 +44,111 @@ function toDatetimeLocal(iso: string | null): string {
   if (!iso) return ''
   return iso.slice(0, 16)
 }
-
 function fromDatetimeLocal(v: string): string | null {
   return v ? new Date(v).toISOString() : null
 }
-
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('en-GB', {
     day: 'numeric', month: 'short', year: 'numeric',
   })
 }
 
-// ── Action button ─────────────────────────────────────────────────────────────
+// ── Primitive buttons ─────────────────────────────────────────────────────────
 
 function ActionBtn({
-  children, onClick, disabled = false, variant = 'secondary', full = false,
+  children, onClick, disabled = false, variant = 'secondary', full = false, type = 'button',
 }: {
   children: React.ReactNode
   onClick?: () => void
   disabled?: boolean
   variant?: 'primary' | 'secondary' | 'danger' | 'ghost'
   full?: boolean
+  type?: 'button' | 'submit'
 }) {
-  const base: React.CSSProperties = {
-    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-    height: '2.125rem', padding: '0 1rem',
-    borderRadius: '0.45rem',
-    fontSize: '0.8rem', fontWeight: 600,
-    cursor: disabled ? 'not-allowed' : 'pointer',
-    opacity: disabled ? 0.5 : 1,
-    border: 'none',
-    width: full ? '100%' : undefined,
-    transition: 'opacity 0.1s',
-  }
   const styles: Record<string, React.CSSProperties> = {
-    primary:   { background: 'var(--orange)',           color: '#fff' },
+    primary:   { background: 'var(--orange)',           color: '#fff',      border: 'none' },
     secondary: { background: '#fff',                    color: 'var(--ink-mid)', border: '1px solid var(--border-mid)' },
-    danger:    { background: 'rgba(239,68,68,0.07)',    color: '#991b1b',       border: '1px solid rgba(239,68,68,0.20)' },
+    danger:    { background: 'rgba(239,68,68,0.07)',    color: '#991b1b',   border: '1px solid rgba(239,68,68,0.20)' },
     ghost:     { background: 'transparent',             color: 'var(--ink-light)', border: '1px solid var(--tint-border)' },
   }
   return (
-    <button type="button" onClick={onClick} disabled={disabled} style={{ ...base, ...styles[variant] }}>
+    <button
+      type={type}
+      onClick={onClick}
+      disabled={disabled}
+      style={{
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+        height: '2.125rem', padding: '0 1rem',
+        borderRadius: '0.45rem',
+        fontSize: '0.8rem', fontWeight: 600,
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        opacity: disabled ? 0.5 : 1,
+        width: full ? '100%' : undefined,
+        ...styles[variant],
+      }}
+    >
       {children}
     </button>
+  )
+}
+
+function FormField({ label, children, noMargin = false }: {
+  label: string; children: React.ReactNode; noMargin?: boolean
+}) {
+  return (
+    <div style={{ marginBottom: noMargin ? 0 : '0.875rem' }}>
+      <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 600, color: 'var(--ink-light)', marginBottom: '0.3rem' }}>
+        {label}
+      </label>
+      {children}
+    </div>
+  )
+}
+
+// ── Confirmation panel (inline, replaces button) ───────────────────────────────
+
+function ConfirmPanel({
+  action, onConfirm, onCancel, saving,
+}: {
+  action: ConfirmAction
+  onConfirm: () => void
+  onCancel: () => void
+  saving: boolean
+}) {
+  const COPY: Record<ConfirmAction, { message: string; confirm: string; confirmLabel: string }> = {
+    close:   {
+      message: 'Employees will no longer be able to submit ideas.',
+      confirm: 'This cannot be undone without re-opening the round.',
+      confirmLabel: 'Confirm — close round',
+    },
+    archive: {
+      message: 'This will permanently remove the round configuration.',
+      confirm: 'You can set up a new round at any time.',
+      confirmLabel: 'Confirm — archive round',
+    },
+  }
+  const c = COPY[action]
+  return (
+    <div style={{
+      borderRadius: '0.625rem',
+      border: `1px solid ${action === 'archive' ? 'rgba(239,68,68,0.20)' : 'rgba(239,68,68,0.20)'}`,
+      background: 'rgba(239,68,68,0.04)',
+      padding: '0.875rem',
+    }}>
+      <p style={{ fontSize: '0.8rem', fontWeight: 600, color: '#7f1d1d', marginBottom: '0.25rem' }}>
+        Are you sure?
+      </p>
+      <p style={{ fontSize: '0.775rem', color: '#991b1b', marginBottom: '0.2rem' }}>{c.message}</p>
+      <p style={{ fontSize: '0.75rem', color: 'var(--ink-light)', marginBottom: '0.875rem' }}>{c.confirm}</p>
+      <div style={{ display: 'flex', gap: '0.5rem' }}>
+        <ActionBtn onClick={onCancel} variant="ghost" disabled={saving}>
+          Cancel
+        </ActionBtn>
+        <ActionBtn onClick={onConfirm} variant="danger" disabled={saving}>
+          {saving ? 'Working…' : c.confirmLabel}
+        </ActionBtn>
+      </div>
+    </div>
   )
 }
 
@@ -107,31 +171,38 @@ function RoundModal({
   endsAt: string | null
   onClose: () => void
 }) {
+  const [view, setView]               = useState<ModalView>('main')
+  const [confirmAction, setConfirm]   = useState<ConfirmAction | null>(null)
+
+  // Form fields — shared between new/draft/active forms
   const [name, setName]         = useState(initName ?? '')
   const [startsAt, setStartsAt] = useState(toDatetimeLocal(initStartsAt))
   const [endsAt, setEndsAt]     = useState(toDatetimeLocal(initEndsAt))
-  const [saving, setSaving]     = useState(false)
-  const [error, setError]       = useState('')
+
+  const [saving, setSaving] = useState(false)
+  const [error, setError]   = useState('')
   const router  = useRouter()
   const trapRef = useRef<HTMLDivElement>(null)
 
-  // Close on Escape
   useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose()
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (confirmAction) { setConfirm(null); return }
+        if (view === 'new-form') { setView('main'); return }
+        onClose()
+      }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
+  }, [onClose, confirmAction, view])
 
-  // Prevent background scroll
   useEffect(() => {
     document.body.style.overflow = 'hidden'
     return () => { document.body.style.overflow = '' }
   }, [])
 
   // ── API ─────────────────────────────────────────────────────────────────────
-  async function save(patch: Record<string, unknown>) {
+  async function callApi(patch: Record<string, unknown>, opts?: { keepOpen?: boolean }) {
     setSaving(true)
     setError('')
     try {
@@ -145,43 +216,57 @@ function RoundModal({
         throw new Error(d.error ?? 'Failed to save')
       }
       router.refresh()
-      onClose()
+      if (!opts?.keepOpen) onClose()
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Something went wrong')
+    } finally {
       setSaving(false)
     }
   }
 
-  // ── Action handlers ─────────────────────────────────────────────────────────
-  const commonFields = () => ({
-    name: name.trim() || 'Idea Round',
+  // ── Handlers ─────────────────────────────────────────────────────────────────
+  const roundFields = () => ({
+    name:     name.trim() || 'Idea Round',
     startsAt: fromDatetimeLocal(startsAt),
     endsAt:   fromDatetimeLocal(endsAt),
   })
 
-  const handleSaveDraft   = () => save({ ...commonFields(), status: 'draft'  })
-  const handleStartRound  = () => save({ ...commonFields(), status: 'active' })
-  const handleSaveChanges = () => save({ ...commonFields(), status: initStatus ?? 'active' })
-  const handleCloseRound  = () => save({ status: 'closed' })
-  const handleReopen      = () => save({ status: 'active' })
-  const handleNewRound    = () => {
+  const handleSaveDraft   = () => callApi({ ...roundFields(), status: 'draft'  })
+  const handleStartRound  = () => callApi({ ...roundFields(), status: 'active' })
+  const handleSaveChanges = () => callApi({ ...roundFields(), status: initStatus ?? 'active' })
+  const handleCloseRound  = () => callApi({ status: 'closed' })
+  const handleReopen      = () => callApi({ status: 'active' })
+  const handleArchive     = () => callApi({ name: null, status: null, startsAt: null, endsAt: null })
+
+  // "Start new round" → open inline form with cleared fields
+  function openNewForm() {
     setName('')
     setStartsAt('')
     setEndsAt('')
-    save({ name: null, status: null, startsAt: null, endsAt: null })
+    setConfirm(null)
+    setView('new-form')
   }
 
-  // ── What the modal body shows depends on current status ─────────────────────
+  // ── Status flags ─────────────────────────────────────────────────────────────
   const isNew    = initStatus === null
   const isDraft  = initStatus === 'draft'
   const isActive = initStatus === 'active'
   const isClosed = initStatus === 'closed'
 
+  // ── Modal title ──────────────────────────────────────────────────────────────
+  const title = view === 'new-form'
+    ? 'Start a new round'
+    : initStatus === null ? 'Set up idea round' : 'Manage idea round'
+
   return (
     <>
       {/* Backdrop */}
       <div
-        onClick={onClose}
+        onClick={() => {
+          if (confirmAction) { setConfirm(null); return }
+          if (view === 'new-form') { setView('main'); return }
+          onClose()
+        }}
         style={{
           position: 'fixed', inset: 0, zIndex: 900,
           background: 'rgba(13,31,53,0.45)',
@@ -191,17 +276,19 @@ function RoundModal({
         aria-hidden
       />
 
-      {/* Modal */}
+      {/* Modal panel */}
       <div
         ref={trapRef}
         role="dialog"
         aria-modal="true"
-        aria-label="Manage idea round"
+        aria-label={title}
         style={{
           position: 'fixed', zIndex: 901,
           top: '50%', left: '50%',
           transform: 'translate(-50%, -50%)',
-          width: 'min(28rem, calc(100vw - 2rem))',
+          width: 'min(29rem, calc(100vw - 2rem))',
+          maxHeight: 'calc(100vh - 3rem)',
+          overflowY: 'auto',
           background: '#ffffff',
           borderRadius: '1.125rem',
           border: '1px solid rgba(26,107,191,0.12)',
@@ -216,31 +303,30 @@ function RoundModal({
           borderBottom: '1px solid rgba(26,107,191,0.08)',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-            <p style={{
-              fontSize: '0.875rem', fontWeight: 700,
-              color: 'var(--ink)', letterSpacing: '-0.01em',
-            }}>
-              Manage idea round
+            {view === 'new-form' && (
+              <button
+                type="button"
+                onClick={() => setView('main')}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '1.5rem', height: '1.5rem', borderRadius: '0.35rem', background: 'transparent', border: '1px solid var(--tint-border)', color: 'var(--ink-light)', cursor: 'pointer', padding: 0, marginRight: '0.125rem' }}
+                aria-label="Back"
+              >
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M15 18l-6-6 6-6"/>
+                </svg>
+              </button>
+            )}
+            <p style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--ink)', letterSpacing: '-0.01em' }}>
+              {title}
             </p>
-            {initStatus !== null && <StatusBadge status={initStatus} />}
+            {view === 'main' && initStatus !== null && <StatusBadge status={initStatus} />}
           </div>
           <button
             type="button"
             onClick={onClose}
-            style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              width: '1.75rem', height: '1.75rem',
-              borderRadius: '0.4rem',
-              background: 'transparent',
-              border: '1px solid var(--tint-border)',
-              color: 'var(--ink-light)',
-              cursor: 'pointer', padding: 0,
-            }}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '1.75rem', height: '1.75rem', borderRadius: '0.4rem', background: 'transparent', border: '1px solid var(--tint-border)', color: 'var(--ink-light)', cursor: 'pointer', padding: 0 }}
             aria-label="Close"
           >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" strokeWidth="2.5"
-              strokeLinecap="round" strokeLinejoin="round">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M18 6L6 18M6 6l12 12"/>
             </svg>
           </button>
@@ -249,25 +335,21 @@ function RoundModal({
         {/* Body */}
         <div style={{ padding: '1.25rem' }}>
 
-          {/* ── NEW or DRAFT — full setup form ── */}
-          {(isNew || isDraft) && (
+          {/* ════════════════════════════════════════
+              VIEW: new-form (start a new round)
+          ════════════════════════════════════════ */}
+          {view === 'new-form' && (
             <>
-              {isDraft && (
+              {isClosed && (
                 <div style={{
-                  fontSize: '0.775rem', color: '#92400e',
-                  background: 'rgba(245,158,11,0.07)',
-                  border: '1px solid rgba(245,158,11,0.18)',
+                  fontSize: '0.775rem', color: '#64748b',
+                  background: 'rgba(0,0,0,0.03)',
+                  border: '1px solid var(--tint-border)',
                   borderRadius: '0.5rem', padding: '0.625rem 0.875rem',
                   marginBottom: '1.125rem', lineHeight: 1.5,
                 }}>
-                  This round is in draft. Employees cannot submit ideas until you start it.
+                  The current round will be archived when you start this new one.
                 </div>
-              )}
-
-              {isNew && (
-                <p style={{ fontSize: '0.825rem', color: 'var(--ink-light)', lineHeight: 1.65, marginBottom: '1.125rem' }}>
-                  Create a named idea collection window — like &ldquo;Q3 improvements&rdquo; or &ldquo;Innovation week&rdquo;.
-                </p>
               )}
 
               <FormField label="Round name">
@@ -284,14 +366,12 @@ function RoundModal({
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.625rem', marginBottom: '1.25rem' }}>
                 <FormField label="Opens (optional)" noMargin>
-                  <input type="datetime-local" className="input"
-                    value={startsAt} onChange={e => setStartsAt(e.target.value)}
-                    disabled={saving} style={{ fontSize: '0.775rem' }} />
+                  <input type="datetime-local" className="input" value={startsAt}
+                    onChange={e => setStartsAt(e.target.value)} disabled={saving} style={{ fontSize: '0.775rem' }} />
                 </FormField>
                 <FormField label="Closes (optional)" noMargin>
-                  <input type="datetime-local" className="input"
-                    value={endsAt} onChange={e => setEndsAt(e.target.value)}
-                    disabled={saving} style={{ fontSize: '0.775rem' }} />
+                  <input type="datetime-local" className="input" value={endsAt}
+                    onChange={e => setEndsAt(e.target.value)} disabled={saving} style={{ fontSize: '0.775rem' }} />
                 </FormField>
               </div>
 
@@ -306,87 +386,159 @@ function RoundModal({
             </>
           )}
 
-          {/* ── ACTIVE — edit + close ── */}
-          {isActive && (
+          {/* ════════════════════════════════════════
+              VIEW: main
+          ════════════════════════════════════════ */}
+          {view === 'main' && (
             <>
-              <FormField label="Round name">
-                <input
-                  className="input"
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  placeholder="Round name"
-                  maxLength={60}
-                  disabled={saving}
-                  autoFocus
-                />
-              </FormField>
+              {/* ── NEW or DRAFT ── */}
+              {(isNew || isDraft) && (
+                <>
+                  {isDraft && (
+                    <div style={{ fontSize: '0.775rem', color: '#92400e', background: 'rgba(245,158,11,0.07)', border: '1px solid rgba(245,158,11,0.18)', borderRadius: '0.5rem', padding: '0.625rem 0.875rem', marginBottom: '1.125rem', lineHeight: 1.5 }}>
+                      In draft — employees cannot submit ideas until you start this round.
+                    </div>
+                  )}
+                  {isNew && (
+                    <p style={{ fontSize: '0.825rem', color: 'var(--ink-light)', lineHeight: 1.65, marginBottom: '1.125rem' }}>
+                      Create a named collection window — like &ldquo;Q3 improvements&rdquo; or &ldquo;Innovation week&rdquo;. Only active rounds accept idea submissions.
+                    </p>
+                  )}
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.625rem', marginBottom: '1.25rem' }}>
-                <FormField label="Opens (optional)" noMargin>
-                  <input type="datetime-local" className="input"
-                    value={startsAt} onChange={e => setStartsAt(e.target.value)}
-                    disabled={saving} style={{ fontSize: '0.775rem' }} />
-                </FormField>
-                <FormField label="Closes (optional)" noMargin>
-                  <input type="datetime-local" className="input"
-                    value={endsAt} onChange={e => setEndsAt(e.target.value)}
-                    disabled={saving} style={{ fontSize: '0.775rem' }} />
-                </FormField>
-              </div>
+                  <FormField label="Round name">
+                    <input className="input" value={name} onChange={e => setName(e.target.value)}
+                      placeholder="e.g. Q3 improvements, Innovation week…" maxLength={60} disabled={saving} autoFocus />
+                  </FormField>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.625rem', marginBottom: '1.25rem' }}>
+                    <FormField label="Opens (optional)" noMargin>
+                      <input type="datetime-local" className="input" value={startsAt}
+                        onChange={e => setStartsAt(e.target.value)} disabled={saving} style={{ fontSize: '0.775rem' }} />
+                    </FormField>
+                    <FormField label="Closes (optional)" noMargin>
+                      <input type="datetime-local" className="input" value={endsAt}
+                        onChange={e => setEndsAt(e.target.value)} disabled={saving} style={{ fontSize: '0.775rem' }} />
+                    </FormField>
+                  </div>
 
-              <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginBottom: '1rem' }}>
-                <ActionBtn onClick={onClose} variant="ghost">Cancel</ActionBtn>
-                <ActionBtn onClick={handleSaveChanges} disabled={saving} variant="secondary">
-                  {saving ? 'Saving…' : 'Save changes'}
-                </ActionBtn>
-              </div>
+                  <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                    <ActionBtn onClick={handleSaveDraft} disabled={saving} variant="ghost">
+                      Save as draft
+                    </ActionBtn>
+                    <ActionBtn onClick={handleStartRound} disabled={saving} variant="primary">
+                      {saving ? 'Starting…' : 'Start round'}
+                    </ActionBtn>
+                  </div>
+                </>
+              )}
 
-              {/* Divider before destructive action */}
-              <div style={{ borderTop: '1px solid rgba(239,68,68,0.12)', paddingTop: '1rem' }}>
-                <p style={{ fontSize: '0.775rem', color: 'var(--ink-light)', marginBottom: '0.625rem' }}>
-                  Closing the round locks idea submission for everyone.
+              {/* ── ACTIVE ── */}
+              {isActive && (
+                <>
+                  <FormField label="Round name">
+                    <input className="input" value={name} onChange={e => setName(e.target.value)}
+                      placeholder="Round name" maxLength={60} disabled={saving} autoFocus />
+                  </FormField>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.625rem', marginBottom: '1.25rem' }}>
+                    <FormField label="Opens (optional)" noMargin>
+                      <input type="datetime-local" className="input" value={startsAt}
+                        onChange={e => setStartsAt(e.target.value)} disabled={saving} style={{ fontSize: '0.775rem' }} />
+                    </FormField>
+                    <FormField label="Closes (optional)" noMargin>
+                      <input type="datetime-local" className="input" value={endsAt}
+                        onChange={e => setEndsAt(e.target.value)} disabled={saving} style={{ fontSize: '0.775rem' }} />
+                    </FormField>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginBottom: '1.25rem' }}>
+                    <ActionBtn onClick={onClose} variant="ghost">Cancel</ActionBtn>
+                    <ActionBtn onClick={handleSaveChanges} disabled={saving} variant="secondary">
+                      {saving ? 'Saving…' : 'Save changes'}
+                    </ActionBtn>
+                  </div>
+
+                  {/* Close round — with inline confirmation */}
+                  <div style={{ borderTop: '1px solid rgba(0,0,0,0.07)', paddingTop: '1rem' }}>
+                    {confirmAction === 'close' ? (
+                      <ConfirmPanel
+                        action="close"
+                        onConfirm={handleCloseRound}
+                        onCancel={() => setConfirm(null)}
+                        saving={saving}
+                      />
+                    ) : (
+                      <>
+                        <p style={{ fontSize: '0.775rem', color: 'var(--ink-light)', marginBottom: '0.5rem' }}>
+                          Closing stops idea submission for everyone until you re-open.
+                        </p>
+                        <ActionBtn onClick={() => setConfirm('close')} variant="danger" full>
+                          Close round
+                        </ActionBtn>
+                      </>
+                    )}
+                  </div>
+                </>
+              )}
+
+              {/* ── CLOSED ── */}
+              {isClosed && (
+                <>
+                  {/* Round summary */}
+                  <div style={{ borderRadius: '0.625rem', border: '1px solid rgba(239,68,68,0.15)', background: 'rgba(239,68,68,0.04)', padding: '0.875rem', marginBottom: '1.25rem' }}>
+                    <p style={{ fontSize: '0.825rem', fontWeight: 700, color: 'var(--ink)', marginBottom: '0.2rem' }}>
+                      {initName || 'Unnamed round'}
+                    </p>
+                    {initEndsAt && (
+                      <p style={{ fontSize: '0.775rem', color: 'var(--ink-light)' }}>
+                        Closed {formatDate(initEndsAt)}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Primary actions */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1.25rem' }}>
+                    <ActionBtn onClick={handleReopen} disabled={saving} variant="secondary" full>
+                      Re-open this round
+                    </ActionBtn>
+                    <ActionBtn onClick={openNewForm} disabled={saving} variant="primary" full>
+                      Start new round
+                    </ActionBtn>
+                  </div>
+
+                  {/* Archive — destructive, needs confirmation */}
+                  <div style={{ borderTop: '1px solid rgba(0,0,0,0.07)', paddingTop: '1rem' }}>
+                    {confirmAction === 'archive' ? (
+                      <ConfirmPanel
+                        action="archive"
+                        onConfirm={handleArchive}
+                        onCancel={() => setConfirm(null)}
+                        saving={saving}
+                      />
+                    ) : (
+                      <>
+                        <p style={{ fontSize: '0.775rem', color: 'var(--ink-light)', marginBottom: '0.5rem' }}>
+                          Archive this round to clear its configuration entirely.
+                        </p>
+                        <ActionBtn onClick={() => setConfirm('archive')} variant="ghost" full>
+                          Archive round
+                        </ActionBtn>
+                      </>
+                    )}
+                  </div>
+                </>
+              )}
+
+              {/* Error */}
+              {error && (
+                <p style={{ marginTop: '0.875rem', fontSize: '0.775rem', color: '#dc2626' }}>
+                  {error}
                 </p>
-                <ActionBtn onClick={handleCloseRound} disabled={saving} variant="danger" full>
-                  {saving ? 'Closing…' : 'Close round'}
-                </ActionBtn>
-              </div>
+              )}
             </>
           )}
 
-          {/* ── CLOSED — re-open or start fresh ── */}
-          {isClosed && (
-            <>
-              <div style={{
-                borderRadius: '0.625rem',
-                border: '1px solid rgba(239,68,68,0.15)',
-                background: 'rgba(239,68,68,0.04)',
-                padding: '0.875rem',
-                marginBottom: '1.25rem',
-              }}>
-                <p style={{ fontSize: '0.825rem', fontWeight: 700, color: 'var(--ink)', marginBottom: '0.2rem' }}>
-                  {initName || 'Unnamed round'}
-                </p>
-                {initEndsAt && (
-                  <p style={{ fontSize: '0.775rem', color: 'var(--ink-light)' }}>
-                    Closed {formatDate(initEndsAt)}
-                  </p>
-                )}
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <ActionBtn onClick={handleReopen} disabled={saving} variant="secondary" full>
-                  {saving ? '…' : 'Re-open this round'}
-                </ActionBtn>
-                <ActionBtn onClick={handleNewRound} disabled={saving} variant="primary" full>
-                  {saving ? '…' : 'Start new round'}
-                </ActionBtn>
-              </div>
-            </>
-          )}
-
-          {/* Error */}
-          {error && (
-            <p style={{ marginTop: '0.75rem', fontSize: '0.775rem', color: '#dc2626' }}>
+          {/* Error shown in new-form view too */}
+          {view === 'new-form' && error && (
+            <p style={{ marginTop: '0.875rem', fontSize: '0.775rem', color: '#dc2626' }}>
               {error}
             </p>
           )}
@@ -401,11 +553,7 @@ function RoundModal({
 // ══════════════════════════════════════════════════════════════════════════════
 
 export default function IdeaRoundAdmin({
-  companyId,
-  initialName,
-  initialStatus,
-  initialStartsAt,
-  initialEndsAt,
+  companyId, initialName, initialStatus, initialStartsAt, initialEndsAt,
 }: IdeaRoundAdminProps) {
   const [modalOpen, setModalOpen] = useState(false)
 
@@ -414,30 +562,17 @@ export default function IdeaRoundAdmin({
 
   return (
     <>
-      <div style={{
-        borderRadius: '0.75rem',
-        border: '1px solid var(--border)',
-        background: '#ffffff',
-        overflow: 'hidden',
-      }}>
-        {/* Header row */}
-        <div style={{
-          padding: '0.75rem 1rem',
-          borderBottom: '1px solid var(--tint-border)',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          gap: '0.5rem',
-        }}>
-          <p style={{
-            fontSize: '0.72rem', fontWeight: 700,
-            letterSpacing: '0.12em', textTransform: 'uppercase',
-            color: 'var(--ink-light)',
-          }}>
+      <div style={{ borderRadius: '0.75rem', border: '1px solid var(--border)', background: '#ffffff', overflow: 'hidden' }}>
+
+        {/* Header */}
+        <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid var(--tint-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
+          <p style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink-light)' }}>
             Idea round
           </p>
           {hasRound && <StatusBadge status={initialStatus} />}
         </div>
 
-        {/* Summary body */}
+        {/* Body */}
         <div style={{ padding: '0.875rem 1rem' }}>
           {!hasRound ? (
             <p style={{ fontSize: '0.8rem', color: 'var(--ink-light)', lineHeight: 1.55, marginBottom: '0.875rem' }}>
@@ -454,12 +589,12 @@ export default function IdeaRoundAdmin({
                 </p>
               )}
               {initialStatus === 'draft' && (
-                <p style={{ fontSize: '0.775rem', color: '#92400e', marginTop: '0.25rem' }}>
+                <p style={{ fontSize: '0.775rem', color: '#92400e', marginTop: '0.2rem' }}>
                   Draft — employees cannot submit yet
                 </p>
               )}
               {initialStatus === 'closed' && (
-                <p style={{ fontSize: '0.775rem', color: '#991b1b', marginTop: '0.25rem' }}>
+                <p style={{ fontSize: '0.775rem', color: '#991b1b', marginTop: '0.2rem' }}>
                   Submission is closed
                 </p>
               )}
@@ -470,28 +605,23 @@ export default function IdeaRoundAdmin({
             type="button"
             onClick={() => setModalOpen(true)}
             style={{
-              display: 'inline-flex', alignItems: 'center', gap: '0.35rem',
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem',
+              width: '100%', padding: '0.375rem 0.875rem',
               fontSize: '0.8rem', fontWeight: 600,
               color: 'var(--orange)',
               background: 'rgba(249,115,22,0.07)',
               border: '1px solid rgba(249,115,22,0.18)',
-              borderRadius: '0.45rem',
-              padding: '0.375rem 0.875rem',
-              cursor: 'pointer',
-              width: '100%', justifyContent: 'center',
+              borderRadius: '0.45rem', cursor: 'pointer',
             }}
           >
             {hasRound ? 'Manage round' : 'Set up round'}
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" strokeWidth="2.5"
-              strokeLinecap="round" strokeLinejoin="round">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M9 18l6-6-6-6"/>
             </svg>
           </button>
         </div>
       </div>
 
-      {/* Modal — rendered outside the card */}
       {modalOpen && (
         <RoundModal
           companyId={companyId}
@@ -503,28 +633,5 @@ export default function IdeaRoundAdmin({
         />
       )}
     </>
-  )
-}
-
-// ── FormField helper ──────────────────────────────────────────────────────────
-
-function FormField({
-  label, children, noMargin = false,
-}: {
-  label: string
-  children: React.ReactNode
-  noMargin?: boolean
-}) {
-  return (
-    <div style={{ marginBottom: noMargin ? 0 : '0.875rem' }}>
-      <label style={{
-        display: 'block', fontSize: '0.72rem',
-        fontWeight: 600, color: 'var(--ink-light)',
-        marginBottom: '0.3rem',
-      }}>
-        {label}
-      </label>
-      {children}
-    </div>
   )
 }
