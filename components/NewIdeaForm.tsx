@@ -11,6 +11,13 @@ interface NewIdeaFormProps {
   isAdmin?: boolean
   /** Current custom heading from companies.custom_idea_prompt. Null = use default. */
   customPrompt?: string | null
+  /**
+   * Whether an idea round is currently accepting submissions.
+   * true (default) = open; false = locked (round closed or in draft).
+   */
+  roundActive?: boolean
+  /** Name of the current round, shown in the locked state message. */
+  roundName?: string | null
 }
 
 export default function NewIdeaForm({
@@ -18,6 +25,8 @@ export default function NewIdeaForm({
   companyId,
   isAdmin = false,
   customPrompt = null,
+  roundActive = true,
+  roundName = null,
 }: NewIdeaFormProps) {
   // ── Idea submission state ──────────────────────────────────────────────────
   const [open, setOpen] = useState(false)
@@ -283,6 +292,38 @@ export default function NewIdeaForm({
     )}
   </div>
 )
+
+  // ── Round locked state ────────────────────────────────────────────────────
+  if (!roundActive) {
+    return (
+      <div>
+        {headingBlock}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '0.75rem',
+          padding: '0.875rem 1rem',
+          borderRadius: '1rem',
+          border: '1px solid rgba(239,68,68,0.15)',
+          background: 'rgba(239,68,68,0.03)',
+          color: '#9ab0c8',
+        }}>
+          <span style={{
+            width: '1.75rem', height: '1.75rem', borderRadius: '0.45rem',
+            background: 'rgba(239,68,68,0.08)',
+            color: '#dc2626',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: '0.875rem', flexShrink: 0,
+          }}>
+            🔒
+          </span>
+          <span style={{ fontSize: '0.855rem', fontWeight: 500 }}>
+            {roundName
+              ? `${roundName} is closed — idea submission is not available right now.`
+              : 'Idea submission is closed right now.'}
+          </span>
+        </div>
+      </div>
+    )
+  }
 
   // ── Collapsed state ────────────────────────────────────────────────────────
   if (!open) {

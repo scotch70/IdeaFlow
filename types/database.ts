@@ -19,6 +19,10 @@ export interface Database {
     stripe_customer_id: string | null
     stripe_subscription_id: string | null
     custom_idea_prompt: string | null
+    idea_round_name: string | null
+    idea_round_status: 'draft' | 'active' | 'closed' | null
+    idea_round_starts_at: string | null
+    idea_round_ends_at: string | null
   }
   Insert: {
     id?: string
@@ -29,6 +33,10 @@ export interface Database {
     stripe_customer_id?: string | null
     stripe_subscription_id?: string | null
     custom_idea_prompt?: string | null
+    idea_round_name?: string | null
+    idea_round_status?: 'draft' | 'active' | 'closed' | null
+    idea_round_starts_at?: string | null
+    idea_round_ends_at?: string | null
   }
   Update: {
     id?: string
@@ -39,6 +47,10 @@ export interface Database {
     stripe_customer_id?: string | null
     stripe_subscription_id?: string | null
     custom_idea_prompt?: string | null
+    idea_round_name?: string | null
+    idea_round_status?: 'draft' | 'active' | 'closed' | null
+    idea_round_starts_at?: string | null
+    idea_round_ends_at?: string | null
   }
 }
 

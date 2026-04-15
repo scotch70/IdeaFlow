@@ -412,7 +412,6 @@ export default async function DashboardPage({
                   userId={user.id}
                   companyId={profile.company_id}
                   isAdmin={profile.role === 'admin'}
-                  customPrompt={company?.custom_idea_prompt ?? null}
                 />
               </div>
 
