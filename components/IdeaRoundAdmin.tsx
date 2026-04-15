@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type RoundStatus = 'draft' | 'active' | 'closed'
-type ConfirmAction = 'close' | 'archive'
+type ConfirmAction = 'close' | 'archive' | 'delete'
 type ModalView = 'main' | 'new-form'
 
 export interface IdeaRoundAdminProps {
@@ -112,7 +112,7 @@ function ConfirmPanel({ action, onConfirm, onCancel, saving }: {
   onCancel: () => void
   saving: boolean
 }) {
-  const COPY: Record<ConfirmAction, { message: string; detail: string; confirmLabel: string }> = {
+  const COPY: Record<ConfirmAction, { message: string; detail: string; confirmLabel: string; intense?: boolean }> = {
     close: {
       message:      'Close IdeaFlow?',
       detail:       'Employees will no longer be able to submit ideas. You can re-open it at any time.',
@@ -120,24 +120,38 @@ function ConfirmPanel({ action, onConfirm, onCancel, saving }: {
     },
     archive: {
       message:      'Archive IdeaFlow?',
-      detail:       'This will permanently remove the IdeaFlow configuration. You can set up a new one at any time.',
+      detail:       'This clears the configuration. You can set up a new IdeaFlow at any time.',
       confirmLabel: 'Yes, archive IdeaFlow',
+    },
+    // MVP note: delete and archive do the same DB operation (clear round fields)
+    // because there is no historical rounds table yet. The distinction is UX only —
+    // delete uses stronger language and a more prominent warning.
+    delete: {
+      message:      'Delete IdeaFlow?',
+      detail:       'This permanently removes the IdeaFlow and cannot be undone. The name, dates, and status will be gone.',
+      confirmLabel: 'Yes, delete IdeaFlow',
+      intense:      true,
     },
   }
   const c = COPY[action]
   return (
     <div style={{
       borderRadius: '0.625rem',
-      border: '1px solid rgba(239,68,68,0.20)',
-      background: 'rgba(239,68,68,0.04)',
+      border: c.intense ? '1px solid rgba(239,68,68,0.35)' : '1px solid rgba(239,68,68,0.20)',
+      background: c.intense ? 'rgba(239,68,68,0.08)' : 'rgba(239,68,68,0.04)',
       padding: '0.875rem',
     }}>
       <p style={{ fontSize: '0.8rem', fontWeight: 700, color: '#7f1d1d', marginBottom: '0.25rem' }}>
         {c.message}
       </p>
-      <p style={{ fontSize: '0.775rem', color: '#991b1b', lineHeight: 1.5, marginBottom: '0.875rem' }}>
+      <p style={{ fontSize: '0.775rem', color: '#991b1b', lineHeight: 1.5, marginBottom: c.intense ? '0.5rem' : '0.875rem' }}>
         {c.detail}
       </p>
+      {c.intense && (
+        <p style={{ fontSize: '0.725rem', fontWeight: 600, color: '#7f1d1d', marginBottom: '0.875rem', letterSpacing: '0.01em' }}>
+          ⚠ This action cannot be undone.
+        </p>
+      )}
       <div style={{ display: 'flex', gap: '0.5rem' }}>
         <ActionBtn onClick={onCancel} variant="ghost" disabled={saving}>
           Cancel
@@ -230,7 +244,10 @@ function RoundModal({
   const handleSaveChanges = () => callApi({ ...ideaFlowFields(), status: initStatus ?? 'active' })
   const handleCloseFlow   = () => callApi({ status: 'closed' })
   const handleReopen      = () => callApi({ status: 'active' })
-  const handleArchive     = () => callApi({ name: null, status: null, startsAt: null, endsAt: null })
+  const handleArchive = () => callApi({ name: null, status: null, startsAt: null, endsAt: null })
+  // MVP: delete does the same DB operation as archive (no history table yet).
+  // The distinction is intentional UX — delete uses stronger confirmation copy.
+  const handleDelete  = () => callApi({ name: null, status: null, startsAt: null, endsAt: null })
 
   function openNewForm() {
     setName('')
@@ -467,20 +484,37 @@ function RoundModal({
                     </ActionBtn>
                   </div>
 
-                  {/* Archive IdeaFlow — destructive, requires confirmation */}
-                  <div style={{ borderTop: '1px solid rgba(0,0,0,0.07)', paddingTop: '1rem' }}>
+                  {/* Archive / Delete — both require confirmation */}
+                  <div style={{ borderTop: '1px solid rgba(0,0,0,0.07)', paddingTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
+
+                    {/* Archive */}
                     {confirmAction === 'archive' ? (
                       <ConfirmPanel action="archive" onConfirm={handleArchive} onCancel={() => setConfirm(null)} saving={saving} />
-                    ) : (
-                      <>
-                        <p style={{ fontSize: '0.775rem', color: 'var(--ink-light)', marginBottom: '0.5rem' }}>
-                          Archive IdeaFlow to clear its configuration entirely.
+                    ) : confirmAction !== 'delete' && (
+                      <div>
+                        <p style={{ fontSize: '0.75rem', color: 'var(--ink-light)', marginBottom: '0.375rem' }}>
+                          Archive clears the configuration. You can set up a new IdeaFlow later.
                         </p>
                         <ActionBtn onClick={() => setConfirm('archive')} variant="ghost" full>
                           Archive IdeaFlow
                         </ActionBtn>
-                      </>
+                      </div>
                     )}
+
+                    {/* Delete */}
+                    {confirmAction === 'delete' ? (
+                      <ConfirmPanel action="delete" onConfirm={handleDelete} onCancel={() => setConfirm(null)} saving={saving} />
+                    ) : confirmAction !== 'archive' && (
+                      <div>
+                        <p style={{ fontSize: '0.75rem', color: '#991b1b', marginBottom: '0.375rem' }}>
+                          Delete permanently removes this IdeaFlow and cannot be undone.
+                        </p>
+                        <ActionBtn onClick={() => setConfirm('delete')} variant="danger" full>
+                          Delete IdeaFlow
+                        </ActionBtn>
+                      </div>
+                    )}
+
                   </div>
                 </>
               )}
