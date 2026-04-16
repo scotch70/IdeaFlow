@@ -122,7 +122,10 @@ if (
       return NextResponse.json({ error: inviteError.message }, { status: 500 })
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin
+    // Always use the canonical production domain.
+    // Never fall back to request.nextUrl.origin — that would produce a Vercel
+    // preview URL on non-production deployments.
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://useideaflow.com'
     const joinUrl = `${appUrl}/join?code=${inviteCode}`
 
     if (email?.trim()) {

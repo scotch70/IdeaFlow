@@ -1,7 +1,11 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
+
+// Always use the canonical production domain for invite links.
+// NEXT_PUBLIC_ variables are inlined at build time in client components.
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://useideaflow.com'
 import type { Invite } from '@/types/database'
 import { QRCodeSVG } from 'qrcode.react'
 
@@ -34,11 +38,6 @@ export default function ActiveInvites({ invites }: ActiveInvitesProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [openQrId, setOpenQrId] = useState<string | null>(null)
-  const [origin, setOrigin] = useState('')
-
-  useEffect(() => {
-    setOrigin(window.location.origin)
-  }, [])
 
   async function handleDelete(id: string) {
     setError('')
@@ -63,7 +62,7 @@ export default function ActiveInvites({ invites }: ActiveInvitesProps) {
   async function handleCopy(inviteCode: string, id: string) {
     try {
       await navigator.clipboard.writeText(
-        `${window.location.origin}/join?code=${inviteCode}`
+        `${APP_URL}/join?code=${inviteCode}`
       )
       setCopiedId(id)
       setTimeout(() => setCopiedId(null), 1500)
@@ -126,9 +125,7 @@ export default function ActiveInvites({ invites }: ActiveInvitesProps) {
           invites.map(invite => {
             const showQr = openQrId === invite.id
             
-            const qrValue = origin
-              ? `${origin}/join?code=${invite.invite_code}`
-              : ''
+            const qrValue = `${APP_URL}/join?code=${invite.invite_code}`
 
               const expired = isExpired(invite)
 
@@ -209,16 +206,6 @@ opacity: expired && !invite.used_at ? 0.65 : 1,
   Invited {formatDate(invite.created_at)}
 </p>
 
-<p
-  style={{
-    fontSize: '0.68rem',
-    color: 'var(--ink-faint)',
-    marginTop: '0.1rem',
-  }}
->
-  Invited {formatDate(invite.created_at)}
-</p>
-
 {invite.expires_at && !invite.used_at && (
   <p
     style={{
@@ -240,18 +227,6 @@ opacity: expired && !invite.used_at ? 0.65 : 1,
     }}
   >
     Joined by {invite.profiles?.full_name || 'a team member'} on {formatDate(invite.used_at)}
-  </p>
-)}
-
-{invite.expires_at && !invite.used_at && (
-  <p
-    style={{
-      fontSize: '0.68rem',
-      color: 'var(--ink-faint)',
-      marginTop: '0.1rem',
-    }}
-  >
-    Expires {formatDate(invite.expires_at)}
   </p>
 )}
                   </div>
@@ -335,7 +310,7 @@ opacity: expired && !invite.used_at ? 0.65 : 1,
                   </div>
                 </div>
 
-                {showQr && qrValue && (
+                {showQr && (
                   <div
                     style={{
                       marginTop: '0.75rem',
