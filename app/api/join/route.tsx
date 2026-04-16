@@ -31,19 +31,22 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (inviteError || !invite) {
-      return NextResponse.json({ error: 'Invalid invite code' }, { status: 404 })
+      return NextResponse.json(
+        { error: 'Invalid invite code', errorCode: 'INVITE_INVALID' },
+        { status: 404 }
+      )
     }
 
     if (invite.used_at) {
       return NextResponse.json(
-        { error: 'This invite has already been used' },
+        { error: 'This invite has already been used', errorCode: 'INVITE_USED' },
         { status: 400 }
       )
     }
 
     if (invite.expires_at && new Date(invite.expires_at) < new Date()) {
       return NextResponse.json(
-        { error: 'This invite has expired' },
+        { error: 'This invite has expired', errorCode: 'INVITE_EXPIRED' },
         { status: 400 }
       )
     }

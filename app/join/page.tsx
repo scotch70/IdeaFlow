@@ -21,6 +21,7 @@ export default function JoinPage() {
   const [checkingAuth, setCheckingAuth] = useState(true)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [error, setError] = useState('')
+  const [errorCode, setErrorCode] = useState<'INVITE_INVALID' | 'INVITE_USED' | 'INVITE_EXPIRED' | ''>('')
 
   useEffect(() => {
     const savedCode = window.localStorage.getItem(INVITE_CODE_STORAGE_KEY)
@@ -53,6 +54,7 @@ export default function JoinPage() {
       if (params.get('autoJoin') !== '1') return
       setLoading(true)
       setError('')
+      setErrorCode('')
       try {
         const res = await fetch('/api/join', {
           method: 'POST',
@@ -60,7 +62,10 @@ export default function JoinPage() {
           body: JSON.stringify({ inviteCode: trimmedCode, fullName: name }),
         })
         const data = await res.json()
-        if (!res.ok) throw new Error(data.error || 'Failed to join')
+        if (!res.ok) {
+          if (data?.errorCode) setErrorCode(data.errorCode)
+          throw new Error(data.error || 'Failed to join')
+        }
         window.localStorage.removeItem('ideaflow_invite_code')
         router.push('/dashboard')
       } catch (err: unknown) {
@@ -85,6 +90,7 @@ export default function JoinPage() {
     e.preventDefault()
     setLoading(true)
     setError('')
+    setErrorCode('')
     try {
       const res = await fetch('/api/join', {
         method: 'POST',
@@ -92,7 +98,10 @@ export default function JoinPage() {
         body: JSON.stringify({ inviteCode: trimmedCode, fullName: name }),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Failed to join')
+      if (!res.ok) {
+        if (data?.errorCode) setErrorCode(data.errorCode)
+        throw new Error(data.error || 'Failed to join')
+      }
       window.localStorage.removeItem(INVITE_CODE_STORAGE_KEY)
       router.push('/dashboard')
     } catch (err: unknown) {
@@ -133,6 +142,59 @@ export default function JoinPage() {
       {children}
     </div>
   )
+
+  // ── Fatal invite error states ─────────────────────────────────────────────
+  const FATAL_ERRORS = {
+    INVITE_EXPIRED: {
+      icon: '⏱',
+      heading: 'Invite has expired',
+      body: 'This invite link is no longer valid. Ask your admin to send you a new one.',
+    },
+    INVITE_USED: {
+      icon: '🔒',
+      heading: 'Invite already used',
+      body: 'Each invite can only be accepted once. Contact your admin if you still need access.',
+    },
+    INVITE_INVALID: {
+      icon: '✕',
+      heading: 'Invite not found',
+      body: "We couldn't find that invite code. Double-check the link or ask your admin for a new invite.",
+    },
+  } as const
+
+  if (errorCode && errorCode in FATAL_ERRORS) {
+    const { icon, heading, body } = FATAL_ERRORS[errorCode as keyof typeof FATAL_ERRORS]
+    return pageShell(card(
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+        <div
+          style={{
+            width: '2.75rem',
+            height: '2.75rem',
+            borderRadius: '50%',
+            background: 'rgba(220,38,38,0.08)',
+            border: '1px solid rgba(220,38,38,0.15)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '1.1rem',
+          }}
+        >
+          {icon}
+        </div>
+        <div>
+          <h1 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--ink)', letterSpacing: '-0.02em', lineHeight: 1.2, marginBottom: '0.4rem' }}>
+            {heading}
+          </h1>
+          <p style={{ fontSize: '0.875rem', color: 'var(--ink-light)', lineHeight: 1.6 }}>
+            {body}
+          </p>
+        </div>
+        <Link href="/" className="btn-ghost-dark" style={{ textAlign: 'center' }}>
+          Back to home
+        </Link>
+      </div>
+    ))
+  }
 
   if (checkingAuth) {
     return pageShell(card(
