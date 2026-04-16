@@ -19,21 +19,48 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    // Supabase processes the URL hash on client init and fires PASSWORD_RECOVERY
-    // when it finds a valid recovery token. If INITIAL_SESSION fires first without
-    // a recovery token in the URL, the link is missing or expired.
+    // Supabase sends reset links in two formats depending on the project's auth flow:
+    //
+    //   PKCE (modern default): /reset-password?code=XXXX
+    //     → must call exchangeCodeForSession() to establish the session
+    //
+    //   Implicit (legacy):     /reset-password#access_token=...&type=recovery
+    //     → Supabase JS processes the hash automatically and fires PASSWORD_RECOVERY
+    //
+    // Only mark the link invalid when neither format is detected.
+
+    let resolved = false
+    function resolve(next: 'ready' | 'invalid') {
+      if (resolved) return
+      resolved = true
+      setStatus(next)
+    }
+
+    const searchCode = new URLSearchParams(window.location.search).get('code')
+    const hashType = new URLSearchParams(
+      window.location.hash.replace(/^#/, '')
+    ).get('type')
+
+    // ── PKCE path ──────────────────────────────────────────────────────────
+    if (searchCode) {
+      supabase.auth
+        .exchangeCodeForSession(searchCode)
+        .then(({ error }) => resolve(error ? 'invalid' : 'ready'))
+        .catch(() => resolve('invalid'))
+      // No auth state subscription needed — the exchange result is definitive.
+      return
+    }
+
+    // ── Legacy implicit path ───────────────────────────────────────────────
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') {
-        setStatus('ready')
+        resolve('ready')
       } else if (event === 'INITIAL_SESSION') {
-        // INITIAL_SESSION fires when there is no recovery token to process.
-        // Check the hash so we don't flash "invalid" during the brief window
-        // before PASSWORD_RECOVERY fires (which always comes after INITIAL_SESSION).
-        const hasRecoveryToken = window.location.hash.includes('type=recovery')
-        if (!hasRecoveryToken) {
-          setStatus('invalid')
+        // PASSWORD_RECOVERY fires right after INITIAL_SESSION when the hash
+        // contains a recovery token. Only give up if the hash has no token.
+        if (hashType !== 'recovery') {
+          resolve('invalid')
         }
-        // If the hash has type=recovery, wait for PASSWORD_RECOVERY to fire next.
       }
     })
 
