@@ -5,7 +5,7 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import LogoMark from '@/components/LogoMark'
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://useideaflow.com'
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://useideaflow.com'
 
 export default function ForgotPasswordPage() {
   const supabase = createClient()
