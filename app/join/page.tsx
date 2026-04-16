@@ -20,9 +20,18 @@ export default function JoinPage() {
   const [loading, setLoading] = useState(false)
   const [checkingAuth, setCheckingAuth] = useState(true)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [userEmail, setUserEmail] = useState('')
   const [error, setError] = useState('')
   const [errorCode, setErrorCode] = useState<'INVITE_INVALID' | 'INVITE_USED' | 'INVITE_EXPIRED' | ''>('')
 
+  // ── Invite preview (email mismatch detection) ─────────────────────────────
+  const [inviteEmail, setInviteEmail] = useState<string | null>(null)
+  // inviteCheckDone prevents autoJoin from firing before we know the email
+  const [inviteCheckDone, setInviteCheckDone] = useState(false)
+  // User explicitly acknowledged the mismatch and chose to continue anyway
+  const [mismatchDismissed, setMismatchDismissed] = useState(false)
+
+  // ── Restore code from localStorage ────────────────────────────────────────
   useEffect(() => {
     const savedCode = window.localStorage.getItem(INVITE_CODE_STORAGE_KEY)
     if (codeFromUrl) {
@@ -33,11 +42,13 @@ export default function JoinPage() {
     }
   }, [codeFromUrl])
 
+  // ── Auth check ────────────────────────────────────────────────────────────
   useEffect(() => {
     async function checkAuth() {
       const { data: { user } } = await supabase.auth.getUser()
       setIsLoggedIn(!!user)
       if (user) {
+        setUserEmail(user.email || '')
         const fullName = user.user_metadata?.full_name || user.user_metadata?.name || ''
         if (fullName) setName(fullName)
       }
@@ -48,10 +59,69 @@ export default function JoinPage() {
 
   const trimmedCode = code.trim().toUpperCase()
 
+  // ── Invite email preview fetch ────────────────────────────────────────────
+  // Runs whenever the user is logged in and we have a code.
+  // We don't block unauthenticated users here — they'll hit the API on submit.
+  useEffect(() => {
+    if (!isLoggedIn || !trimmedCode) {
+      // Not logged in or no code yet — nothing to check
+      setInviteEmail(null)
+      setInviteCheckDone(true)
+      return
+    }
+
+    let cancelled = false
+    setInviteCheckDone(false)
+
+    fetch(`/api/invites/preview?code=${encodeURIComponent(trimmedCode)}`)
+      .then(r => r.json())
+      .then(data => {
+        if (cancelled) return
+        setInviteEmail(data.email ?? null)
+      })
+      .catch(() => {
+        if (cancelled) return
+        // Network error — don't block the user, let the join API handle it
+        setInviteEmail(null)
+      })
+      .finally(() => {
+        if (cancelled) return
+        setInviteCheckDone(true)
+      })
+
+    return () => { cancelled = true }
+  }, [isLoggedIn, trimmedCode])
+
+  // Persist code to localStorage as it changes
+  useEffect(() => {
+    if (trimmedCode) window.localStorage.setItem(INVITE_CODE_STORAGE_KEY, trimmedCode)
+  }, [trimmedCode])
+
+  // True when the invite email is known, doesn't match the logged-in user,
+  // and the user hasn't explicitly dismissed the warning.
+  const accountMismatch =
+    isLoggedIn &&
+    inviteCheckDone &&
+    !!inviteEmail &&
+    !!userEmail &&
+    inviteEmail.toLowerCase() !== userEmail.toLowerCase() &&
+    !mismatchDismissed
+
+  const authRedirectUrl = useMemo(() => {
+    const next = trimmedCode ? `/join?code=${encodeURIComponent(trimmedCode)}&autoJoin=1` : '/join'
+    return `/auth?next=${encodeURIComponent(next)}`
+  }, [trimmedCode])
+
+  // ── Auto-join (post-auth redirect) ────────────────────────────────────────
+  // Wait for invite check to complete before auto-joining.
+  // Never auto-join while there is an unacknowledged account mismatch.
   useEffect(() => {
     async function autoJoinIfReady() {
       if (!isLoggedIn || !trimmedCode || !name.trim() || loading) return
+      if (!inviteCheckDone) return         // wait for mismatch check
+      if (accountMismatch) return          // blocked until user decides
       if (params.get('autoJoin') !== '1') return
+
       setLoading(true)
       setError('')
       setErrorCode('')
@@ -75,17 +145,9 @@ export default function JoinPage() {
       }
     }
     autoJoinIfReady()
-  }, [isLoggedIn, trimmedCode, name, loading, params, router])
+  }, [isLoggedIn, trimmedCode, name, loading, inviteCheckDone, accountMismatch, params, router])
 
-  useEffect(() => {
-    if (trimmedCode) window.localStorage.setItem(INVITE_CODE_STORAGE_KEY, trimmedCode)
-  }, [trimmedCode])
-
-  const authRedirectUrl = useMemo(() => {
-    const next = trimmedCode ? `/join?code=${encodeURIComponent(trimmedCode)}&autoJoin=1` : '/join'
-    return `/auth?next=${encodeURIComponent(next)}`
-  }, [trimmedCode])
-
+  // ── Manual join ───────────────────────────────────────────────────────────
   async function handleJoin(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
@@ -111,6 +173,13 @@ export default function JoinPage() {
     }
   }
 
+  // ── Sign out and switch account ───────────────────────────────────────────
+  async function handleSignOutAndSwitch() {
+    await supabase.auth.signOut()
+    router.push(authRedirectUrl)
+  }
+
+  // ── Shared layout helpers ─────────────────────────────────────────────────
   const pageShell = (children: React.ReactNode) => (
     <main
       style={{
@@ -127,7 +196,6 @@ export default function JoinPage() {
     >
       <div aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(ellipse 60% 55% at 30% 60%, rgba(249,115,22,0.09) 0%, transparent 65%)' }} />
       <div style={{ width: '100%', maxWidth: '22rem', position: 'relative', zIndex: 1 }}>
-        {/* Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '2rem', justifyContent: 'center' }}>
           <div style={{ filter: 'drop-shadow(0 3px 12px rgba(240,104,0,0.40))' }}><LogoMark size={30} /></div>
           <span style={{ fontSize: '1.15rem', fontWeight: 800, color: '#fff', letterSpacing: '-0.03em', fontFamily: "'DM Sans', sans-serif" }}>Idea<span style={{ color: '#ffb733' }}>Flow</span></span>
@@ -166,32 +234,14 @@ export default function JoinPage() {
     const { icon, heading, body } = FATAL_ERRORS[errorCode as keyof typeof FATAL_ERRORS]
     return pageShell(card(
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-        <div
-          style={{
-            width: '2.75rem',
-            height: '2.75rem',
-            borderRadius: '50%',
-            background: 'rgba(220,38,38,0.08)',
-            border: '1px solid rgba(220,38,38,0.15)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '1.1rem',
-          }}
-        >
+        <div style={{ width: '2.75rem', height: '2.75rem', borderRadius: '50%', background: 'rgba(220,38,38,0.08)', border: '1px solid rgba(220,38,38,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem' }}>
           {icon}
         </div>
         <div>
-          <h1 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--ink)', letterSpacing: '-0.02em', lineHeight: 1.2, marginBottom: '0.4rem' }}>
-            {heading}
-          </h1>
-          <p style={{ fontSize: '0.875rem', color: 'var(--ink-light)', lineHeight: 1.6 }}>
-            {body}
-          </p>
+          <h1 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--ink)', letterSpacing: '-0.02em', lineHeight: 1.2, marginBottom: '0.4rem' }}>{heading}</h1>
+          <p style={{ fontSize: '0.875rem', color: 'var(--ink-light)', lineHeight: 1.6 }}>{body}</p>
         </div>
-        <Link href="/" className="btn-ghost-dark" style={{ textAlign: 'center' }}>
-          Back to home
-        </Link>
+        <Link href="/" className="btn-ghost-dark" style={{ textAlign: 'center' }}>Back to home</Link>
       </div>
     ))
   }
@@ -202,6 +252,62 @@ export default function JoinPage() {
     ))
   }
 
+  // ── Account mismatch warning ──────────────────────────────────────────────
+  if (accountMismatch) {
+    return pageShell(card(
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        <div>
+          <p style={{ fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#b45309', marginBottom: '0.3rem' }}>
+            Wrong account?
+          </p>
+          <h1 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--ink)', letterSpacing: '-0.02em', lineHeight: 1.2 }}>
+            Check your account
+          </h1>
+        </div>
+
+        {/* Account comparison */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <div style={{ borderRadius: '0.75rem', border: '1px solid rgba(234,179,8,0.25)', background: 'rgba(254,249,195,0.6)', padding: '0.75rem 0.875rem' }}>
+            <p style={{ fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#92400e', marginBottom: '0.2rem' }}>
+              Signed in as
+            </p>
+            <p style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--ink)', wordBreak: 'break-all' }}>
+              {userEmail}
+            </p>
+          </div>
+          <div style={{ borderRadius: '0.75rem', border: '1px solid rgba(34,197,94,0.2)', background: 'rgba(240,253,244,0.8)', padding: '0.75rem 0.875rem' }}>
+            <p style={{ fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#166534', marginBottom: '0.2rem' }}>
+              Invite sent to
+            </p>
+            <p style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--ink)', wordBreak: 'break-all' }}>
+              {inviteEmail}
+            </p>
+          </div>
+        </div>
+
+        <p style={{ fontSize: '0.825rem', color: 'var(--ink-light)', lineHeight: 1.6, marginTop: '-0.25rem' }}>
+          You can continue with your current account, or sign out and log in as the invited address.
+        </p>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
+          <button
+            onClick={handleSignOutAndSwitch}
+            className="btn-primary"
+          >
+            Sign out and use another account
+          </button>
+          <button
+            onClick={() => setMismatchDismissed(true)}
+            className="btn-ghost-dark"
+          >
+            Continue as current user
+          </button>
+        </div>
+      </div>
+    ))
+  }
+
+  // ── Not logged in ─────────────────────────────────────────────────────────
   if (!isLoggedIn) {
     return pageShell(card(
       <>
@@ -233,6 +339,7 @@ export default function JoinPage() {
     ))
   }
 
+  // ── Logged in — join form ─────────────────────────────────────────────────
   return pageShell(card(
     <>
       <div style={{ marginBottom: '1.5rem' }}>
