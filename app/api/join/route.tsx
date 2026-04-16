@@ -48,34 +48,27 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { data: existingProfile, error: existingProfileError } = await (supabase as any)
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
+    // Always use the role from the invite — never inherit any pre-existing role.
+    // A profile may have been auto-created with role:'admin' by a Supabase trigger,
+    // but that should never bleed through to an invited member.
+    const nextRole = (invite.role as string) || 'member'
 
-    if (existingProfileError) {
-      return NextResponse.json(
-        { error: existingProfileError.message },
-        { status: 500 }
+    // Use upsert so this works whether or not a profile row already exists.
+    const { error: upsertProfileError } = await (supabase as any)
+      .from('profiles')
+      .upsert(
+        {
+          id: user.id,
+          full_name: fullName.trim(),
+          company_id: invite.company_id,
+          role: nextRole,
+        },
+        { onConflict: 'id' }
       )
-    }
 
-    const nextRole =
-      existingProfile?.role === 'admin' ? 'admin' : (invite.role || 'member')
-
-    const { error: updateProfileError } = await (supabase as any)
-      .from('profiles')
-      .update({
-        full_name: fullName.trim(),
-        company_id: invite.company_id,
-        role: nextRole,
-      })
-      .eq('id', user.id)
-
-    if (updateProfileError) {
+    if (upsertProfileError) {
       return NextResponse.json(
-        { error: updateProfileError.message },
+        { error: upsertProfileError.message },
         { status: 500 }
       )
     }
