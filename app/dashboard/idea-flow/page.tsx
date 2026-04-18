@@ -6,9 +6,11 @@ import PageContainer from '@/components/PageContainer'
 export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Set Up IdeaFlow — IdeaFlow' }
 
+type RoundStatus = 'draft' | 'active' | 'closed'
+
 type RoundData = {
   idea_round_name: string | null
-  idea_round_status: string | null
+  idea_round_status: RoundStatus | null
   idea_round_starts_at: string | null
   idea_round_ends_at: string | null
 }

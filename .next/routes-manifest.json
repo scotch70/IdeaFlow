@@ -153,6 +153,36 @@
       "namedRegex": "^/dashboard(?:/)?$"
     },
     {
+      "page": "/dashboard/analytics",
+      "regex": "^/dashboard/analytics(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/analytics(?:/)?$"
+    },
+    {
+      "page": "/dashboard/idea-flow",
+      "regex": "^/dashboard/idea\\-flow(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/idea\\-flow(?:/)?$"
+    },
+    {
+      "page": "/dashboard/ideas",
+      "regex": "^/dashboard/ideas(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/ideas(?:/)?$"
+    },
+    {
+      "page": "/dashboard/invites",
+      "regex": "^/dashboard/invites(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/invites(?:/)?$"
+    },
+    {
+      "page": "/dashboard/members",
+      "regex": "^/dashboard/members(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/members(?:/)?$"
+    },
+    {
       "page": "/dashboard/review",
       "regex": "^/dashboard/review(?:/)?$",
       "routeKeys": {},

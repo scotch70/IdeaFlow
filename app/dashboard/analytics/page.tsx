@@ -74,7 +74,7 @@ export default async function AnalyticsPage() {
   const sortedByLikes = [...(ideas ?? [])].sort((a, b) => (b.likes_count ?? 0) - (a.likes_count ?? 0))
   const topIdea =
     sortedByLikes.length > 0 && (sortedByLikes[0].likes_count ?? 0) > 0
-      ? { title: sortedByLikes[0].title, likes: sortedByLikes[0].likes_count }
+      ? { title: sortedByLikes[0].title, likes: sortedByLikes[0].likes_count ?? 0 }
       : null
 
   return (
