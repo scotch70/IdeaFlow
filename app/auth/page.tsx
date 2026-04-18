@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useSearchParams, useRouter } from 'next/navigation'
 import LogoMark from '@/components/LogoMark'
@@ -12,6 +12,14 @@ import LogoMark from '@/components/LogoMark'
 type Mode = 'choose' | 'signup' | 'signin'
 
 export default function AuthPage() {
+  return (
+    <Suspense>
+      <AuthPageInner />
+    </Suspense>
+  )
+}
+
+function AuthPageInner() {
   const router = useRouter()
   const params = useSearchParams()
   const nextUrl = params.get('next') || '/dashboard'
