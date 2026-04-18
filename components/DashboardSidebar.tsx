@@ -1,150 +1,156 @@
 'use client'
 
+/**
+ * DashboardSidebar
+ *
+ * position: fixed — intentionally kept out of the document flow so
+ * the main content column retains its full max-w-7xl width.
+ *
+ * Sidebar width is exposed via --sidebar-w CSS variable on :root so the
+ * layout's margin-left can reference it without hard-coding a number in
+ * two places.
+ */
+
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import LogoMark from '@/components/LogoMark'
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-
-interface NavItem {
-  label: string
-  href: string
-  icon: React.ReactNode
-  adminOnly?: boolean
-  matchExact?: boolean
-}
-
-interface Props {
-  userName: string
-  userEmail: string
-  userRole: string
-}
+// ── Width token (keep in sync with --sidebar-w in globals.css or here) ────────
+const SIDEBAR_W = 200   // px
+const HEADER_H  = '3.625rem'
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
 
-const Icon = {
-  dashboard: (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="3" width="7" height="7" rx="1.5"/>
-      <rect x="14" y="3" width="7" height="7" rx="1.5"/>
-      <rect x="3" y="14" width="7" height="7" rx="1.5"/>
-      <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+function Ico({ d, d2 }: { d: string; d2?: string }) {
+  return (
+    <svg
+      width="14" height="14" viewBox="0 0 24 24"
+      fill="none" stroke="currentColor"
+      strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"
+      style={{ flexShrink: 0 }}
+    >
+      <path d={d} />
+      {d2 && <path d={d2} />}
     </svg>
-  ),
-  ideas: (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z"/>
-      <path d="M9 21h6M10 17v4M14 17v4"/>
-    </svg>
-  ),
-  review: (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M9 11l3 3L22 4"/>
-      <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-    </svg>
-  ),
-  members: (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="9" cy="7" r="4"/>
-      <path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/>
-      <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-      <path d="M21 21v-2a4 4 0 0 0-3-3.87"/>
-    </svg>
-  ),
-  settings: (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="3"/>
-      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-    </svg>
-  ),
-  signout: (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-      <polyline points="16 17 21 12 16 7"/>
-      <line x1="21" y1="12" x2="9" y2="12"/>
-    </svg>
-  ),
+  )
 }
 
-// ── Nav items config ──────────────────────────────────────────────────────────
+const ICONS = {
+  dashboard:  <Ico d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z" />,
+  ideas:      <Ico d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z" d2="M9 21h6" />,
+  review:     <Ico d="M9 11l3 3L22 4" d2="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />,
+  members:    <Ico d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" d2="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm8 0c1.66 0 3-1.34 3-3s-1.34-3-3-3m3 13v-2a4 4 0 0 0-3-3.87" />,
+  invite:     <Ico d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" d2="M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm6 3h6m-3-3v6" />,
+  setup:      <Ico d="M12 20h9" d2="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />,
+  analytics:  <Ico d="M22 12h-4l-3 9L9 3l-3 9H2" />,
+  settings:   <Ico d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm6.93-3c.04-.32.07-.65.07-1s-.03-.68-.07-1l2.16-1.68a.5.5 0 0 0 .12-.64l-2.05-3.55a.5.5 0 0 0-.61-.22l-2.55 1.02a7.46 7.46 0 0 0-1.72-.99L14 2.21A.5.5 0 0 0 13.5 2h-3a.5.5 0 0 0-.5.21l-.38 2.73a7.46 7.46 0 0 0-1.72.99L5.35 4.91a.5.5 0 0 0-.61.22L2.69 8.68a.49.49 0 0 0 .12.64L4.97 11c-.04.32-.07.65-.07 1s.03.68.07 1l-2.16 1.68a.5.5 0 0 0-.12.64l2.05 3.55c.13.22.38.31.61.22l2.55-1.02c.54.38 1.11.7 1.72.99l.38 2.73c.06.28.31.21.5.21h3c.19 0 .44.07.5-.21l.38-2.73a7.46 7.46 0 0 0 1.72-.99l2.55 1.02c.23.09.48 0 .61-.22l2.05-3.55a.49.49 0 0 0-.12-.64L18.93 12z" />,
+  signout:    <Ico d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" d2="M16 17l5-5-5-5M21 12H9" />,
+}
 
-const NAV_ITEMS: NavItem[] = [
-  { label: 'Dashboard',  href: '/dashboard',        icon: Icon.dashboard, matchExact: true },
-  { label: 'Ideas',      href: '/dashboard',        icon: Icon.ideas,     matchExact: true },
-  { label: 'Review',     href: '/dashboard/review', icon: Icon.review,    adminOnly: true },
-  { label: 'Members',    href: '/dashboard',        icon: Icon.members,   matchExact: true },
-  { label: 'Settings',   href: '/settings',         icon: Icon.settings,  matchExact: false },
-]
+// ── Section label ─────────────────────────────────────────────────────────────
 
-// ── NavLink ───────────────────────────────────────────────────────────────────
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <p style={{
+      fontSize: '0.575rem',
+      fontWeight: 700,
+      letterSpacing: '0.1em',
+      textTransform: 'uppercase',
+      color: '#94a3b8',
+      padding: '0 0.5rem',
+      marginBottom: '0.25rem',
+    }}>
+      {children}
+    </p>
+  )
+}
 
-function NavLink({
-  item,
-  isActive,
-}: {
-  item: NavItem
-  isActive: boolean
-}) {
+// ── Nav link ──────────────────────────────────────────────────────────────────
+
+interface NavLinkProps {
+  href: string
+  icon: React.ReactNode
+  label: string
+  active: boolean
+  badge?: number
+}
+
+function NavLink({ href, icon, label, active, badge }: NavLinkProps) {
   return (
     <Link
-      href={item.href}
+      href={href}
       style={{
         display: 'flex',
         alignItems: 'center',
-        gap: '0.625rem',
-        padding: '0.45rem 0.625rem',
-        borderRadius: '8px',
+        gap: '0.5rem',
+        padding: '0.375rem 0.5rem',
+        borderRadius: '7px',
         textDecoration: 'none',
-        background: isActive ? 'rgba(249,115,22,0.09)' : 'transparent',
-        transition: 'background 0.15s ease',
+        background: active ? 'rgba(249,115,22,0.09)' : 'transparent',
+        color: active ? '#c2540a' : '#475569',
+        transition: 'background 0.12s ease, color 0.12s ease',
+        position: 'relative',
       }}
-      className={isActive ? '' : 'sidebar-link-inactive'}
+      className={active ? '' : 'db-nav-inactive'}
     >
-      <span style={{ color: isActive ? '#ea580c' : '#64748b', display: 'flex', flexShrink: 0 }}>
-        {item.icon}
+      <span style={{ color: active ? '#ea580c' : '#94a3b8', display: 'flex', flexShrink: 0 }}>
+        {icon}
       </span>
-      <span
-        style={{
-          fontSize: '0.8rem',
-          fontWeight: isActive ? 700 : 500,
-          color: isActive ? '#c2540a' : '#475569',
-          letterSpacing: '-0.01em',
-        }}
-      >
-        {item.label}
+      <span style={{ fontSize: '0.775rem', fontWeight: active ? 700 : 500, flex: 1, letterSpacing: '-0.01em' }}>
+        {label}
       </span>
-      {isActive && (
-        <span
-          style={{
-            marginLeft: 'auto',
-            width: '5px',
-            height: '5px',
-            borderRadius: '50%',
-            background: '#f97316',
-            flexShrink: 0,
-          }}
-        />
+      {active && (
+        <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#f97316', flexShrink: 0 }} />
+      )}
+      {!active && badge !== undefined && badge > 0 && (
+        <span style={{
+          fontSize: '0.55rem', fontWeight: 700,
+          background: '#f97316', color: '#fff',
+          borderRadius: '999px', padding: '0.1rem 0.35rem',
+          minWidth: '1rem', textAlign: 'center',
+        }}>
+          {badge > 9 ? '9+' : badge}
+        </span>
       )}
     </Link>
   )
 }
 
+// ── Divider ───────────────────────────────────────────────────────────────────
+
+function Divider() {
+  return <div style={{ height: '1px', background: '#e8ecf0', margin: '0.625rem 0' }} />
+}
+
 // ── Main sidebar ──────────────────────────────────────────────────────────────
 
-export default function DashboardSidebar({ userName, userEmail, userRole }: Props) {
+interface Props {
+  userName: string
+  userEmail: string
+  userRole: string
+  pendingReviewCount?: number
+}
+
+export default function DashboardSidebar({
+  userName,
+  userEmail,
+  userRole,
+  pendingReviewCount,
+}: Props) {
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
-  const isAdmin = userRole === 'admin'
 
+  const isAdmin = userRole === 'admin'
   const firstName = userName.split(' ')[0] || 'You'
   const initials = userName
     .split(' ')
     .slice(0, 2)
-    .map((n) => n[0])
+    .map((n) => n[0] ?? '')
     .join('')
     .toUpperCase() || '?'
+
+  const is = (href: string) => pathname === href || pathname.startsWith(href + '/')
 
   async function handleSignOut() {
     await supabase.auth.signOut()
@@ -152,152 +158,115 @@ export default function DashboardSidebar({ userName, userEmail, userRole }: Prop
     router.refresh()
   }
 
-  function isItemActive(item: NavItem): boolean {
-    if (item.matchExact !== false) {
-      return pathname === item.href
-    }
-    return pathname.startsWith(item.href)
-  }
-
-  const visibleItems = NAV_ITEMS.filter((item) => !item.adminOnly || isAdmin)
-
   return (
     <>
-      {/* Hover styles injected globally */}
+      {/* Inject hover styles + sidebar-w variable once */}
       <style>{`
-        .sidebar-link-inactive:hover { background: rgba(0,0,0,0.04) !important; }
-        .sidebar-signout:hover { background: rgba(0,0,0,0.05) !important; color: #0f172a !important; }
+        :root { --sidebar-w: ${SIDEBAR_W}px; }
+        .db-nav-inactive:hover { background: rgba(0,0,0,0.04) !important; }
+        .db-signout-btn:hover  { background: rgba(0,0,0,0.05) !important; }
       `}</style>
 
       <aside
         style={{
-          width: '220px',
-          flexShrink: 0,
-          height: '100vh',
-          position: 'sticky',
-          top: 0,
-          display: 'flex',
-          flexDirection: 'column',
+          position: 'fixed',
+          top: HEADER_H,
+          left: 0,
+          bottom: 0,
+          width: `${SIDEBAR_W}px`,
           background: '#ffffff',
           borderRight: '1px solid #e8ecf0',
-          padding: '1.25rem 0.875rem',
-          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+          padding: '1rem 0.625rem 0.875rem',
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          zIndex: 40,
         }}
       >
-        {/* ── Logo ── */}
-        <Link
-          href="/dashboard"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            marginBottom: '1.75rem',
-            paddingLeft: '0.25rem',
-            textDecoration: 'none',
-          }}
-        >
-          <LogoMark size={30} />
-          <span
-            style={{
-              fontSize: '0.975rem',
-              fontWeight: 800,
-              color: '#0d1f35',
-              letterSpacing: '-0.03em',
-              fontFamily: "'DM Sans', sans-serif",
-            }}
-          >
-            Idea<span style={{ color: '#f97316' }}>Flow</span>
-          </span>
-        </Link>
+        {/* ─────────────────── Workspace nav ─────────────────── */}
+        <SectionLabel>Workspace</SectionLabel>
 
-        {/* ── Nav label ── */}
-        <p
-          style={{
-            fontSize: '0.6rem',
-            fontWeight: 700,
-            letterSpacing: '0.1em',
-            textTransform: 'uppercase',
-            color: '#94a3b8',
-            marginBottom: '0.375rem',
-            paddingLeft: '0.625rem',
-          }}
-        >
-          Workspace
-        </p>
-
-        {/* ── Nav items ── */}
-        <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.125rem' }}>
-          {visibleItems.map((item) => (
-            <NavLink key={item.label} item={item} isActive={isItemActive(item)} />
-          ))}
+        <nav style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginBottom: '0.25rem' }}>
+          <NavLink href="/dashboard"       icon={ICONS.dashboard} label="Dashboard" active={is('/dashboard') && !is('/dashboard/review')} />
+          <NavLink href="/dashboard"       icon={ICONS.ideas}     label="Ideas"     active={false} />
         </nav>
 
-        {/* ── Spacer ── */}
+        {/* ─────────────────── Management (admin) ─────────────── */}
+        {isAdmin && (
+          <>
+            <Divider />
+            <SectionLabel>Management</SectionLabel>
+
+            <nav style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginBottom: '0.25rem' }}>
+              <NavLink
+                href="/dashboard/review"
+                icon={ICONS.review}
+                label="Needs attention"
+                active={is('/dashboard/review')}
+                badge={pendingReviewCount}
+              />
+              <NavLink href="/dashboard#invite-team" icon={ICONS.invite}   label="Generate invite"   active={false} />
+              <NavLink href="/dashboard#idea-rounds" icon={ICONS.setup}    label="Set up IdeaFlow"   active={false} />
+              <NavLink href="/dashboard#analytics"   icon={ICONS.analytics} label="Analytics"        active={false} />
+            </nav>
+          </>
+        )}
+
+        {/* ─────────────────── Team ───────────────────────────── */}
+        <Divider />
+        <SectionLabel>Team</SectionLabel>
+
+        <nav style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+          <NavLink href="/dashboard#members" icon={ICONS.members} label="Members" active={false} />
+        </nav>
+
+        {/* ─────────────────── Spacer ─────────────────────────── */}
         <div style={{ flex: 1 }} />
 
-        {/* ── User footer ── */}
-        <div
-          style={{
-            borderTop: '1px solid #e8ecf0',
-            paddingTop: '0.875rem',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '0.5rem',
-          }}
-        >
-          {/* User card */}
+        {/* ─────────────────── Bottom section ─────────────────── */}
+        <div>
+          <Divider />
+
+          <NavLink href="/settings" icon={ICONS.settings} label="Settings" active={is('/settings')} />
+
+          {/* User block */}
           <div
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '0.625rem',
-              padding: '0.5rem 0.625rem',
+              gap: '0.5rem',
+              padding: '0.5rem',
               borderRadius: '8px',
               background: '#f8fafc',
               border: '1px solid #e8ecf0',
+              marginTop: '0.375rem',
+              marginBottom: '0.375rem',
             }}
           >
             {/* Avatar */}
             <div
               style={{
-                width: '1.875rem',
-                height: '1.875rem',
+                width: '1.75rem',
+                height: '1.75rem',
                 borderRadius: '50%',
                 background: 'linear-gradient(135deg, #f97316, #ea580c)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 flexShrink: 0,
-                fontSize: '0.65rem',
+                fontSize: '0.6rem',
                 fontWeight: 800,
-                color: '#ffffff',
-                letterSpacing: '0.02em',
+                color: '#fff',
               }}
             >
               {initials}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <p
-                style={{
-                  fontSize: '0.72rem',
-                  fontWeight: 700,
-                  color: '#0f172a',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                }}
-              >
+              <p style={{ fontSize: '0.7rem', fontWeight: 700, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {firstName}
               </p>
-              <p
-                style={{
-                  fontSize: '0.6rem',
-                  color: '#94a3b8',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                }}
-              >
+              <p style={{ fontSize: '0.575rem', color: '#94a3b8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {isAdmin ? 'Admin' : 'Member'}
               </p>
             </div>
@@ -306,25 +275,23 @@ export default function DashboardSidebar({ userName, userEmail, userRole }: Prop
           {/* Sign out */}
           <button
             onClick={handleSignOut}
-            className="sidebar-signout"
+            className="db-signout-btn"
             style={{
               display: 'flex',
               alignItems: 'center',
               gap: '0.5rem',
-              padding: '0.45rem 0.625rem',
-              borderRadius: '8px',
+              padding: '0.375rem 0.5rem',
+              borderRadius: '7px',
               background: 'transparent',
               border: 'none',
               cursor: 'pointer',
               width: '100%',
-              textAlign: 'left',
-              transition: 'background 0.15s ease',
+              color: '#64748b',
+              transition: 'background 0.12s ease',
             }}
           >
-            <span style={{ color: '#94a3b8', display: 'flex' }}>{Icon.signout}</span>
-            <span style={{ fontSize: '0.775rem', fontWeight: 500, color: '#64748b' }}>
-              Sign out
-            </span>
+            <span style={{ color: '#94a3b8', display: 'flex' }}>{ICONS.signout}</span>
+            <span style={{ fontSize: '0.75rem', fontWeight: 500 }}>Sign out</span>
           </button>
         </div>
       </aside>

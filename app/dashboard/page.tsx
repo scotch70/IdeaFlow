@@ -239,14 +239,14 @@ export default async function DashboardPage({
 
   return (
     <>
-      {/* ── Page header ── */}
+      {/* ── Page header — sticky below the SiteHeader (3.625rem) ── */}
       <div
         style={{
           background: '#ffffff',
           borderBottom: '1px solid rgba(26,107,191,0.09)',
           position: 'sticky',
-          top: 0,
-          zIndex: 10,
+          top: '3.625rem',   /* SiteHeader height */
+          zIndex: 9,
         }}
       >
         <PageContainer style={{ paddingTop: '1.125rem', paddingBottom: '1.125rem' }}>
@@ -466,26 +466,32 @@ export default async function DashboardPage({
               />
             </section>
 
-            <aside className="space-y-6 self-start lg:sticky lg:top-24">
+            <aside className="space-y-6 self-start lg:sticky" style={{ top: 'calc(3.625rem + 4rem)' }}>
               {profile.role === 'admin' && (
                 <ManagerQueue ideas={ideasWithLikeStatus} />
               )}
 
+              {/* id=idea-rounds — sidebar "Set up IdeaFlow" link scrolls here */}
               {profile.role === 'admin' && (
-                <IdeaRoundAdmin
-                  companyId={profile.company_id}
-                  initialName={roundData?.idea_round_name ?? null}
-                  initialStatus={roundData?.idea_round_status ?? null}
-                  initialStartsAt={roundData?.idea_round_starts_at ?? null}
-                  initialEndsAt={roundData?.idea_round_ends_at ?? null}
-                />
+                <div id="idea-rounds">
+                  <IdeaRoundAdmin
+                    companyId={profile.company_id}
+                    initialName={roundData?.idea_round_name ?? null}
+                    initialStatus={roundData?.idea_round_status ?? null}
+                    initialStartsAt={roundData?.idea_round_starts_at ?? null}
+                    initialEndsAt={roundData?.idea_round_ends_at ?? null}
+                  />
+                </div>
               )}
 
-              <TeamMembers
-                members={members ?? []}
-                currentUserId={user.id}
-                currentUserRole={profile.role}
-              />
+              {/* id=members — sidebar "Members" link scrolls here */}
+              <div id="members">
+                <TeamMembers
+                  members={members ?? []}
+                  currentUserId={user.id}
+                  currentUserRole={profile.role}
+                />
+              </div>
 
               {profile.role === 'admin' && (
                 <ActiveInvites invites={invites ?? []} />
@@ -509,7 +515,9 @@ export default async function DashboardPage({
             <ImplementedIdeas ideas={ideasWithLikeStatus} />
           </div>
 
+          {/* id=analytics — sidebar "Analytics" link scrolls here */}
           <div
+            id="analytics"
             style={{
               marginTop: '2rem',
               paddingTop: '2rem',

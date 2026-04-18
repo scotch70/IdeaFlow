@@ -1,6 +1,11 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import DashboardSidebar from '@/components/DashboardSidebar'
+import SiteHeader from '@/components/SiteHeader'
+
+// The SiteHeader inner-container is exactly 3.625rem tall.
+// We export this as a CSS custom property so the sidebar can reference it.
+export const HEADER_HEIGHT = '3.625rem'
 
 export default async function DashboardLayout({
   children,
@@ -25,31 +30,35 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        height: '100vh',
-        overflow: 'hidden',
-        background: 'var(--page-bg)',
-      }}
-    >
-      <DashboardSidebar
-        userName={profile?.full_name ?? ''}
-        userEmail={user.email ?? ''}
-        userRole={profile?.role ?? 'member'}
-      />
+    <>
+      {/* ── Top navbar — full viewport width, sticky ── */}
+      <SiteHeader />
 
-      {/* Scrollable content area */}
-      <div
-        style={{
-          flex: 1,
-          overflowY: 'auto',
-          overflowX: 'hidden',
-          minWidth: 0,
-        }}
-      >
-        {children}
+      {/*
+        ── Sidebar + content shell ──────────────────────────────────────────
+        The sidebar is position:fixed so it does NOT steal width from the
+        content column.  The content div gets margin-left equal to the
+        sidebar width so it starts to the right of the sidebar.
+        PageContainer (max-w-7xl mx-auto) then centres inside the remaining
+        viewport width — identical to the old top-nav-only layout.
+      */}
+      <div style={{ position: 'relative', background: 'var(--page-bg)' }}>
+        <DashboardSidebar
+          userName={profile?.full_name ?? ''}
+          userEmail={user.email ?? ''}
+          userRole={profile?.role ?? 'member'}
+        />
+
+        {/* Content: starts to the right of the fixed sidebar */}
+        <div
+          style={{
+            marginLeft: 'var(--sidebar-w, 200px)',
+            minHeight: `calc(100vh - ${HEADER_HEIGHT})`,
+          }}
+        >
+          {children}
+        </div>
       </div>
-    </div>
+    </>
   )
 }

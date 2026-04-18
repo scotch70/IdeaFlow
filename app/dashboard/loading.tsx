@@ -10,11 +10,14 @@ export default function DashboardLoading() {
     <div>
       <style>{`@keyframes shimmer { 0% { background-position: 200% 0 } 100% { background-position: -200% 0 } }`}</style>
 
-      {/* Sticky page-header skeleton */}
+      {/* Sticky page-header skeleton — top:3.625rem so it sits below SiteHeader */}
       <div style={{
         background: '#ffffff',
         borderBottom: '1px solid rgba(26,107,191,0.09)',
         padding: '1.125rem 1.5rem',
+        position: 'sticky',
+        top: '3.625rem',
+        zIndex: 9,
       }}>
         <div style={{ maxWidth: '80rem', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
