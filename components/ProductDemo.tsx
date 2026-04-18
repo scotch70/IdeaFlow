@@ -1,119 +1,144 @@
 'use client'
 
 /**
- * ProductDemo — animated hero mockup for the IdeaFlow landing page.
- *
+ * ProductDemo — animated light-theme hero mockup for the IdeaFlow landing page.
  * Requires: npm install framer-motion
- *
- * Drop into any page: <ProductDemo />
  */
 
 import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+// ── Data ──────────────────────────────────────────────────────────────────────
 
-type BadgeLabel = 'Under Review' | 'Planned' | 'Implemented' | null
-
-// ── Design tokens ─────────────────────────────────────────────────────────────
-
-const C = {
-  bg: '#0d1117',
-  chrome: '#161b22',
-  border: 'rgba(255,255,255,0.08)',
-  borderFaint: 'rgba(255,255,255,0.05)',
-  text: 'rgba(255,255,255,0.88)',
-  textMid: 'rgba(255,255,255,0.5)',
-  textFaint: 'rgba(255,255,255,0.28)',
-  card: 'rgba(255,255,255,0.04)',
-  orange: '#f97316',
-} as const
-
-const BADGE: Record<string, { bg: string; color: string }> = {
-  'Under Review': { bg: 'rgba(251,191,36,0.12)',  color: '#fbbf24' },
-  'Planned':      { bg: 'rgba(139,92,246,0.12)',  color: '#a78bfa' },
-  'Implemented':  { bg: 'rgba(34,197,94,0.12)',   color: '#4ade80' },
-}
-
-const ease = [0.25, 0.46, 0.45, 0.94] as const
+const IDEAS = [
+  {
+    id: 1,
+    title: 'Let employees suggest improvements anonymously',
+    category: 'People & HR',
+    finalVotes: 31,
+    color: '#f97316',
+  },
+  {
+    id: 2,
+    title: 'Better shift handover between teams',
+    category: 'Operations',
+    finalVotes: 24,
+    color: '#94a3b8',
+  },
+  {
+    id: 3,
+    title: 'Show which ideas leadership has acted on',
+    category: 'Leadership',
+    finalVotes: 18,
+    color: '#94a3b8',
+  },
+]
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
-function StatusBadge({ label }: { label: string }) {
-  const s = BADGE[label]
-  if (!s) return null
+function HeartIcon({ filled, color }: { filled: boolean; color: string }) {
   return (
-    <motion.span
-      initial={{ opacity: 0, scale: 0.75 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.75 }}
-      transition={{ duration: 0.3, ease }}
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: '0.3rem',
-        padding: '0.18rem 0.55rem',
-        borderRadius: '9999px',
-        fontSize: '10px',
-        fontWeight: 700,
-        letterSpacing: '0.03em',
-        background: s.bg,
-        color: s.color,
-        border: `1px solid ${s.color}28`,
-        whiteSpace: 'nowrap',
-        flexShrink: 0,
-      }}
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill={filled ? color : 'none'}
+      stroke={color}
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
     >
-      <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: s.color, display: 'inline-block' }} />
-      {label}
-    </motion.span>
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+    </svg>
   )
 }
 
-function IdeaCard({
-  title,
-  category,
-  votes,
-  badge,
-}: {
+function CategoryPill({ label }: { label: string }) {
+  return (
+    <span
+      style={{
+        display: 'inline-block',
+        fontSize: '0.6rem',
+        fontWeight: 600,
+        letterSpacing: '0.04em',
+        color: '#64748b',
+        background: '#f1f5f9',
+        border: '1px solid #e2e8f0',
+        borderRadius: '999px',
+        padding: '0.15rem 0.5rem',
+      }}
+    >
+      {label}
+    </span>
+  )
+}
+
+interface IdeaCardProps {
   title: string
   category: string
-  votes: number | string
-  badge: BadgeLabel
-}) {
+  votes: number
+  highlighted: boolean
+  color: string
+  filled: boolean
+}
+
+function IdeaCard({ title, category, votes, highlighted, color, filled }: IdeaCardProps) {
   return (
-    <div
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 14 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.45, ease: [0.25, 0.46, 0.45, 0.94] }}
       style={{
         display: 'flex',
         alignItems: 'flex-start',
         gap: '0.75rem',
-        padding: '0.875rem 1rem',
-        borderRadius: '0.75rem',
-        border: `1px solid ${C.border}`,
-        background: C.card,
+        padding: '0.75rem 0.875rem',
+        borderRadius: '10px',
+        background: highlighted ? 'rgba(249,115,22,0.04)' : '#ffffff',
+        border: `1px solid ${highlighted ? 'rgba(249,115,22,0.22)' : '#e8ecf0'}`,
+        boxShadow: highlighted
+          ? '0 2px 12px rgba(249,115,22,0.10)'
+          : '0 1px 4px rgba(0,0,0,0.05)',
+        transition: 'box-shadow 0.3s ease, border-color 0.3s ease, background 0.3s ease',
       }}
     >
-      {/* Upvote column */}
+      {/* Vote button */}
       <div
         style={{
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          gap: '3px',
+          gap: '0.15rem',
           minWidth: '1.75rem',
-          paddingTop: '2px',
+          paddingTop: '0.05rem',
         }}
       >
-        <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-          <path d="M5 0.5L9.5 7.5H0.5L5 0.5Z" fill="rgba(255,255,255,0.35)" />
-        </svg>
+        <div
+          style={{
+            width: '1.625rem',
+            height: '1.625rem',
+            borderRadius: '7px',
+            background: filled ? 'rgba(249,115,22,0.08)' : '#f8fafc',
+            border: `1px solid ${filled ? 'rgba(249,115,22,0.20)' : '#e8ecf0'}`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'background 0.3s ease, border-color 0.3s ease',
+          }}
+        >
+          <HeartIcon filled={filled} color={filled ? color : '#cbd5e1'} />
+        </div>
         <span
           style={{
-            fontSize: '13px',
+            fontSize: '0.62rem',
             fontWeight: 700,
-            lineHeight: 1,
-            color: C.text,
+            color: filled ? color : '#94a3b8',
             fontVariantNumeric: 'tabular-nums',
+            lineHeight: 1,
+            transition: 'color 0.3s ease',
+            minWidth: '1.5rem',
+            textAlign: 'center',
           }}
         >
           {votes}
@@ -122,77 +147,20 @@ function IdeaCard({
 
       {/* Content */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: '0.5rem',
-            marginBottom: '0.375rem',
-          }}
-        >
-          <span
-            style={{
-              fontSize: '10px',
-              fontWeight: 600,
-              textTransform: 'uppercase',
-              letterSpacing: '0.08em',
-              color: C.textFaint,
-              flexShrink: 0,
-            }}
-          >
-            {category}
-          </span>
-
-          <AnimatePresence mode="wait">
-            {badge && <StatusBadge key={badge} label={badge} />}
-          </AnimatePresence>
-        </div>
-
         <p
           style={{
-            fontSize: '12.5px',
-            lineHeight: 1.55,
-            color: C.text,
-            margin: 0,
+            fontSize: '0.78rem',
+            fontWeight: 600,
+            color: '#0f172a',
+            lineHeight: 1.45,
+            marginBottom: '0.35rem',
           }}
         >
           {title}
         </p>
+        <CategoryPill label={category} />
       </div>
-    </div>
-  )
-}
-
-function SidebarItem({ label, active }: { label: string; active: boolean }) {
-  return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.5rem',
-        padding: '0.375rem 0.625rem',
-        borderRadius: '0.5rem',
-        fontSize: '12px',
-        fontWeight: active ? 600 : 400,
-        color: active ? C.orange : C.textFaint,
-        background: active ? 'rgba(249,115,22,0.10)' : 'transparent',
-        cursor: 'default',
-        userSelect: 'none',
-      }}
-    >
-      <span
-        style={{
-          width: '5px',
-          height: '5px',
-          borderRadius: '50%',
-          background: 'currentColor',
-          opacity: active ? 0.8 : 0.5,
-          flexShrink: 0,
-        }}
-      />
-      {label}
-    </div>
+    </motion.div>
   )
 }
 
@@ -202,127 +170,113 @@ export default function ProductDemo() {
   const [showCard1, setShowCard1] = useState(false)
   const [showCard2, setShowCard2] = useState(false)
   const [showCard3, setShowCard3] = useState(false)
-  const [badge1, setBadge1] = useState<BadgeLabel>(null)
-  const [badge2, setBadge2] = useState<BadgeLabel>(null)
   const [card1Votes, setCard1Votes] = useState(0)
+  const [card1Highlighted, setCard1Highlighted] = useState(false)
   const [showFooter, setShowFooter] = useState(false)
 
   const timers = useRef<ReturnType<typeof setTimeout>[]>([])
-  const raf = useRef<number>(0)
+  const raf = useRef<number | null>(null)
 
   function clearAll() {
     timers.current.forEach(clearTimeout)
     timers.current = []
-    cancelAnimationFrame(raf.current)
+    if (raf.current !== null) cancelAnimationFrame(raf.current)
   }
 
-  function schedule(fn: () => void, ms: number) {
-    timers.current.push(setTimeout(fn, ms))
+  function push(fn: () => void, delay: number) {
+    timers.current.push(setTimeout(fn, delay))
   }
 
-  function countUp(to: number, durationMs: number) {
-    const t0 = Date.now()
-    function tick() {
-      const p = Math.min((Date.now() - t0) / durationMs, 1)
+  function countUp(target: number, duration: number, setter: (v: number) => void) {
+    const start = performance.now()
+    function tick(now: number) {
+      const p = Math.min((now - start) / duration, 1)
       const eased = 1 - Math.pow(1 - p, 3) // ease-out-cubic
-      setCard1Votes(Math.round(to * eased))
-      if (p < 1) raf.current = requestAnimationFrame(tick)
+      setter(Math.round(eased * target))
+      if (p < 1) {
+        raf.current = requestAnimationFrame(tick)
+      }
     }
     raf.current = requestAnimationFrame(tick)
   }
 
+  function runSequence() {
+    clearAll()
+    setShowCard1(false)
+    setShowCard2(false)
+    setShowCard3(false)
+    setCard1Votes(0)
+    setCard1Highlighted(false)
+    setShowFooter(false)
+
+    // Card 1 slides in + votes count up
+    push(() => {
+      setShowCard1(true)
+      push(() => countUp(31, 1100, setCard1Votes), 150)
+    }, 700)
+
+    // Card 2
+    push(() => setShowCard2(true), 1900)
+
+    // Card 3
+    push(() => setShowCard3(true), 2700)
+
+    // Card 1 gets highlighted (selected state)
+    push(() => setCard1Highlighted(true), 3700)
+
+    // Footer appears
+    push(() => setShowFooter(true), 4600)
+
+    // Loop
+    push(() => runSequence(), 11000)
+  }
+
   useEffect(() => {
-    function run() {
-      // ── Reset ────────────────────────────────────────────────────────────
-      setShowCard1(false)
-      setShowCard2(false)
-      setShowCard3(false)
-      setBadge1(null)
-      setBadge2(null)
-      setCard1Votes(0)
-      setShowFooter(false)
-
-      // ── Sequence ─────────────────────────────────────────────────────────
-      schedule(() => {
-        setShowCard1(true)
-        countUp(31, 1400)
-      }, 600)
-
-      schedule(() => setShowCard2(true), 2700)
-      schedule(() => setShowCard3(true), 4200)
-      schedule(() => setBadge1('Under Review'), 5400)
-      schedule(() => setBadge2('Planned'), 6600)
-      schedule(() => setShowFooter(true), 7700)
-
-      // ── Loop ─────────────────────────────────────────────────────────────
-      schedule(() => {
-        clearAll()
-        run()
-      }, 11000)
-    }
-
-    run()
+    runSequence()
     return clearAll
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // ── Render ────────────────────────────────────────────────────────────────
-
   return (
-    /* Floating wrapper */
     <motion.div
-      style={{ position: 'relative', width: '100%' }}
-      animate={{ y: [0, -7, 0] }}
-      transition={{ duration: 5.5, repeat: Infinity, ease: 'easeInOut' }}
+      animate={{ y: [0, -6, 0] }}
+      transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+      style={{ width: '100%', maxWidth: '26rem', margin: '0 auto' }}
     >
-      {/* Ambient glow beneath the panel */}
+      {/* Browser window shell */}
       <div
-        aria-hidden
         style={{
-          position: 'absolute',
-          inset: 0,
-          borderRadius: '1.5rem',
-          background:
-            'radial-gradient(ellipse 70% 40% at 50% 110%, rgba(249,115,22,0.18) 0%, transparent 70%)',
-          filter: 'blur(24px)',
-          transform: 'translateY(8px) scaleX(0.92)',
-          zIndex: 0,
-        }}
-      />
-
-      {/* Browser window */}
-      <motion.div
-        initial={{ opacity: 0, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.9, ease }}
-        style={{
-          position: 'relative',
-          zIndex: 1,
-          borderRadius: '1.125rem',
+          borderRadius: '16px',
           overflow: 'hidden',
-          background: C.bg,
-          border: `1px solid ${C.border}`,
-          boxShadow: '0 40px 100px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.04)',
+          background: '#ffffff',
+          boxShadow:
+            '0 0 0 1px rgba(0,0,0,0.07), 0 4px 6px rgba(0,0,0,0.04), 0 24px 56px rgba(0,0,0,0.12)',
         }}
       >
 
-        {/* ── Browser chrome ─────────────────────────────────────────────── */}
+        {/* ── Browser chrome ── */}
         <div
           style={{
+            background: '#f8f9fb',
+            borderBottom: '1px solid #e8ecf0',
+            padding: '0.55rem 0.875rem',
             display: 'flex',
             alignItems: 'center',
-            gap: '0.75rem',
-            padding: '0.625rem 1rem',
-            background: C.chrome,
-            borderBottom: `1px solid ${C.borderFaint}`,
+            gap: '0.5rem',
           }}
         >
           {/* Traffic lights */}
-          <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
-            {['#ff5f57', '#febc2e', '#28c840'].map((color) => (
+          <div style={{ display: 'flex', gap: '0.3rem', flexShrink: 0 }}>
+            {['#fc5f57', '#fdbc2c', '#33c748'].map((c, i) => (
               <div
-                key={color}
-                style={{ width: '10px', height: '10px', borderRadius: '50%', background: color }}
+                key={i}
+                style={{
+                  width: '0.5rem',
+                  height: '0.5rem',
+                  borderRadius: '50%',
+                  background: c,
+                  opacity: 0.85,
+                }}
               />
             ))}
           </div>
@@ -331,241 +285,161 @@ export default function ProductDemo() {
           <div
             style={{
               flex: 1,
+              height: '1.25rem',
               borderRadius: '0.375rem',
-              padding: '0.25rem 0.75rem',
-              background: 'rgba(255,255,255,0.05)',
-              fontSize: '11px',
-              fontFamily: 'ui-monospace, monospace',
-              color: C.textFaint,
-              textAlign: 'center',
-              letterSpacing: '0.01em',
+              background: '#ffffff',
+              border: '1px solid #e2e8f0',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.3rem',
             }}
           >
-            app.useideaflow.com/ideas
+            {/* Lock icon */}
+            <svg width="8" height="9" viewBox="0 0 8 9" fill="none" style={{ opacity: 0.4 }}>
+              <rect x="1" y="4" width="6" height="5" rx="1" stroke="#64748b" strokeWidth="1"/>
+              <path d="M2.5 4V2.5a1.5 1.5 0 0 1 3 0V4" stroke="#64748b" strokeWidth="1"/>
+            </svg>
+            <span style={{ fontSize: '0.575rem', color: '#94a3b8', letterSpacing: '0.02em' }}>
+              useideaflow.com/dashboard
+            </span>
           </div>
-
-          {/* Spacer to balance traffic lights */}
-          <div style={{ width: '3rem', flexShrink: 0 }} />
         </div>
 
-        {/* ── App layout ─────────────────────────────────────────────────── */}
-        <div style={{ display: 'flex', minHeight: '340px' }}>
+        {/* ── Dashboard panel ── */}
+        <div style={{ padding: '1.125rem', background: '#f8f9fb', minHeight: '14rem' }}>
 
-          {/* Sidebar */}
+          {/* Header row */}
           <div
             style={{
-              width: '148px',
-              flexShrink: 0,
-              padding: '1rem 0.625rem',
               display: 'flex',
-              flexDirection: 'column',
-              gap: '0.25rem',
-              borderRight: `1px solid ${C.borderFaint}`,
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: '0.75rem',
             }}
           >
-            {/* Logo */}
-            <div
+            <div>
+              <p
+                style={{
+                  fontSize: '0.78rem',
+                  fontWeight: 700,
+                  color: '#0f172a',
+                  marginBottom: '0.1rem',
+                }}
+              >
+                Company idea feed
+              </p>
+              <p style={{ fontSize: '0.62rem', color: '#94a3b8', fontWeight: 400 }}>
+                Sorted by team support
+              </p>
+            </div>
+
+            {/* Live badge */}
+            <span
               style={{
-                display: 'flex',
+                display: 'inline-flex',
                 alignItems: 'center',
-                gap: '0.5rem',
-                padding: '0.25rem 0.5rem',
-                marginBottom: '0.75rem',
+                gap: '0.3rem',
+                fontSize: '0.6rem',
+                fontWeight: 700,
+                letterSpacing: '0.06em',
+                color: '#16a34a',
+                background: 'rgba(22,163,74,0.08)',
+                border: '1px solid rgba(22,163,74,0.16)',
+                borderRadius: '999px',
+                padding: '0.2rem 0.55rem',
               }}
             >
-              <div
+              <span
                 style={{
-                  width: '18px',
-                  height: '18px',
-                  borderRadius: '5px',
-                  background: C.orange,
+                  width: '5px',
+                  height: '5px',
+                  borderRadius: '50%',
+                  background: '#16a34a',
+                  display: 'inline-block',
                   flexShrink: 0,
                 }}
               />
-              <span style={{ fontSize: '12px', fontWeight: 800, color: C.text }}>
-                IdeaFlow
-              </span>
-            </div>
-
-            <SidebarItem label="Dashboard" active={false} />
-            <SidebarItem label="Ideas" active={true} />
-            <SidebarItem label="Roadmap" active={false} />
-            <SidebarItem label="Members" active={false} />
-            <SidebarItem label="Settings" active={false} />
+              Live
+            </span>
           </div>
 
-          {/* Main panel */}
-          <div
-            style={{
-              flex: 1,
-              padding: '1.125rem 1.25rem',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '1rem',
-              minWidth: 0,
-            }}
-          >
-            {/* Page header */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-              }}
-            >
-              <div>
-                <p
-                  style={{
-                    fontSize: '9.5px',
-                    fontWeight: 700,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.14em',
-                    color: C.textFaint,
-                    marginBottom: '0.2rem',
-                  }}
-                >
-                  Workspace
-                </p>
-                <h2
-                  style={{
-                    fontSize: '15px',
-                    fontWeight: 800,
-                    color: C.text,
-                    lineHeight: 1,
-                    margin: 0,
-                  }}
-                >
-                  Ideas
-                </h2>
-              </div>
-
-              <div
-                style={{
-                  padding: '0.375rem 0.75rem',
-                  borderRadius: '0.5rem',
-                  background: C.orange,
-                  fontSize: '11px',
-                  fontWeight: 700,
-                  color: '#fff',
-                  cursor: 'default',
-                  userSelect: 'none',
-                }}
-              >
-                + Submit idea
-              </div>
-            </div>
-
-            {/* Tab strip */}
-            <div style={{ display: 'flex', gap: '0.125rem' }}>
-              {['All', 'New', 'Under Review', 'Planned'].map((tab) => (
-                <div
-                  key={tab}
-                  style={{
-                    padding: '0.25rem 0.625rem',
-                    borderRadius: '0.375rem',
-                    fontSize: '11px',
-                    fontWeight: tab === 'All' ? 600 : 400,
-                    color: tab === 'All' ? C.textMid : C.textFaint,
-                    background: tab === 'All' ? 'rgba(255,255,255,0.06)' : 'transparent',
-                    cursor: 'default',
-                    userSelect: 'none',
-                  }}
-                >
-                  {tab}
-                </div>
-              ))}
-            </div>
-
-            {/* Cards */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <AnimatePresence>
-                {showCard1 && (
-                  <motion.div
-                    key="card1"
-                    initial={{ opacity: 0, y: 14 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, ease }}
-                  >
-                    <IdeaCard
-                      title="Let employees suggest improvements anonymously"
-                      category="Process"
-                      votes={card1Votes}
-                      badge={badge1}
-                    />
-                  </motion.div>
-                )}
-
-                {showCard2 && (
-                  <motion.div
-                    key="card2"
-                    initial={{ opacity: 0, y: 14 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, ease }}
-                  >
-                    <IdeaCard
-                      title="Better shift handover between teams"
-                      category="Operations"
-                      votes={24}
-                      badge={badge2}
-                    />
-                  </motion.div>
-                )}
-
-                {showCard3 && (
-                  <motion.div
-                    key="card3"
-                    initial={{ opacity: 0, y: 14 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, ease }}
-                  >
-                    <IdeaCard
-                      title="Show which ideas leadership has acted on"
-                      category="Transparency"
-                      votes={18}
-                      badge={null}
-                    />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* Footer stat */}
+          {/* Cards */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             <AnimatePresence>
-              {showFooter && (
-                <motion.div
-                  key="footer"
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.5, ease }}
-                  style={{
-                    marginTop: 'auto',
-                    paddingTop: '0.75rem',
-                    borderTop: `1px solid ${C.borderFaint}`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                  }}
-                >
-                  <span
-                    style={{
-                      display: 'inline-block',
-                      width: '6px',
-                      height: '6px',
-                      borderRadius: '50%',
-                      background: '#4ade80',
-                      flexShrink: 0,
-                    }}
-                  />
-                  <span style={{ fontSize: '11px', fontWeight: 600, color: '#4ade80' }}>
-                    3 ideas implemented this month
-                  </span>
-                </motion.div>
+              {showCard1 && (
+                <IdeaCard
+                  key="card1"
+                  title={IDEAS[0].title}
+                  category={IDEAS[0].category}
+                  votes={card1Votes}
+                  highlighted={card1Highlighted}
+                  color={IDEAS[0].color}
+                  filled={card1Votes > 0}
+                />
+              )}
+              {showCard2 && (
+                <IdeaCard
+                  key="card2"
+                  title={IDEAS[1].title}
+                  category={IDEAS[1].category}
+                  votes={IDEAS[1].finalVotes}
+                  highlighted={false}
+                  color={IDEAS[1].color}
+                  filled={false}
+                />
+              )}
+              {showCard3 && (
+                <IdeaCard
+                  key="card3"
+                  title={IDEAS[2].title}
+                  category={IDEAS[2].category}
+                  votes={IDEAS[2].finalVotes}
+                  highlighted={false}
+                  color={IDEAS[2].color}
+                  filled={false}
+                />
               )}
             </AnimatePresence>
           </div>
+
+          {/* Footer */}
+          <AnimatePresence>
+            {showFooter && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.5, ease: 'easeOut' }}
+                style={{
+                  marginTop: '0.875rem',
+                  paddingTop: '0.75rem',
+                  borderTop: '1px solid #e8ecf0',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}
+              >
+                <p style={{ fontSize: '0.6rem', color: '#94a3b8' }}>3 new ideas today</p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                  <div
+                    style={{
+                      width: '5px',
+                      height: '5px',
+                      borderRadius: '50%',
+                      background: '#f97316',
+                    }}
+                  />
+                  <span style={{ fontSize: '0.6rem', fontWeight: 600, color: '#ea580c' }}>
+                    12 active members
+                  </span>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
         </div>
-      </motion.div>
+      </div>
     </motion.div>
   )
 }
