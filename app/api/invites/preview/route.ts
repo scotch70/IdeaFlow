@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Code required' }, { status: 400 })
   }
 
-  const supabase = createClient()
+  const supabase = await createClient()
 
   const { data: invite, error } = await (supabase as any)
     .from('invites')

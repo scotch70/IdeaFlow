@@ -4,8 +4,8 @@ import type { Database } from '@/types/database'
 
 type CookieEntry = { name: string; value: string; options?: object }
 
-export function createClient() {
-  const cookieStore = cookies()
+export async function createClient() {
+  const cookieStore = await cookies()
   return createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,

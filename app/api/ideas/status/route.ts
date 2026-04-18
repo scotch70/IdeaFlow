@@ -34,7 +34,7 @@ const FROM_EMAIL =
 export async function POST(request: NextRequest) {
   try {
     // SSR client — used only for auth + profile (needs cookie session)
-    const supabase = createClient()
+    const supabase = await createClient()
     // Admin client — bypasses RLS for idea reads/writes
     const adminClient = createAdminClient()
 

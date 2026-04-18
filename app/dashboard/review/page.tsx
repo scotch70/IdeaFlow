@@ -11,7 +11,7 @@ type IdeaJoinResult = Database['public']['Tables']['ideas']['Row'] & {
 export const dynamic = 'force-dynamic'
 
 export default async function ReviewPage() {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   // ── Auth ──────────────────────────────────────────────────────────────────
   const {

@@ -57,7 +57,7 @@ export default async function DashboardPage({
 }) {
   const { upgraded } = await searchParams
   const justUpgraded = upgraded === 'true'
-  const supabase = createClient()
+  const supabase = await createClient()
 
   const {
     data: { user },

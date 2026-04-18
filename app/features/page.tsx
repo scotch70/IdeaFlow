@@ -42,7 +42,7 @@ const DIVIDER = { borderTop: '1px solid rgba(0,0,0,0.06)' } as const
 // ── Page ──────────────────────────────────────────────────────────────────
 
 export default async function FeaturesPage() {
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   return (

@@ -5,7 +5,7 @@ import PageContainer from '@/components/PageContainer'
 import ProductDemo from '@/components/ProductDemo'
 
 export default async function HomePage() {
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   return (
