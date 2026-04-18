@@ -25,26 +25,20 @@ export default async function SettingsLayout({
   }
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        height: '100vh',
-        overflow: 'hidden',
-        background: 'var(--page-bg)',
-      }}
-    >
+    <div style={{ background: 'var(--page-bg)' }}>
       <DashboardSidebar
         userName={profile?.full_name ?? ''}
         userEmail={user.email ?? ''}
         userRole={profile?.role ?? 'member'}
       />
 
+      {/* Mirror the dashboard content wrapper so settings aligns consistently */}
       <div
         style={{
-          flex: 1,
-          overflowY: 'auto',
+          marginLeft: 'var(--sidebar-w, 200px)',
+          maxWidth: 'calc((100vw + 80rem) / 2 - var(--sidebar-w, 200px))',
+          minHeight: '100vh',
           overflowX: 'hidden',
-          minWidth: 0,
         }}
       >
         {children}

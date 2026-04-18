@@ -49,10 +49,14 @@ export default async function DashboardLayout({
           userRole={profile?.role ?? 'member'}
         />
 
-        {/* Content: starts to the right of the fixed sidebar */}
+        {/* Content: starts to the right of the fixed sidebar.
+            max-width formula aligns the right edge with SiteHeader's inner container:
+              right edge = sidebar-w + max-w = (100vw + 80rem) / 2  ← same as SiteHeader
+        */}
         <div
           style={{
-            marginLeft: 'calc(var(--sidebar-w, 200px) + 16px)',
+            marginLeft: 'var(--sidebar-w, 200px)',
+            maxWidth: 'calc((100vw + 80rem) / 2 - var(--sidebar-w, 200px))',
             minHeight: `calc(100vh - ${HEADER_HEIGHT})`,
           }}
         >
