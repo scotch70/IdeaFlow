@@ -9,14 +9,18 @@
  * Sidebar width is exposed via --sidebar-w CSS variable on :root so the
  * layout's margin-left can reference it without hard-coding a number in
  * two places.
+ *
+ * All navigation uses real Next.js routes — no anchor (#) links.
  */
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
-// ── Width token (keep in sync with --sidebar-w in globals.css or here) ────────
-const SIDEBAR_W = 200   // px
+// ── Width + height tokens ──────────────────────────────────────────────────────
+const SIDEBAR_W = 200   // px  (keep in sync with --sidebar-w)
+// SiteHeader inner container is 3.625rem tall; the <header> element itself
+// renders at that exact height (border-bottom is inset via box-sizing).
 const HEADER_H  = '3.625rem'
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
@@ -89,7 +93,6 @@ function NavLink({ href, icon, label, active, badge }: NavLinkProps) {
         background: active ? 'rgba(249,115,22,0.09)' : 'transparent',
         color: active ? '#c2540a' : '#475569',
         transition: 'background 0.12s ease, color 0.12s ease',
-        position: 'relative',
       }}
       className={active ? '' : 'db-nav-inactive'}
     >
@@ -119,7 +122,7 @@ function NavLink({ href, icon, label, active, badge }: NavLinkProps) {
 // ── Divider ───────────────────────────────────────────────────────────────────
 
 function Divider() {
-  return <div style={{ height: '1px', background: '#e8ecf0', margin: '0.625rem 0' }} />
+  return <div style={{ height: '1px', background: '#e8ecf0', margin: '0.5rem 0' }} />
 }
 
 // ── Main sidebar ──────────────────────────────────────────────────────────────
@@ -150,7 +153,10 @@ export default function DashboardSidebar({
     .join('')
     .toUpperCase() || '?'
 
-  const is = (href: string) => pathname === href || pathname.startsWith(href + '/')
+  // Exact-match helper — prevents /dashboard from matching /dashboard/review etc.
+  const exact = (href: string) => pathname === href
+  // Prefix-match helper for sections that have nested routes
+  const under = (href: string) => pathname.startsWith(href + '/')
 
   async function handleSignOut() {
     await supabase.auth.signOut()
@@ -160,7 +166,7 @@ export default function DashboardSidebar({
 
   return (
     <>
-      {/* Inject hover styles + sidebar-w variable once */}
+      {/* Inject hover styles + sidebar-w CSS variable */}
       <style>{`
         :root { --sidebar-w: ${SIDEBAR_W}px; }
         .db-nav-inactive:hover { background: rgba(0,0,0,0.04) !important; }
@@ -170,6 +176,7 @@ export default function DashboardSidebar({
       <aside
         style={{
           position: 'fixed',
+          // Sit flush under the SiteHeader — no extra offset, no gap
           top: HEADER_H,
           left: 0,
           bottom: 0,
@@ -178,57 +185,93 @@ export default function DashboardSidebar({
           borderRight: '1px solid #e8ecf0',
           display: 'flex',
           flexDirection: 'column',
-          padding: '1rem 0.625rem 0.875rem',
+          // Tight top padding so the first nav item starts close to the header edge
+          padding: '0.5rem 0.625rem 0.875rem',
           overflowY: 'auto',
           overflowX: 'hidden',
           zIndex: 40,
         }}
       >
-        {/* ─────────────────── Workspace nav ─────────────────── */}
+
+        {/* ─────────────────── Workspace ──────────────────── */}
+        <SectionLabel>Workspace</SectionLabel>
         <nav style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginBottom: '0.25rem' }}>
-          <NavLink href="/dashboard"       icon={ICONS.dashboard} label="Dashboard" active={is('/dashboard') && !is('/dashboard/review')} />
-          <NavLink href="/dashboard"       icon={ICONS.ideas}     label="Ideas"     active={false} />
+          <NavLink
+            href="/dashboard"
+            icon={ICONS.dashboard}
+            label="Dashboard"
+            active={exact('/dashboard')}
+          />
+          <NavLink
+            href="/dashboard/ideas"
+            icon={ICONS.ideas}
+            label="Ideas"
+            active={exact('/dashboard/ideas') || under('/dashboard/ideas')}
+          />
         </nav>
 
-        {/* ─────────────────── Management (admin) ─────────────── */}
+        {/* ─────────────────── Management (admin only) ────── */}
         {isAdmin && (
           <>
             <Divider />
             <SectionLabel>Management</SectionLabel>
-
             <nav style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginBottom: '0.25rem' }}>
               <NavLink
                 href="/dashboard/review"
                 icon={ICONS.review}
                 label="Needs attention"
-                active={is('/dashboard/review')}
+                active={exact('/dashboard/review') || under('/dashboard/review')}
                 badge={pendingReviewCount}
               />
-              <NavLink href="/dashboard#invite-team" icon={ICONS.invite}   label="Generate invite"   active={false} />
-              <NavLink href="/dashboard#idea-rounds" icon={ICONS.setup}    label="Set up IdeaFlow"   active={false} />
-              <NavLink href="/dashboard#analytics"   icon={ICONS.analytics} label="Analytics"        active={false} />
+              <NavLink
+                href="/dashboard/invites"
+                icon={ICONS.invite}
+                label="Generate invite"
+                active={exact('/dashboard/invites') || under('/dashboard/invites')}
+              />
+              <NavLink
+                href="/dashboard/idea-flow"
+                icon={ICONS.setup}
+                label="Set up IdeaFlow"
+                active={exact('/dashboard/idea-flow') || under('/dashboard/idea-flow')}
+              />
+              <NavLink
+                href="/dashboard/analytics"
+                icon={ICONS.analytics}
+                label="Analytics"
+                active={exact('/dashboard/analytics') || under('/dashboard/analytics')}
+              />
             </nav>
           </>
         )}
 
-        {/* ─────────────────── Team ───────────────────────────── */}
+        {/* ─────────────────── Team ───────────────────────── */}
         <Divider />
         <SectionLabel>Team</SectionLabel>
-
         <nav style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-          <NavLink href="/dashboard#members" icon={ICONS.members} label="Members" active={false} />
+          <NavLink
+            href="/dashboard/members"
+            icon={ICONS.members}
+            label="Members"
+            active={exact('/dashboard/members') || under('/dashboard/members')}
+          />
         </nav>
 
-        {/* ─────────────────── Spacer ─────────────────────────── */}
+        {/* ─────────────────── Spacer ─────────────────────── */}
         <div style={{ flex: 1 }} />
 
-        {/* ─────────────────── Bottom section ─────────────────── */}
+        {/* ─────────────────── Bottom ─────────────────────── */}
         <div>
           <Divider />
 
-          <NavLink href="/settings" icon={ICONS.settings} label="Settings" active={is('/settings')} />
+          <NavLink
+            href="/settings"
+            icon={ICONS.settings}
+            label="Settings"
+            active={exact('/settings') || under('/settings')}
+          />
 
-          {/* User block */}
+          {/* User card */}
           <div
             style={{
               display: 'flex',
@@ -242,7 +285,6 @@ export default function DashboardSidebar({
               marginBottom: '0.375rem',
             }}
           >
-            {/* Avatar */}
             <div
               style={{
                 width: '1.75rem',
@@ -292,6 +334,7 @@ export default function DashboardSidebar({
             <span style={{ fontSize: '0.75rem', fontWeight: 500 }}>Sign out</span>
           </button>
         </div>
+
       </aside>
     </>
   )
