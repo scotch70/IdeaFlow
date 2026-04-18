@@ -53,9 +53,10 @@ export const dynamic = 'force-dynamic'
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: { upgraded?: string }
+  searchParams: Promise<{ upgraded?: string }>
 }) {
-  const justUpgraded = searchParams.upgraded === 'true'
+  const { upgraded } = await searchParams
+  const justUpgraded = upgraded === 'true'
   const supabase = createClient()
 
   const {

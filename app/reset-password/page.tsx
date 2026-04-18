@@ -19,26 +19,51 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    let mounted = true
+    // Supabase sends reset links in two formats:
+    //
+    //   PKCE (modern default):  /reset-password?code=XXXX
+    //     → session doesn't exist yet; must call exchangeCodeForSession(code)
+    //
+    //   Implicit (legacy):      /reset-password#access_token=...&type=recovery
+    //     → Supabase JS processes the hash automatically; listen for PASSWORD_RECOVERY
+    //
+    // getSession() alone fails for PKCE links — no session exists before the exchange.
 
-    async function checkSession() {
-      const { data, error } = await supabase.auth.getSession()
+    let resolved = false
+    function resolve(next: 'ready' | 'invalid') {
+      if (resolved) return
+      resolved = true
+      setStatus(next)
+    }
 
-      if (!mounted) return
+    const searchCode = new URLSearchParams(window.location.search).get('code')
+    const hashType = new URLSearchParams(
+      window.location.hash.replace(/^#/, '')
+    ).get('type')
 
-      if (error || !data.session) {
-        setStatus('invalid')
-        return
+    // ── PKCE: exchange the code for a session ─────────────────────────────
+    if (searchCode) {
+      supabase.auth
+        .exchangeCodeForSession(searchCode)
+        .then(({ error }) => resolve(error ? 'invalid' : 'ready'))
+        .catch(() => resolve('invalid'))
+      return
+    }
+
+    // ── Legacy implicit: wait for the PASSWORD_RECOVERY event ─────────────
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        resolve('ready')
+      } else if (event === 'INITIAL_SESSION') {
+        // PASSWORD_RECOVERY fires immediately after INITIAL_SESSION when the
+        // hash contains a valid token. Only give up if the hash has no token.
+        if (hashType !== 'recovery') {
+          resolve('invalid')
+        }
       }
+    })
 
-      setStatus('ready')
-    }
-
-    checkSession()
-
-    return () => {
-      mounted = false
-    }
+    return () => subscription.unsubscribe()
   }, [supabase])
 
   async function handleSubmit(e: React.FormEvent) {

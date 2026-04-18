@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import LogoMark from '@/components/LogoMark'
 import PageContainer from '@/components/PageContainer'
+import ProductDemo from '@/components/ProductDemo'
 
 export default async function HomePage() {
   const supabase = createClient()
@@ -180,76 +181,9 @@ export default async function HomePage() {
             </div>
           </div>
 
-          {/* ── Product mockup ── */}
-          <div
-            className="fade-up fade-up-2"
-            style={{
-              borderRadius: '1rem',
-              overflow: 'hidden',
-              background: '#ffffff',
-              border: '1px solid rgba(255,255,255,0.10)',
-              boxShadow: '0 0 0 1px rgba(249,115,22,0.08), 0 20px 60px rgba(0,0,0,0.55), 0 4px 16px rgba(0,0,0,0.35)',
-            }}
-          >
-            {/* Browser chrome */}
-            <div style={{ background: '#f7f8fa', borderBottom: '1px solid rgba(0,0,0,0.06)', padding: '0.65rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <div style={{ display: 'flex', gap: '0.35rem' }}>
-                {['#f87171','#fbbf24','#34d399'].map((c, i) => (
-                  <div key={i} style={{ width: '0.45rem', height: '0.45rem', borderRadius: '50%', background: c, opacity: 0.7 }} />
-                ))}
-              </div>
-              <div style={{ flex: 1, marginLeft: '0.375rem', height: '1.25rem', borderRadius: '0.375rem', background: 'rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <span style={{ fontSize: '0.6rem', color: '#9ab0c8', letterSpacing: '0.03em' }}>ideaflow.app/dashboard</span>
-              </div>
-            </div>
-            {/* Feed */}
-            <div style={{ padding: '1.1rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.875rem' }}>
-                <div>
-                  <p style={{ fontSize: '0.78rem', fontWeight: 600, color: '#0d1f35', marginBottom: '0.1rem' }}>Company idea feed</p>
-                  <p style={{ fontSize: '0.64rem', color: '#9ab0c8' }}>Sorted by team support</p>
-                </div>
-                <span style={{ borderRadius: '0.375rem', padding: '0.2rem 0.55rem', fontSize: '0.62rem', fontWeight: 600, background: 'rgba(16,185,129,0.08)', color: '#059669', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
-                  <span className="pulse-dot" style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#059669', display: 'inline-block', flexShrink: 0 }} />
-                  Live
-                </span>
-              </div>
-              {[
-                { title: 'Let employees suggest improvements anonymously', tag: 'People & HR', likes: 31, active: true },
-                { title: 'Better shift handover between teams', tag: 'Operations', likes: 24, active: false },
-                { title: 'Show which ideas leadership has acted on', tag: 'Leadership', likes: 18, active: false },
-              ].map((item, i) => (
-                <div
-                  key={i}
-                  style={{
-                    display: 'flex', alignItems: 'flex-start', gap: '0.65rem',
-                    borderRadius: '0.625rem', padding: '0.7rem 0.75rem', marginBottom: '0.4rem',
-                    background: item.active ? 'rgba(249,115,22,0.04)' : '#f8f9fb',
-                    border: `1px solid ${item.active ? 'rgba(249,115,22,0.14)' : 'rgba(0,0,0,0.05)'}`,
-                  }}
-                >
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.1rem', minWidth: '1.6rem', paddingTop: '0.1rem' }}>
-                    <div style={{ width: '1.5rem', height: '1.5rem', borderRadius: '0.35rem', display: 'flex', alignItems: 'center', justifyContent: 'center', background: item.active ? 'rgba(249,115,22,0.10)' : 'rgba(0,0,0,0.04)' }}>
-                      <svg width="9" height="9" viewBox="0 0 24 24" fill={item.active ? '#f97316' : 'none'} stroke={item.active ? '#f97316' : '#9ab0c8'} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                      </svg>
-                    </div>
-                    <span style={{ fontSize: '0.58rem', fontWeight: 700, color: item.active ? '#f97316' : '#9ab0c8', fontVariantNumeric: 'tabular-nums' }}>{item.likes}</span>
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontSize: '0.75rem', fontWeight: 600, lineHeight: 1.4, color: '#0d1f35' }}>{item.title}</p>
-                    <p style={{ marginTop: '0.2rem', fontSize: '0.6rem', color: '#9ab0c8' }}>{item.tag}</p>
-                  </div>
-                </div>
-              ))}
-              <div style={{ paddingTop: '0.75rem', borderTop: '1px solid rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <p style={{ fontSize: '0.6rem', color: '#b0c4d8' }}>3 new ideas today</p>
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
-                  <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#f97316' }} />
-                  <span style={{ fontSize: '0.6rem', fontWeight: 600, color: '#c2540a' }}>12 active members</span>
-                </div>
-              </div>
-            </div>
+          {/* ── Product demo animation ── */}
+          <div className="fade-up fade-up-2">
+            <ProductDemo />
           </div>
         </div>
       </section>
