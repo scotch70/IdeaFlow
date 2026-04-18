@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import LogoMark from '@/components/LogoMark'
+import SiteHeader from '@/components/SiteHeader'
 
-// Exact same container class as SiteHeader — guarantees pixel-perfect alignment
 const NAV_CONTAINER = 'mx-auto w-full max-w-7xl px-6 lg:px-10'
 
 export const metadata = {
@@ -11,6 +11,8 @@ export const metadata = {
 
 export default function ContactPage() {
   return (
+    <>
+    <SiteHeader />
     <main style={{ minHeight: '100vh', fontFamily: "'DM Sans', sans-serif" }}>
 
       {/* ── Hero ── */}
@@ -279,5 +281,6 @@ export default function ContactPage() {
       </section>
 
     </main>
+    </>
   )
 }

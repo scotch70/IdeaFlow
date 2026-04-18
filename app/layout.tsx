@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import './globals.css'
-import SiteHeader from '@/components/SiteHeader'
 
 export const metadata: Metadata = {
   title: 'IdeaFlow — Employee Idea Management',
@@ -11,7 +10,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body className="antialiased" style={{ background: 'var(--page-bg)', color: 'var(--ink)' }}>
-        <SiteHeader />
         {children}
       </body>
     </html>

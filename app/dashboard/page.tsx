@@ -238,14 +238,18 @@ export default async function DashboardPage({
   const trialActive = company?.plan === 'free' && trialDaysLeft > 0
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--page-bg)' }}>
+    <>
+      {/* ── Page header ── */}
       <div
         style={{
           background: '#ffffff',
           borderBottom: '1px solid rgba(26,107,191,0.09)',
+          position: 'sticky',
+          top: 0,
+          zIndex: 10,
         }}
       >
-        <PageContainer style={{ paddingTop: '1.5rem', paddingBottom: '1.5rem' }}>
+        <PageContainer style={{ paddingTop: '1.125rem', paddingBottom: '1.125rem' }}>
           <div
             style={{
               display: 'flex',
@@ -258,19 +262,19 @@ export default async function DashboardPage({
             <div>
               <p
                 style={{
-                  fontSize: '0.72rem',
+                  fontSize: '0.68rem',
                   fontWeight: 700,
                   letterSpacing: '0.16em',
                   textTransform: 'uppercase',
                   color: '#9ab0c8',
-                  marginBottom: '0.3rem',
+                  marginBottom: '0.2rem',
                 }}
               >
                 Dashboard
               </p>
               <h1
                 style={{
-                  fontSize: '1.375rem',
+                  fontSize: '1.25rem',
                   fontWeight: 800,
                   color: '#0d1f35',
                   letterSpacing: '-0.02em',
@@ -281,13 +285,7 @@ export default async function DashboardPage({
               </h1>
             </div>
 
-            <p
-              style={{
-                fontSize: '0.875rem',
-                color: '#9ab0c8',
-                fontWeight: 500,
-              }}
-            >
+            <p style={{ fontSize: '0.825rem', color: '#9ab0c8', fontWeight: 500 }}>
               {memberCount} member{memberCount !== 1 ? 's' : ''} ·{' '}
               {ideasWithLikeStatus.length} idea
               {ideasWithLikeStatus.length !== 1 ? 's' : ''}
@@ -530,6 +528,6 @@ export default async function DashboardPage({
           </div>
         </PageContainer>
       </main>
-    </div>
+    </>
   )
 }

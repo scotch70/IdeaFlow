@@ -3,12 +3,15 @@ import { createClient } from '@/lib/supabase/server'
 import LogoMark from '@/components/LogoMark'
 import PageContainer from '@/components/PageContainer'
 import ProductDemo from '@/components/ProductDemo'
+import SiteHeader from '@/components/SiteHeader'
 
 export default async function HomePage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   return (
+    <>
+    <SiteHeader />
     <main style={{ fontFamily: "'DM Sans', sans-serif", background: '#f8f9fb', minHeight: '100vh' }}>
 
       {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -433,5 +436,6 @@ export default async function HomePage() {
       </footer>
 
     </main>
+    </>
   )
 }

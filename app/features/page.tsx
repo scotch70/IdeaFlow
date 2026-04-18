@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import PageContainer from '@/components/PageContainer'
+import SiteHeader from '@/components/SiteHeader'
 
 export const metadata = {
   title: 'Features — IdeaFlow',
@@ -46,6 +47,8 @@ export default async function FeaturesPage() {
   const { data: { user } } = await supabase.auth.getUser()
 
   return (
+    <>
+    <SiteHeader />
     <main style={{ fontFamily: "'DM Sans', sans-serif", background: '#f8f9fb', minHeight: '100vh' }}>
 
       {/* ── HEADER + FEATURE GRID ────────────────────────────────────────── */}
@@ -433,5 +436,6 @@ export default async function FeaturesPage() {
       </section>
 
     </main>
+    </>
   )
 }
