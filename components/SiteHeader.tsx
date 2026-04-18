@@ -5,7 +5,7 @@ import LogoMark from './LogoMark'
 import HeaderUserMenu from './HeaderUserMenu'
 
 export default async function SiteHeader() {
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   let profile: { full_name: string | null; last_name: string | null; avatar_url: string | null } | null = null
