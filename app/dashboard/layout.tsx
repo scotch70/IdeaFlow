@@ -52,7 +52,7 @@ export default async function DashboardLayout({
         {/* Content: starts to the right of the fixed sidebar */}
         <div
           style={{
-            marginLeft: 'var(--sidebar-w, 200px)',
+            marginLeft: 'calc(var(--sidebar-w, 200px) + 16px)',
             minHeight: `calc(100vh - ${HEADER_HEIGHT})`,
           }}
         >

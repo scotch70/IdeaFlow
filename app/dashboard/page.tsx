@@ -3,29 +3,17 @@ import { createClient } from '@/lib/supabase/server'
 import IdeaList from '@/components/IdeaList'
 import NewIdeaForm from '@/components/NewIdeaForm'
 import type { Database, Idea } from '@/types/database'
-import InviteMembers from '@/components/InviteMembers'
-import TeamMembers from '@/components/TeamMembers'
-import ActiveInvites from '@/components/ActiveInvites'
 import AnalyticsPanel from '@/components/AnalyticsPanel'
 import type { DailyPoint, Contributor } from '@/components/AnalyticsPanel'
 import UpgradeButton from '@/components/UpgradeButton'
-import ManagerQueue from '@/components/ManagerQueue'
 import ImplementedIdeas from '@/components/ImplementedIdeas'
 import PageContainer from '@/components/PageContainer'
-import IdeaRoundAdmin from '@/components/IdeaRoundAdmin'
 import IdeaRoundBanner from '@/components/IdeaRoundBanner'
 
 type ProfileResult = Pick<
   Database['public']['Tables']['profiles']['Row'],
   'id' | 'full_name' | 'company_id' | 'role'
 >
-
-type MemberResult = Pick<
-  Database['public']['Tables']['profiles']['Row'],
-  'id' | 'full_name' | 'role'
->
-
-type InviteResult = Database['public']['Tables']['invites']['Row']
 
 type LikeResult = Pick<
   Database['public']['Tables']['likes']['Row'],
@@ -98,19 +86,7 @@ export default async function DashboardPage({
     .select('id, full_name, role')
     .eq('company_id', profile.company_id)
     .order('created_at', { ascending: true })) as unknown as {
-    data: MemberResult[] | null
-  }
-
-  const { data: invites } = (await supabase
-    .from('invites')
-    .select(
-      'id, invite_code, role, used_at, created_at, name, email, expires_at, joined_user_id, profiles!invites_joined_user_id_fkey(full_name)'
-    )
-    .eq('company_id', profile.company_id)
-    .order('created_at', { ascending: false })) as unknown as {
-    data: (InviteResult & {
-      profiles?: { full_name: string | null } | null
-    })[] | null
+    data: { id: string; full_name: string | null; role: string }[] | null
   }
 
   const { data: ideas } = (await supabase
@@ -373,137 +349,83 @@ export default async function DashboardPage({
             />
           )}
 
-          <div className="grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
-            <section className="space-y-6">
+          <section className="space-y-6">
 
-              {/* ── Onboarding empty state ── */}
-              {ideasWithLikeStatus.length === 0 && (
+            {/* ── Onboarding empty state ── */}
+            {ideasWithLikeStatus.length === 0 && (
+              <div style={{
+                background: '#ffffff',
+                border: '1px solid rgba(26,107,191,0.10)',
+                borderRadius: '1.25rem',
+                padding: '2.5rem 2rem',
+                textAlign: 'center',
+                boxShadow: '0 2px 12px rgba(6,14,38,0.05)',
+              }}>
                 <div style={{
-                  background: '#ffffff',
-                  border: '1px solid rgba(26,107,191,0.10)',
-                  borderRadius: '1.25rem',
-                  padding: '2.5rem 2rem',
-                  textAlign: 'center',
-                  boxShadow: '0 2px 12px rgba(6,14,38,0.05)',
+                  width: '3rem', height: '3rem',
+                  borderRadius: '0.875rem',
+                  background: 'rgba(249,115,22,0.08)',
+                  border: '1px solid rgba(249,115,22,0.15)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  margin: '0 auto 1.25rem',
+                  fontSize: '1.25rem',
                 }}>
-                  <div style={{
-                    width: '3rem', height: '3rem',
-                    borderRadius: '0.875rem',
-                    background: 'rgba(249,115,22,0.08)',
-                    border: '1px solid rgba(249,115,22,0.15)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    margin: '0 auto 1.25rem',
-                    fontSize: '1.25rem',
-                  }}>
-                    💡
-                  </div>
-                  <h2 style={{
-                    fontSize: '1.05rem', fontWeight: 800,
-                    color: '#0d1f35', letterSpacing: '-0.02em',
-                    marginBottom: '0.4rem',
-                  }}>
-                    No ideas yet
-                  </h2>
-                  <p style={{
-                    fontSize: '0.875rem', color: '#9ab0c8',
-                    lineHeight: 1.6, maxWidth: '22rem',
-                    margin: '0 auto 1.75rem',
-                  }}>
-                    The best ideas come from the people doing the work. Be the first to share one.
-                  </p>
-                  <div style={{ display: 'flex', gap: '0.625rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-                    <a
-                      href="#new-idea-form"
-                      className="btn-primary"
-                      style={{ fontSize: '0.85rem', padding: '0.55rem 1.25rem', textDecoration: 'none' }}
-                    >
-                      Post your first idea →
-                    </a>
-                    {profile.role === 'admin' && (
-                      <a
-                        href="#invite-team"
-                        style={{
-                          fontSize: '0.85rem', fontWeight: 600,
-                          color: '#5a7fa8', textDecoration: 'none',
-                          padding: '0.55rem 1.25rem',
-                          border: '1px solid rgba(26,107,191,0.18)',
-                          borderRadius: '0.5rem',
-                        }}
-                      >
-                        Invite your team
-                      </a>
-                    )}
-                  </div>
+                  💡
                 </div>
-              )}
-
-              <div
-                id="new-idea-form"
-                style={{
-                  borderRadius: '1.25rem',
-                  border: '1px solid rgba(26,107,191,0.11)',
-                  background:
-                    'linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(248,250,255,1) 100%)',
-                  boxShadow: '0 6px 24px rgba(6,14,38,0.04)',
-                  padding: '1.25rem',
-                }}
-              >
-                <NewIdeaForm
-                  userId={user.id}
-                  companyId={profile.company_id}
-                  isAdmin={profile.role === 'admin'}
-                  customPrompt={company?.custom_idea_prompt ?? null}
-                  roundActive={isRoundActive}
-                  roundName={roundData?.idea_round_name ?? null}
-                />
+                <h2 style={{
+                  fontSize: '1.05rem', fontWeight: 800,
+                  color: '#0d1f35', letterSpacing: '-0.02em',
+                  marginBottom: '0.4rem',
+                }}>
+                  No ideas yet
+                </h2>
+                <p style={{
+                  fontSize: '0.875rem', color: '#9ab0c8',
+                  lineHeight: 1.6, maxWidth: '22rem',
+                  margin: '0 auto 1.75rem',
+                }}>
+                  The best ideas come from the people doing the work. Be the first to share one.
+                </p>
+                <div style={{ display: 'flex', gap: '0.625rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                  <a
+                    href="#new-idea-form"
+                    className="btn-primary"
+                    style={{ fontSize: '0.85rem', padding: '0.55rem 1.25rem', textDecoration: 'none' }}
+                  >
+                    Post your first idea →
+                  </a>
+                </div>
               </div>
+            )}
 
-              <IdeaList
-                ideas={ideasWithLikeStatus}
-                currentUserId={user.id}
+            <div
+              id="new-idea-form"
+              style={{
+                borderRadius: '1.25rem',
+                border: '1px solid rgba(26,107,191,0.11)',
+                background:
+                  'linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(248,250,255,1) 100%)',
+                boxShadow: '0 6px 24px rgba(6,14,38,0.04)',
+                padding: '1.25rem',
+              }}
+            >
+              <NewIdeaForm
+                userId={user.id}
                 companyId={profile.company_id}
                 isAdmin={profile.role === 'admin'}
+                customPrompt={company?.custom_idea_prompt ?? null}
+                roundActive={isRoundActive}
+                roundName={roundData?.idea_round_name ?? null}
               />
-            </section>
+            </div>
 
-            <aside className="space-y-6 self-start lg:sticky" style={{ top: 'calc(3.625rem + 4rem)' }}>
-              {profile.role === 'admin' && (
-                <ManagerQueue ideas={ideasWithLikeStatus} />
-              )}
-
-              {/* id=idea-rounds — sidebar "Set up IdeaFlow" link scrolls here */}
-              {profile.role === 'admin' && (
-                <div id="idea-rounds">
-                  <IdeaRoundAdmin
-                    companyId={profile.company_id}
-                    initialName={roundData?.idea_round_name ?? null}
-                    initialStatus={roundData?.idea_round_status ?? null}
-                    initialStartsAt={roundData?.idea_round_starts_at ?? null}
-                    initialEndsAt={roundData?.idea_round_ends_at ?? null}
-                  />
-                </div>
-              )}
-
-              {/* id=members — sidebar "Members" link scrolls here */}
-              <div id="members">
-                <TeamMembers
-                  members={members ?? []}
-                  currentUserId={user.id}
-                  currentUserRole={profile.role}
-                />
-              </div>
-
-              {profile.role === 'admin' && (
-                <ActiveInvites invites={invites ?? []} />
-              )}
-
-              {profile.role === 'admin' && (
-                <div id="invite-team">
-                  <InviteMembers />
-                </div>
-              )}
-            </aside>
-          </div>
+            <IdeaList
+              ideas={ideasWithLikeStatus}
+              currentUserId={user.id}
+              companyId={profile.company_id}
+              isAdmin={profile.role === 'admin'}
+            />
+          </section>
 
           <div
             style={{

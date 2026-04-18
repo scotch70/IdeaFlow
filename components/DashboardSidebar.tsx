@@ -185,8 +185,6 @@ export default function DashboardSidebar({
         }}
       >
         {/* ─────────────────── Workspace nav ─────────────────── */}
-        <SectionLabel>Workspace</SectionLabel>
-
         <nav style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginBottom: '0.25rem' }}>
           <NavLink href="/dashboard"       icon={ICONS.dashboard} label="Dashboard" active={is('/dashboard') && !is('/dashboard/review')} />
           <NavLink href="/dashboard"       icon={ICONS.ideas}     label="Ideas"     active={false} />
