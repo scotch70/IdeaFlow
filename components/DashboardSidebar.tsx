@@ -18,7 +18,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
 // ── Width + height tokens ──────────────────────────────────────────────────────
-const SIDEBAR_W = 200   // px  (keep in sync with --sidebar-w)
+const SIDEBAR_W = 240   // px  (keep in sync with --sidebar-w)
 // SiteHeader inner container is 3.625rem tall; the <header> element itself
 // renders at that exact height (border-bottom is inset via box-sizing).
 const HEADER_H  = '3.625rem'
@@ -87,12 +87,17 @@ function NavLink({ href, icon, label, active, badge }: NavLinkProps) {
         display: 'flex',
         alignItems: 'center',
         gap: '0.5rem',
-        padding: '0.375rem 0.5rem',
+        // Active: left-border accent + orange tint; keep padding compensated so text stays aligned
+        paddingTop: '0.375rem',
+        paddingBottom: '0.375rem',
+        paddingRight: '0.5rem',
+        paddingLeft: active ? 'calc(0.5rem - 2px)' : '0.5rem',
         borderRadius: '7px',
         textDecoration: 'none',
         background: active ? 'rgba(249,115,22,0.09)' : 'transparent',
         color: active ? '#c2540a' : '#475569',
-        transition: 'background 0.12s ease, color 0.12s ease',
+        borderLeft: active ? '2px solid #f97316' : '2px solid transparent',
+        transition: 'background 0.12s ease, color 0.12s ease, border-color 0.12s ease',
       }}
       className={active ? '' : 'db-nav-inactive'}
     >
