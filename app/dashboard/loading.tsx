@@ -10,7 +10,7 @@ export default function DashboardLoading() {
     <div>
       <style>{`@keyframes shimmer { 0% { background-position: 200% 0 } 100% { background-position: -200% 0 } }`}</style>
 
-      {/* Sticky page-header skeleton — top:3.625rem so it sits below SiteHeader */}
+      {/* Sticky page-header skeleton — mirrors the real page sub-header */}
       <div style={{
         background: '#ffffff',
         borderBottom: '1px solid rgba(26,107,191,0.09)',
@@ -19,7 +19,7 @@ export default function DashboardLoading() {
         top: '3.625rem',
         zIndex: 9,
       }}>
-        <div style={{ maxWidth: '80rem', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
             <div style={{ ...shimmer, width: '4rem', height: '0.6rem', marginBottom: '0.4rem' }} />
             <div style={{ ...shimmer, width: '9rem', height: '1.1rem' }} />
@@ -28,42 +28,27 @@ export default function DashboardLoading() {
         </div>
       </div>
 
-      {/* Content skeleton */}
-      <div style={{ maxWidth: '80rem', margin: '0 auto', padding: '2rem 1.5rem' }}>
-        <div style={{ display: 'grid', gap: '2rem', gridTemplateColumns: 'minmax(0,2fr) minmax(280px,1fr)' }}>
+      {/* Single-column content skeleton — matches the real dashboard feed */}
+      <div style={{ padding: '2rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
 
-          {/* Main column */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div style={{ background: 'var(--surface)', borderRadius: '1rem', border: '1px solid var(--border)', padding: '1.25rem' }}>
-              <div style={{ ...shimmer, width: '8rem', height: '0.7rem', marginBottom: '0.75rem' }} />
-              <div style={{ ...shimmer, height: '2.5rem', marginBottom: '0.5rem' }} />
-              <div style={{ ...shimmer, height: '2.5rem' }} />
-            </div>
-            {[0, 1, 2, 3].map(i => (
-              <div key={i} style={{ background: 'var(--surface)', borderRadius: '1rem', border: '1px solid var(--border)', padding: '1.25rem', display: 'flex', gap: '0.875rem' }}>
-                <div style={{ ...shimmer, width: '2rem', height: '2.5rem', borderRadius: '0.5rem', flexShrink: 0 }} />
-                <div style={{ flex: 1 }}>
-                  <div style={{ ...shimmer, height: '0.8rem', marginBottom: '0.5rem', width: '85%' }} />
-                  <div style={{ ...shimmer, height: '0.7rem', width: '60%' }} />
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Sidebar column */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div style={{ background: 'var(--surface)', borderRadius: '1rem', border: '1px solid var(--border)', padding: '1.25rem' }}>
-              <div style={{ ...shimmer, width: '6rem', height: '0.7rem', marginBottom: '0.75rem' }} />
-              {[0, 1, 2].map(i => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '0.625rem' }}>
-                  <div style={{ ...shimmer, width: '2rem', height: '2rem', borderRadius: '50%', flexShrink: 0 }} />
-                  <div style={{ ...shimmer, height: '0.7rem', flex: 1 }} />
-                </div>
-              ))}
-            </div>
-          </div>
-
+        {/* Idea form card */}
+        <div style={{ background: 'var(--surface)', borderRadius: '1rem', border: '1px solid var(--border)', padding: '1.25rem' }}>
+          <div style={{ ...shimmer, width: '8rem', height: '0.7rem', marginBottom: '0.75rem' }} />
+          <div style={{ ...shimmer, height: '2.5rem', marginBottom: '0.5rem' }} />
+          <div style={{ ...shimmer, height: '2.5rem' }} />
         </div>
+
+        {/* Idea list items */}
+        {[0, 1, 2, 3].map(i => (
+          <div key={i} style={{ background: 'var(--surface)', borderRadius: '1rem', border: '1px solid var(--border)', padding: '1.25rem', display: 'flex', gap: '0.875rem' }}>
+            <div style={{ ...shimmer, width: '2rem', height: '2.5rem', borderRadius: '0.5rem', flexShrink: 0 }} />
+            <div style={{ flex: 1 }}>
+              <div style={{ ...shimmer, height: '0.8rem', marginBottom: '0.5rem', width: '85%' }} />
+              <div style={{ ...shimmer, height: '0.7rem', width: '60%' }} />
+            </div>
+          </div>
+        ))}
+
       </div>
     </div>
   )

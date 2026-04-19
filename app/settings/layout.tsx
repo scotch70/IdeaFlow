@@ -1,6 +1,9 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import DashboardSidebar from '@/components/DashboardSidebar'
+import SiteHeader from '@/components/SiteHeader'
+
+const HEADER_HEIGHT = '3.625rem'
 
 export default async function SettingsLayout({
   children,
@@ -25,24 +28,24 @@ export default async function SettingsLayout({
   }
 
   return (
-    <div style={{ background: 'var(--page-bg)' }}>
-      <DashboardSidebar
-        userName={profile?.full_name ?? ''}
-        userEmail={user.email ?? ''}
-        userRole={profile?.role ?? 'member'}
-      />
+    <>
+      <SiteHeader />
 
-      {/* Mirror the dashboard content wrapper so settings aligns consistently */}
+      {/* Identical shell to dashboard/layout.tsx — same centering, same gutters */}
       <div
-        style={{
-          marginLeft: 'var(--sidebar-w, 200px)',
-          maxWidth: 'calc((100vw + 80rem) / 2 - var(--sidebar-w, 200px))',
-          minHeight: '100vh',
-          overflowX: 'hidden',
-        }}
+        className="mx-auto flex max-w-7xl px-6 lg:px-10"
+        style={{ minHeight: `calc(100vh - ${HEADER_HEIGHT})` }}
       >
-        {children}
+        <DashboardSidebar
+          userName={profile?.full_name ?? ''}
+          userEmail={user.email ?? ''}
+          userRole={profile?.role ?? 'member'}
+        />
+
+        <div style={{ flex: 1, minWidth: 0 }}>
+          {children}
+        </div>
       </div>
-    </div>
+    </>
   )
 }

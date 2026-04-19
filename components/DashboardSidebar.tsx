@@ -171,30 +171,34 @@ export default function DashboardSidebar({
 
   return (
     <>
-      {/* Inject hover styles + sidebar-w CSS variable */}
+      {/* Inject hover styles only — no CSS variable needed (sidebar is in-flow) */}
       <style>{`
-        :root { --sidebar-w: ${SIDEBAR_W}px; }
         .db-nav-inactive:hover { background: rgba(0,0,0,0.04) !important; }
         .db-signout-btn:hover  { background: rgba(0,0,0,0.05) !important; }
       `}</style>
 
       <aside
         style={{
-          position: 'fixed',
-          // Sit flush under the SiteHeader — no extra offset, no gap
+          // Sticky within the centered flex shell — not fixed to the viewport.
+          // This keeps the sidebar inside the same max-w-7xl container as the
+          // navbar, so gutters appear naturally on both sides.
+          position: 'sticky',
           top: HEADER_H,
-          left: 0,
-          bottom: 0,
+          // alignSelf:flex-start is required: prevents the flex item from
+          // stretching to the container height, which would break sticky.
+          alignSelf: 'flex-start',
+          height: `calc(100vh - ${HEADER_H})`,
           width: `${SIDEBAR_W}px`,
+          flexShrink: 0,
           background: '#ffffff',
           borderRight: '1px solid #e8ecf0',
           display: 'flex',
           flexDirection: 'column',
-          // Tight top padding so the first nav item starts close to the header edge
           padding: '0.5rem 0.625rem 0.875rem',
           overflowY: 'auto',
           overflowX: 'hidden',
-          zIndex: 40,
+          // Keep above sticky sub-headers (z:9) but below the top navbar (z:50)
+          zIndex: 20,
         }}
       >
 

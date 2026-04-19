@@ -3,8 +3,6 @@ import { createClient } from '@/lib/supabase/server'
 import DashboardSidebar from '@/components/DashboardSidebar'
 import SiteHeader from '@/components/SiteHeader'
 
-// The SiteHeader inner-container is exactly 3.625rem tall.
-// We export this as a CSS custom property so the sidebar can reference it.
 export const HEADER_HEIGHT = '3.625rem'
 
 export default async function DashboardLayout({
@@ -31,35 +29,31 @@ export default async function DashboardLayout({
 
   return (
     <>
-      {/* ── Top navbar — full viewport width, sticky ── */}
+      {/* ── Top navbar — full width, sticky at top ── */}
       <SiteHeader />
 
       {/*
-        ── Sidebar + content shell ──────────────────────────────────────────
-        The sidebar is position:fixed so it does NOT steal width from the
-        content column.  The content div gets margin-left equal to the
-        sidebar width so it starts to the right of the sidebar.
-        PageContainer (max-w-7xl mx-auto) then centres inside the remaining
-        viewport width — identical to the old top-nav-only layout.
+        ── Dashboard shell ──────────────────────────────────────────────────
+        Mirrors the exact centering system used by SiteHeader and PageContainer:
+          mx-auto max-w-7xl px-6 lg:px-10
+        This gives identical left/right gutters to every other page on the site.
+
+        The sidebar is position:sticky (not fixed), so it lives inside this
+        centered container — no margin-left hacks, no CSS custom-property math.
+        Both sidebar and content are naturally bounded by max-w-7xl.
       */}
-      <div style={{ position: 'relative', background: 'var(--page-bg)' }}>
+      <div
+        className="mx-auto flex max-w-7xl px-6 lg:px-10"
+        style={{ minHeight: `calc(100vh - ${HEADER_HEIGHT})` }}
+      >
         <DashboardSidebar
           userName={profile?.full_name ?? ''}
           userEmail={user.email ?? ''}
           userRole={profile?.role ?? 'member'}
         />
 
-        {/* Content: starts to the right of the fixed sidebar.
-            max-width formula aligns the right edge with SiteHeader's inner container:
-              right edge = sidebar-w + max-w = (100vw + 80rem) / 2  ← same as SiteHeader
-        */}
-        <div
-          style={{
-            marginLeft: 'var(--sidebar-w, 200px)',
-            maxWidth: 'calc((100vw + 80rem) / 2 - var(--sidebar-w, 200px))',
-            minHeight: `calc(100vh - ${HEADER_HEIGHT})`,
-          }}
-        >
+        {/* Main content — takes all remaining width */}
+        <div style={{ flex: 1, minWidth: 0 }}>
           {children}
         </div>
       </div>
