@@ -37,7 +37,7 @@ export default function InnerPageHeader({
     <div
       style={{
         position: 'sticky',
-        top: '3.625rem',          // sits directly below SiteHeader
+        top: 0,                   // sticky within the overflow-y:auto content column
         zIndex: 40,
         background: 'rgba(255,255,255,0.95)',
         borderBottom: '1px solid rgba(26,107,191,0.10)',
