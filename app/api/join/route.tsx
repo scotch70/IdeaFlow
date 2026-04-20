@@ -51,13 +51,27 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Guard: a corrupt invite row with no company_id would put the user
+    // in a workspace-less state — catch it explicitly before writing anything.
+    if (!invite.company_id) {
+      return NextResponse.json(
+        { error: 'Invalid invite — no workspace attached', errorCode: 'INVITE_INVALID' },
+        { status: 400 }
+      )
+    }
+
     // Always use the role from the invite — never inherit any pre-existing role.
     // A profile may have been auto-created with role:'admin' by a Supabase trigger,
     // but that should never bleed through to an invited member.
     const nextRole = (invite.role as string) || 'member'
 
-    // Use upsert so this works whether or not a profile row already exists.
-    const { error: upsertProfileError } = await (supabase as any)
+    // Upsert the profile FIRST. The invite is only marked as used after this
+    // succeeds — so a failed write never burns the invite.
+    //
+    // Important: we use .select('id').single() so that a silent RLS-blocked
+    // write (which Supabase returns as error:null, data:null) is caught the
+    // same way as an explicit error, rather than being mistaken for success.
+    const { data: upsertedProfile, error: upsertProfileError } = await (supabase as any)
       .from('profiles')
       .upsert(
         {
@@ -68,10 +82,12 @@ export async function POST(request: NextRequest) {
         },
         { onConflict: 'id' }
       )
+      .select('id')
+      .single()
 
-    if (upsertProfileError) {
+    if (upsertProfileError || !upsertedProfile) {
       return NextResponse.json(
-        { error: upsertProfileError.message },
+        { error: upsertProfileError?.message ?? 'Failed to update profile' },
         { status: 500 }
       )
     }
