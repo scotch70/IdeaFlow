@@ -171,7 +171,7 @@ export default function DashboardSidebar({
 
   return (
     <>
-      {/* Inject hover styles only — no CSS variable needed (sidebar is in-flow) */}
+      {/* Inject hover styles */}
       <style>{`
         .db-nav-inactive:hover { background: rgba(0,0,0,0.04) !important; }
         .db-signout-btn:hover  { background: rgba(0,0,0,0.05) !important; }
@@ -179,15 +179,11 @@ export default function DashboardSidebar({
 
       <aside
         style={{
-          // Sticky within the centered flex shell — not fixed to the viewport.
-          // This keeps the sidebar inside the same max-w-7xl container as the
-          // navbar, so gutters appear naturally on both sides.
-          position: 'sticky',
-          top: HEADER_H,
-          // alignSelf:flex-start is required: prevents the flex item from
-          // stretching to the container height, which would break sticky.
-          alignSelf: 'flex-start',
-          height: `calc(100vh - ${HEADER_H})`,
+          // Plain flex item — no sticky, no fixed.
+          // The layout shell (dashboard/layout.tsx) has a fixed height equal to
+          // 100vh minus the navbar, so this sidebar naturally fills that height
+          // without any positioning tricks. The content column scrolls; the
+          // sidebar never moves.
           width: `${SIDEBAR_W}px`,
           flexShrink: 0,
           background: '#ffffff',
@@ -197,8 +193,6 @@ export default function DashboardSidebar({
           padding: '0.5rem 0.625rem 0.875rem',
           overflowY: 'auto',
           overflowX: 'hidden',
-          // Keep above sticky sub-headers (z:9) but below the top navbar (z:50)
-          zIndex: 20,
         }}
       >
 

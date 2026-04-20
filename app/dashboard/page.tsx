@@ -221,7 +221,7 @@ export default async function DashboardPage({
           background: '#ffffff',
           borderBottom: '1px solid rgba(26,107,191,0.09)',
           position: 'sticky',
-          top: '3.625rem',   /* SiteHeader height */
+          top: 0, /* sticky within the scrollable content column, not the document */
           zIndex: 9,
         }}
       >

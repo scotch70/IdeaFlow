@@ -31,10 +31,10 @@ export default async function SettingsLayout({
     <>
       <SiteHeader />
 
-      {/* Identical shell to dashboard/layout.tsx — same centering, same gutters */}
+      {/* Identical shell to dashboard/layout.tsx — fixed height, scrollable content column */}
       <div
         className="mx-auto flex max-w-7xl px-6 lg:px-10"
-        style={{ minHeight: `calc(100vh - ${HEADER_HEIGHT})` }}
+        style={{ height: `calc(100vh - ${HEADER_HEIGHT})` }}
       >
         <DashboardSidebar
           userName={profile?.full_name ?? ''}
@@ -42,7 +42,7 @@ export default async function SettingsLayout({
           userRole={profile?.role ?? 'member'}
         />
 
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ flex: 1, minWidth: 0, overflowY: 'auto' }}>
           {children}
         </div>
       </div>

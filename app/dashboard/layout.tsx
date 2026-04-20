@@ -42,9 +42,17 @@ export default async function DashboardLayout({
         centered container — no margin-left hacks, no CSS custom-property math.
         Both sidebar and content are naturally bounded by max-w-7xl.
       */}
+      {/*
+        Fixed-height flex shell — the key to making sticky sub-headers work.
+        height (not min-height) constrains the shell to exactly the visible area
+        below the navbar. The sidebar fills that height as a plain flex item.
+        The content column scrolls internally (overflow-y: auto), so
+        position:sticky inside it sticks at top:0 of the scroll viewport —
+        which is visually right below the global navbar.
+      */}
       <div
         className="mx-auto flex max-w-7xl px-6 lg:px-10"
-        style={{ minHeight: `calc(100vh - ${HEADER_HEIGHT})` }}
+        style={{ height: `calc(100vh - ${HEADER_HEIGHT})` }}
       >
         <DashboardSidebar
           userName={profile?.full_name ?? ''}
@@ -52,8 +60,8 @@ export default async function DashboardLayout({
           userRole={profile?.role ?? 'member'}
         />
 
-        {/* Main content — takes all remaining width */}
-        <div style={{ flex: 1, minWidth: 0 }}>
+        {/* Scrollable content column — only this area scrolls */}
+        <div style={{ flex: 1, minWidth: 0, overflowY: 'auto' }}>
           {children}
         </div>
       </div>

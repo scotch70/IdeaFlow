@@ -16,7 +16,7 @@ export default function DashboardLoading() {
         borderBottom: '1px solid rgba(26,107,191,0.09)',
         padding: '1.125rem 1.5rem',
         position: 'sticky',
-        top: '3.625rem',
+        top: 0,
         zIndex: 9,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

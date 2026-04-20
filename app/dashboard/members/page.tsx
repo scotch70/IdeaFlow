@@ -39,7 +39,7 @@ export default async function MembersPage() {
           background: '#ffffff',
           borderBottom: '1px solid rgba(26,107,191,0.09)',
           position: 'sticky',
-          top: '3.625rem',
+          top: 0,
           zIndex: 9,
         }}
       >
