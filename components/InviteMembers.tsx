@@ -10,6 +10,7 @@ export default function InviteMembers() {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [warning, setWarning] = useState('')
   const [joinUrl, setJoinUrl] = useState('')
   const [copied, setCopied] = useState(false)
   const [success, setSuccess] = useState('')
@@ -29,6 +30,7 @@ export default function InviteMembers() {
 
     setLoading(true)
     setError('')
+    setWarning('')
     setSuccess('')
     setJoinUrl('')
     setCopied(false)
@@ -52,7 +54,9 @@ export default function InviteMembers() {
 
       setJoinUrl(data?.joinUrl || '')
 
-      if (email.trim()) {
+      if (data?.emailWarning) {
+        setWarning(data.emailWarning)
+      } else if (email.trim()) {
         setSuccess(`Invite sent to ${email.trim()}`)
       } else {
         setSuccess('Invite link created')
@@ -140,6 +144,21 @@ export default function InviteMembers() {
       {error && (
         <p style={{ fontSize: '0.8rem', color: '#dc2626' }}>
           {error}
+        </p>
+      )}
+
+      {warning && (
+        <p
+          style={{
+            fontSize: '0.8rem',
+            color: '#92400e',
+            background: 'rgba(251,191,36,0.10)',
+            border: '1px solid rgba(251,191,36,0.30)',
+            borderRadius: '0.75rem',
+            padding: '0.65rem 0.8rem',
+          }}
+        >
+          ⚠ {warning}
         </p>
       )}
 

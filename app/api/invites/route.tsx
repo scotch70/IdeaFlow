@@ -128,6 +128,12 @@ if (
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://useideaflow.com'
     const joinUrl = `${appUrl}/join?code=${inviteCode}`
 
+    // Email is best-effort — a delivery failure must never hide the invite URL.
+    // The invite row is already in the database at this point; returning a 500
+    // here would burn the invite (URL lost, no way to resend without a new row).
+    let emailSent = false
+    let emailWarning: string | null = null
+
     if (email?.trim()) {
       const { error: emailError } = await resend.emails.send({
         from: process.env.RESEND_FROM_EMAIL!,
@@ -155,7 +161,12 @@ if (
       })
 
       if (emailError) {
-        return NextResponse.json({ error: emailError.message }, { status: 500 })
+        // Log for ops visibility but do not surface the raw Resend message to
+        // the client — it leaks internal configuration details.
+        console.error('[api/invites] email delivery failed:', emailError.message)
+        emailWarning = 'Invite created, but the email could not be delivered. Share the link below manually.'
+      } else {
+        emailSent = true
       }
     }
 
@@ -163,7 +174,8 @@ if (
       success: true,
       invite,
       joinUrl,
-      emailSent: Boolean(email?.trim()),
+      emailSent,
+      emailWarning,   // non-null signals a delivery problem; invite is still valid
     })
   } catch (error) {
     return NextResponse.json(
