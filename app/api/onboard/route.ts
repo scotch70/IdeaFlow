@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
   }
 
   // ── Create company ─────────────────────────────────────────────────────────
-  const { data: company, error: companyError } = await (adminClient as any)
+  const { data: company, error: companyError } = await adminClient
   .from('companies')
   .insert({
     name: companyName,
@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
     trial_ends_at: new Date(
       Date.now() + 14 * 24 * 60 * 60 * 1000
     ).toISOString(),
-  })
+  } as any)
   .select('id')
   .single()
 

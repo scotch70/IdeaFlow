@@ -18,6 +18,16 @@ interface NewIdeaFormProps {
   roundActive?: boolean
   /** Name of the current round, shown in the locked state message. */
   roundName?: string | null
+  /**
+   * Start the form in expanded state (e.g. when the user is nudged from the
+   * empty-state CTA so they don't land on a collapsed, ambiguous widget).
+   */
+  defaultOpen?: boolean
+  /**
+   * True when a round exists but is still in draft — changes the lock message
+   * from "closed" to "coming soon" so members aren't confused.
+   */
+  roundIsDraft?: boolean
 }
 
 export default function NewIdeaForm({
@@ -27,9 +37,11 @@ export default function NewIdeaForm({
   customPrompt = null,
   roundActive = true,
   roundName = null,
+  defaultOpen = false,
+  roundIsDraft = false,
 }: NewIdeaFormProps) {
   // ── Idea submission state ──────────────────────────────────────────────────
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(defaultOpen)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -316,9 +328,13 @@ export default function NewIdeaForm({
             🔒
           </span>
           <span style={{ fontSize: '0.855rem', fontWeight: 500 }}>
-            {roundName
-              ? `${roundName} is closed — idea submission is not available right now.`
-              : 'Idea submission is closed right now.'}
+            {roundIsDraft
+              ? (roundName
+                  ? `${roundName} is coming soon — submissions will open shortly.`
+                  : 'Your admin is setting up an idea round — submissions will open soon.')
+              : (roundName
+                  ? `${roundName} is closed — idea submission is not available right now.`
+                  : 'Idea submission is closed right now.')}
           </span>
         </div>
       </div>

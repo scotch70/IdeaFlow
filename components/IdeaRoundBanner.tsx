@@ -1,8 +1,9 @@
 /**
- * IdeaRoundBanner — shown to ALL users when a round is active or closed.
+ * IdeaRoundBanner — shown to ALL users when a round is active, closed, or in draft.
  *
- * Draft rounds are invisible to non-admins (handled in dashboard/page.tsx
- * by only rendering the banner when status !== 'draft').
+ * Draft: muted orange "coming soon" banner (members see submissions are locked temporarily).
+ * Active: green banner with optional countdown.
+ * Closed / auto-expired: red banner.
  */
 
 type RoundStatus = 'draft' | 'active' | 'closed'
@@ -21,8 +22,32 @@ export default function IdeaRoundBanner({
   autoExpired = false,
   endsAt,
 }: IdeaRoundBannerProps) {
-  const displayName = name?.trim() || 'IdeaFlow'
+  const displayName = name?.trim() || null
   const effectivelyClosed = status === 'closed' || autoExpired
+
+  // ── Draft ─────────────────────────────────────────────────────────────────
+  if (status === 'draft') {
+    return (
+      <div style={{
+        marginBottom: '1.5rem',
+        borderRadius: '1rem',
+        padding: '0.875rem 1.25rem',
+        background: 'rgba(249,115,22,0.04)',
+        border: '1px solid rgba(249,115,22,0.18)',
+        display: 'flex', alignItems: 'center', gap: '0.75rem',
+      }}>
+        <span style={{ fontSize: '1rem', flexShrink: 0 }}>⏳</span>
+        <div>
+          <p style={{ fontSize: '0.85rem', fontWeight: 700, color: '#9a3412', lineHeight: 1.3 }}>
+            {displayName ? `${displayName} is coming soon` : 'An idea round is coming soon'}
+          </p>
+          <p style={{ fontSize: '0.775rem', color: '#c2410c', marginTop: '0.125rem' }}>
+            Your admin is setting up an idea round — submissions will open soon.
+          </p>
+        </div>
+      </div>
+    )
+  }
 
   // ── Closed / expired ──────────────────────────────────────────────────────
   if (effectivelyClosed) {
@@ -38,7 +63,7 @@ export default function IdeaRoundBanner({
         <span style={{ fontSize: '1rem', flexShrink: 0 }}>🔒</span>
         <div>
           <p style={{ fontSize: '0.85rem', fontWeight: 700, color: '#7f1d1d', lineHeight: 1.3 }}>
-            {displayName} is closed
+            {displayName ?? 'This round'} is closed
           </p>
           <p style={{ fontSize: '0.775rem', color: '#b91c1c', marginTop: '0.125rem' }}>
             Idea submission has ended for this IdeaFlow.
@@ -66,7 +91,7 @@ export default function IdeaRoundBanner({
       <span style={{ fontSize: '1rem', flexShrink: 0 }}>📢</span>
       <div style={{ flex: 1, minWidth: 0 }}>
         <p style={{ fontSize: '0.85rem', fontWeight: 700, color: '#064e3b', lineHeight: 1.3 }}>
-          {displayName} is open
+          {displayName ?? 'Idea round'} is open
         </p>
         <p style={{ fontSize: '0.775rem', color: '#065f46', marginTop: '0.125rem' }}>
           {daysLeft !== null

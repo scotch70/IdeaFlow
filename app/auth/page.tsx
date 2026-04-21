@@ -158,7 +158,7 @@ function AuthPageInner() {
                 {email}
               </p>
               <p style={{ fontSize: '0.825rem', color: 'var(--ink-light)', lineHeight: 1.6 }}>
-                Click the link in the email to activate your account and log in. You can close this tab.
+                Click the link in the email to activate your account and log in. The link will open automatically in your browser.
               </p>
 
               <div style={{ marginTop: '1.5rem', paddingTop: '1.25rem', borderTop: '1px solid var(--border, #e2e8f0)', fontSize: '0.8rem', color: 'var(--ink-light)' }}>
@@ -284,6 +284,22 @@ function AuthPageInner() {
     )
   }
 
+  // ── Invite context banner — shown on both signin and signup when coming from invite ──
+  const INVITE_BANNER = comingFromInvite ? (
+    <div style={{
+      marginBottom: '1rem',
+      borderRadius: '0.75rem',
+      padding: '0.625rem 0.875rem',
+      background: 'rgba(26,107,191,0.06)',
+      border: '1px solid rgba(26,107,191,0.16)',
+      fontSize: '0.8rem',
+      color: '#1a4a7a',
+      lineHeight: 1.55,
+    }}>
+      You&apos;ve been invited to a workspace — sign in or create an account to join.
+    </div>
+  ) : null
+
   // ── Sign in / Create account ───────────────────────────────────────────────
   return (
     <main style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem 1rem', background: 'var(--page-bg)', position: 'relative', overflow: 'hidden' }}>
@@ -293,12 +309,14 @@ function AuthPageInner() {
         <div style={CARD_SHELL}>
           <div style={{ marginBottom: '1.5rem' }}>
             <p style={{ fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--ink-light)', marginBottom: '0.3rem' }}>
-              {mode === 'signin' ? 'Welcome back' : 'New workspace'}
+              {mode === 'signin' ? 'Welcome back' : comingFromInvite ? 'Join workspace' : 'New workspace'}
             </p>
             <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--ink)', letterSpacing: '-0.02em', lineHeight: 1.2 }}>
-              {mode === 'signin' ? 'Sign in' : 'Create your workspace'}
+              {mode === 'signin' ? 'Sign in' : comingFromInvite ? 'Create your account' : 'Create your workspace'}
             </h1>
           </div>
+
+          {INVITE_BANNER}
 
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             {mode === 'signup' && (
@@ -311,14 +329,16 @@ function AuthPageInner() {
                   onChange={e => setFullName(e.target.value)}
                   required
                 />
-                <input
-                  className="input"
-                  type="text"
-                  placeholder="Company name"
-                  value={companyName}
-                  onChange={e => setCompanyName(e.target.value)}
-                  required
-                />
+                {!comingFromInvite && (
+                  <input
+                    className="input"
+                    type="text"
+                    placeholder="Company name"
+                    value={companyName}
+                    onChange={e => setCompanyName(e.target.value)}
+                    required
+                  />
+                )}
               </>
             )}
 
@@ -338,6 +358,11 @@ function AuthPageInner() {
               onChange={e => setPassword(e.target.value)}
               required
             />
+            {mode === 'signup' && (
+              <p style={{ fontSize: '0.75rem', color: 'var(--ink-light)', marginTop: '-0.25rem' }}>
+                At least 8 characters
+              </p>
+            )}
 
             {mode === 'signin' && (
               <div style={{ textAlign: 'right', marginTop: '-0.125rem' }}>

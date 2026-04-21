@@ -197,7 +197,7 @@ export default async function DashboardPage({
   const roundEndsAt  = roundData?.idea_round_ends_at ?? null
   const roundExpired = roundStatus === 'active' && roundEndsAt !== null && new Date(roundEndsAt) < new Date()
   const isRoundActive     = roundStatus === null || (roundStatus === 'active' && !roundExpired)
-  const showRoundBanner   = roundStatus === 'active' || roundStatus === 'closed' || roundExpired
+  const showRoundBanner   = roundStatus === 'active' || roundStatus === 'closed' || roundExpired || roundStatus === 'draft'
 
   const trialEndsAt = company?.trial_ends_at
   const trialDaysLeft = trialEndsAt
@@ -329,16 +329,24 @@ export default async function DashboardPage({
                 <p style={{ fontSize: '0.8rem', color: '#7c2d12' }}>
                   {memberCount} / 10 members used
                 </p>
+                {memberCount <= 1 && (
+                  <a
+                    href="/dashboard/invites"
+                    style={{ fontSize: '0.8rem', color: 'var(--orange)', fontWeight: 600, textDecoration: 'none' }}
+                  >
+                    Invite your team to start collecting ideas →
+                  </a>
+                )}
               </div>
               <UpgradeButton />
             </div>
           )}
 
-          {/* ── Idea round banner (all users, active / closed / expired) ── */}
+          {/* ── Idea round banner (all users: active / closed / expired / draft) ── */}
           {showRoundBanner && (
             <IdeaRoundBanner
               name={roundData?.idea_round_name ?? null}
-              status={roundExpired ? 'closed' : (roundStatus as 'active' | 'closed')}
+              status={roundExpired ? 'closed' : (roundStatus as 'draft' | 'active' | 'closed')}
               autoExpired={roundExpired}
               endsAt={roundEndsAt}
             />
@@ -411,6 +419,8 @@ export default async function DashboardPage({
                 customPrompt={company?.custom_idea_prompt ?? null}
                 roundActive={isRoundActive}
                 roundName={roundData?.idea_round_name ?? null}
+                defaultOpen={ideasWithLikeStatus.length === 0}
+                roundIsDraft={roundStatus === 'draft'}
               />
             </div>
 
