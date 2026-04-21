@@ -74,7 +74,7 @@ export default function SettingsForm({
         const { error: upErr } = await supabase.storage
           .from('avatars')
           .upload(path, pendingFile, { upsert: true, contentType: pendingFile.type })
-        if (upErr) throw upErr
+        if (upErr) throw new Error(upErr.message ?? 'Avatar upload failed')
 
         const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path)
         finalAvatarUrl = `${publicUrl}?t=${Date.now()}`
@@ -82,8 +82,8 @@ export default function SettingsForm({
         setPendingFile(null)
       }
 
-      const { error } = await (supabase
-        .from('profiles') as unknown as { update: (v: Record<string, unknown>) => { eq: (col: string, val: string) => Promise<{ error: Error | null }> } })
+      const { data: updatedRows, error } = await (supabase as any)
+        .from('profiles')
         .update({
           full_name:    firstName.trim(),
           last_name:    lastName.trim(),
@@ -91,12 +91,14 @@ export default function SettingsForm({
           avatar_url:   finalAvatarUrl || null,
         })
         .eq('id', userId)
+        .select('id')
 
-      if (error) throw error
+      if (error) throw new Error(error.message ?? 'Database error')
+      if (!updatedRows?.length) throw new Error('Profile not found or permission denied')
       showToast('ok', 'Profile saved!')
       router.refresh()
     } catch (err: unknown) {
-      showToast('err', err instanceof Error ? err.message : 'Something went wrong')
+      showToast('err', err instanceof Error ? err.message : String(err))
     } finally {
       setSaving(false)
     }
