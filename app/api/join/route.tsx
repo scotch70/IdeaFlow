@@ -60,10 +60,42 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Always use the role from the invite — never inherit any pre-existing role.
-    // A profile may have been auto-created with role:'admin' by a Supabase trigger,
-    // but that should never bleed through to an invited member.
-    const nextRole = (invite.role as string) || 'member'
+    // ── Fetch the user's existing profile ──────────────────────────────────
+    // maybeSingle() returns null cleanly when no row exists yet (new user).
+    // We need this to enforce two invariants before touching anything:
+    //   1. Users cannot silently switch workspaces.
+    //   2. Admins cannot demote themselves by consuming a member invite.
+    const { data: existingProfile } = await (supabase as any)
+      .from('profiles')
+      .select('company_id, role')
+      .eq('id', user.id)
+      .maybeSingle()
+
+    const existingCompanyId = existingProfile?.company_id ?? null
+    const existingRole      = existingProfile?.role       ?? null
+
+    // ── Cross-company guard ─────────────────────────────────────────────────
+    // If the user already belongs to a different company, reject immediately.
+    // Neither the profile nor the invite are touched — the invite remains
+    // reusable by its intended recipient.
+    if (existingCompanyId && existingCompanyId !== invite.company_id) {
+      return NextResponse.json(
+        {
+          error: 'You already belong to a different workspace. Contact your admin if you need to switch.',
+          errorCode: 'ALREADY_IN_COMPANY',
+        },
+        { status: 403 },
+      )
+    }
+
+    // ── Resolve role ────────────────────────────────────────────────────────
+    // Preserve 'admin' if the user is already an admin of this same company.
+    // All generated invites have role:'member', so without this an admin
+    // consuming their own invite would silently lose admin access.
+    const isSameCompany = existingCompanyId === invite.company_id
+    const nextRole = (isSameCompany && existingRole === 'admin')
+      ? 'admin'
+      : ((invite.role as string) || 'member')
 
     // Upsert the profile FIRST. The invite is only marked as used after this
     // succeeds — so a failed write never burns the invite.

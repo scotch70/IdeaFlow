@@ -9,7 +9,8 @@ import LogoMark from '@/components/LogoMark'
 // 'choose'  — first-time visitor selects their path
 // 'signup'  — creating a new workspace
 // 'signin'  — returning user
-type Mode = 'choose' | 'signup' | 'signin'
+// 'confirm' — signup succeeded but email confirmation is required before session exists
+type Mode = 'choose' | 'signup' | 'signin' | 'confirm'
 
 export default function AuthPage() {
   return (
@@ -50,12 +51,19 @@ function AuthPageInner() {
       if (mode === 'signup') {
         if (!fullName.trim()) throw new Error('Full name is required')
         if (!companyName.trim()) throw new Error('Company name is required')
-        const { error } = await supabase.auth.signUp({
+        const { data: signUpData, error } = await supabase.auth.signUp({
           email,
           password,
           options: { data: { full_name: fullName, company_name: companyName } },
         })
         if (error) throw error
+        // When email confirmation is enabled Supabase returns session: null.
+        // Pushing to /dashboard without a session causes an immediate redirect
+        // loop back to /auth. Show a "check your inbox" screen instead.
+        if (!signUpData.session) {
+          setMode('confirm')
+          return
+        }
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
@@ -113,6 +121,61 @@ function AuthPageInner() {
     cursor: 'pointer',
     padding: 0,
     fontSize: 'inherit',
+  }
+
+  // ── Confirm email ─────────────────────────────────────────────────────────
+  if (mode === 'confirm') {
+    return (
+      <main style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem 1rem', background: 'var(--page-bg)', position: 'relative', overflow: 'hidden' }}>
+        {BG_GLOW}
+        <div style={{ width: '100%', maxWidth: '22rem', position: 'relative', zIndex: 1 }}>
+          {LOGO}
+          <div style={CARD_SHELL}>
+            <div style={{ textAlign: 'center' }}>
+              {/* Envelope icon */}
+              <div style={{
+                width: '3.5rem', height: '3.5rem',
+                borderRadius: '1rem',
+                background: 'rgba(249,115,22,0.08)',
+                border: '1px solid rgba(249,115,22,0.18)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                margin: '0 auto 1.25rem',
+                fontSize: '1.5rem',
+              }}>
+                ✉️
+              </div>
+
+              <p style={{ fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--ink-light)', marginBottom: '0.3rem' }}>
+                One more step
+              </p>
+              <h1 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--ink)', letterSpacing: '-0.02em', lineHeight: 1.2, marginBottom: '0.75rem' }}>
+                Check your inbox
+              </h1>
+              <p style={{ fontSize: '0.875rem', color: 'var(--ink-light)', lineHeight: 1.6, marginBottom: '0.5rem' }}>
+                We&apos;ve sent a confirmation link to
+              </p>
+              <p style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--ink)', marginBottom: '1.25rem', wordBreak: 'break-all' }}>
+                {email}
+              </p>
+              <p style={{ fontSize: '0.825rem', color: 'var(--ink-light)', lineHeight: 1.6 }}>
+                Click the link in the email to activate your account and log in. You can close this tab.
+              </p>
+
+              <div style={{ marginTop: '1.5rem', paddingTop: '1.25rem', borderTop: '1px solid var(--border, #e2e8f0)', fontSize: '0.8rem', color: 'var(--ink-light)' }}>
+                Wrong email?{' '}
+                <button
+                  type="button"
+                  onClick={() => { setMode('signup'); setError('') }}
+                  style={FOOTER_LINK}
+                >
+                  Go back
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    )
   }
 
   // ── Choose path ───────────────────────────────────────────────────────────

@@ -65,20 +65,15 @@ export default async function DashboardPage({
     error: Error | null
   }
 
+  // Profile missing or no company_id means the onboarding trigger either hasn't
+  // fired yet or failed entirely. Redirect to the onboard endpoint which creates
+  // the company + profile idempotently as a fallback, then sends the user here.
   if (profileError || !profile) {
-    return (
-      <div className="flex min-h-screen items-center justify-center text-stone-500">
-        Could not load your profile yet. Please sign out and sign back in.
-      </div>
-    )
+    redirect('/api/onboard')
   }
 
   if (!profile.company_id) {
-    return (
-      <div className="flex min-h-screen items-center justify-center text-stone-500">
-        Setting up your workspace… please refresh in a moment.
-      </div>
-    )
+    redirect('/api/onboard')
   }
 
   const { data: members } = (await supabase
