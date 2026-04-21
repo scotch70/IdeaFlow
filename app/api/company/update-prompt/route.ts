@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
     const { error: updateError } = await (supabase as any)
       .from('companies')
       .update({ custom_idea_prompt: trimmedPrompt })
-      .eq('id', companyId)
+      .eq('id', profile.company_id)  // use server-verified value, not body
 
     if (updateError) {
       return NextResponse.json({ error: updateError.message }, { status: 500 })

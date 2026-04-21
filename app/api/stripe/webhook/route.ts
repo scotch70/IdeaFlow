@@ -59,6 +59,7 @@ export async function POST(req: Request) {
     stripe_customer_id: customerId,
     stripe_subscription_id: subscriptionId,
   })
+  .eq('id', companyId)
 
       if (error) {
         console.error('[stripe/webhook] failed to upgrade company:', error)

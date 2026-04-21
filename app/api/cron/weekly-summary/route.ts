@@ -1,9 +1,21 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendWeeklySummary } from '@/lib/email/weeklySummary'
 export const dynamic = 'force-dynamic'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // Require a shared secret so this endpoint cannot be triggered by anyone
+  // with the URL. Set CRON_SECRET in your environment and pass it as:
+  //   Authorization: Bearer <CRON_SECRET>
+  // Vercel Cron jobs support this natively via the `headers` field.
+  const cronSecret = process.env.CRON_SECRET
+  const authHeader = request.headers.get('authorization')
+  const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null
+
+  if (!cronSecret || !token || token !== cronSecret) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   const supabase = createAdminClient()
 
   // 1. Get all companies

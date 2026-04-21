@@ -13,6 +13,7 @@
   "/api/join/route": "/api/join",
   "/api/likes/route": "/api/likes",
   "/api/members/remove/route": "/api/members/remove",
+  "/api/onboard/route": "/api/onboard",
   "/api/stripe/checkout/route": "/api/stripe/checkout",
   "/api/stripe/webhook/route": "/api/stripe/webhook",
   "/auth/callback/route": "/auth/callback",

@@ -1,3 +1,4 @@
+import { randomBytes } from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { resend } from '../../../lib/supabase/resend'
@@ -9,7 +10,9 @@ function generateInviteCode(companyName: string) {
     .toUpperCase()
     .slice(0, 8)
 
-  const random = Math.random().toString(36).slice(2, 7).toUpperCase()
+  // 8 hex bytes = 64 bits of cryptographically secure randomness.
+  // Replaces Math.random() which was ~29 bits and not a CSPRNG.
+  const random = randomBytes(8).toString('hex').toUpperCase()
   return `${prefix}-${random}`
 }
 

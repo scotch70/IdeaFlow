@@ -4,12 +4,12 @@ import { createClient } from '@/lib/supabase/server'
 /**
  * GET /api/invites/preview?code=XXX
  *
- * No authentication required. Returns only the email and invitee name
- * associated with a given invite code so the join page can detect an
- * account mismatch before the user submits anything.
+ * Returns the email and invitee name associated with a given invite code so
+ * the join page can detect an account mismatch before the user submits.
  *
- * Invite codes are already secrets — returning the recipient email to
- * whoever holds the code is intentional and safe.
+ * Authentication is required: an unauthenticated endpoint acting as a
+ * code-validity oracle makes invite codes enumerable even when they are
+ * cryptographically strong.
  */
 export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get('code')
@@ -19,6 +19,17 @@ export async function GET(request: NextRequest) {
   }
 
   const supabase = await createClient()
+
+  // Reject unauthenticated callers. The join page only calls this after the
+  // user has a session, so legitimate flows are unaffected.
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser()
+
+  if (userError || !user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
 
   const { data: invite, error } = await (supabase as any)
     .from('invites')

@@ -95,11 +95,28 @@ export async function POST(request: NextRequest) {
 
     // DELETE IDEA
     if (action === 'delete') {
+      // Guard: if the user has been removed from the company their profile has
+      // company_id: null. Without this check they could still delete old ideas
+      // by ID even after losing membership.
+      const { data: deleteProfile, error: deleteProfileError } = await (supabase as any)
+        .from('profiles')
+        .select('company_id')
+        .eq('id', user.id)
+        .single()
+
+      if (deleteProfileError || !deleteProfile?.company_id) {
+        return NextResponse.json(
+          { error: 'Could not verify your workspace' },
+          { status: 403 },
+        )
+      }
+
       const { error } = await (supabase as any)
         .from('ideas')
         .delete()
         .eq('id', ideaId)
         .eq('user_id', user.id)
+        .eq('company_id', deleteProfile.company_id)  // scope to current membership
 
       if (error) {
         return NextResponse.json({ error: error.message }, { status: 500 })
@@ -114,6 +131,20 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Title is required' }, { status: 400 })
       }
 
+      // Same membership guard as delete — prevent ex-members editing stale ideas.
+      const { data: updateProfile, error: updateProfileError } = await (supabase as any)
+        .from('profiles')
+        .select('company_id')
+        .eq('id', user.id)
+        .single()
+
+      if (updateProfileError || !updateProfile?.company_id) {
+        return NextResponse.json(
+          { error: 'Could not verify your workspace' },
+          { status: 403 },
+        )
+      }
+
       const { data, error } = await (supabase as any)
         .from('ideas')
         .update({
@@ -122,6 +153,7 @@ export async function POST(request: NextRequest) {
         })
         .eq('id', ideaId)
         .eq('user_id', user.id)
+        .eq('company_id', updateProfile.company_id)  // scope to current membership
         .select()
         .single()
 

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { canAddMembers } from '@/lib/billing'
 
 export async function POST(request: NextRequest) {
   try {
@@ -97,12 +98,78 @@ export async function POST(request: NextRequest) {
       ? 'admin'
       : ((invite.role as string) || 'member')
 
-    // Upsert the profile FIRST. The invite is only marked as used after this
-    // succeeds — so a failed write never burns the invite.
-    //
-    // Important: we use .select('id').single() so that a silent RLS-blocked
-    // write (which Supabase returns as error:null, data:null) is caught the
-    // same way as an explicit error, rather than being mistaken for success.
+    // ── Seat-limit check ───────────────────────────────────────────────────
+    // Checked at join time (not just at invite-creation time) so that stale
+    // invites and parallel invite-creation races cannot push a workspace over
+    // its member cap.
+    const { data: joinCompany, error: joinCompanyError } = await (supabase as any)
+      .from('companies')
+      .select('plan, trial_ends_at')
+      .eq('id', invite.company_id)
+      .single()
+
+    if (joinCompanyError || !joinCompany) {
+      return NextResponse.json({ error: 'Workspace not found' }, { status: 404 })
+    }
+
+    const { count: currentMemberCount, error: countError } = await (supabase as any)
+      .from('profiles')
+      .select('*', { count: 'exact', head: true })
+      .eq('company_id', invite.company_id)
+
+    if (countError) {
+      return NextResponse.json({ error: countError.message }, { status: 500 })
+    }
+
+    // Only enforce for users who aren't already in this company — re-joining
+    // members (e.g. an admin consuming their own invite) don't add a new seat.
+    const isNewMember = !isSameCompany
+    if (isNewMember && !canAddMembers({
+      plan: joinCompany.plan,
+      trialEndsAt: joinCompany.trial_ends_at,
+      memberCount: currentMemberCount ?? 0,
+    })) {
+      return NextResponse.json(
+        { error: 'This workspace has reached its member limit. Ask your admin to upgrade.' },
+        { status: 403 },
+      )
+    }
+
+    // ── Atomic invite claim ─────────────────────────────────────────────────
+    // Replace the two-step read-then-mark with a single conditional UPDATE.
+    // PostgreSQL acquires a row lock for the duration of the UPDATE, so two
+    // concurrent requests are serialised: exactly one will get a row back.
+    // The .is('used_at', null) predicate means a second concurrent request
+    // that passes the earlier used_at check above still loses here — it finds
+    // used_at already set and returns null, triggering INVITE_USED.
+    const { data: claimedInvite, error: claimError } = await (supabase as any)
+      .from('invites')
+      .update({
+        used_at: new Date().toISOString(),
+        joined_user_id: user.id,
+      })
+      .eq('id', invite.id)
+      .is('used_at', null)
+      .select('id')
+      .maybeSingle()
+
+    if (claimError) {
+      return NextResponse.json({ error: claimError.message }, { status: 500 })
+    }
+
+    if (!claimedInvite) {
+      // Another request claimed the invite between our initial read and now.
+      return NextResponse.json(
+        { error: 'This invite has already been used', errorCode: 'INVITE_USED' },
+        { status: 400 },
+      )
+    }
+
+    // ── Upsert profile ──────────────────────────────────────────────────────
+    // Invite is already marked used above. If this write fails the invite is
+    // consumed but the profile isn't updated — log the error so it's visible
+    // for manual recovery. We use .select('id').single() to catch silent
+    // RLS-blocked writes (error:null, data:null) the same as explicit errors.
     const { data: upsertedProfile, error: upsertProfileError } = await (supabase as any)
       .from('profiles')
       .upsert(
@@ -118,23 +185,9 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (upsertProfileError || !upsertedProfile) {
+      console.error('[api/join] profile upsert failed after invite claimed:', upsertProfileError?.message)
       return NextResponse.json(
         { error: upsertProfileError?.message ?? 'Failed to update profile' },
-        { status: 500 }
-      )
-    }
-
-    const { error: markInviteError } = await (supabase as any)
-  .from('invites')
-  .update({
-    used_at: new Date().toISOString(),
-    joined_user_id: user.id,
-  })
-  .eq('id', invite.id)
-
-    if (markInviteError) {
-      return NextResponse.json(
-        { error: markInviteError.message },
         { status: 500 }
       )
     }

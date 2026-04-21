@@ -136,11 +136,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    // ── Detect whether status is actually changing ────────────────────────────
-    const statusChanged = idea.status !== status
-
-    // ── Update via admin client (bypasses RLS) ───────────────────────────────
-    const { data: updated, error: updateError } = (await (adminClient as any)
+    // ── Optimistic-lock update via admin client (bypasses RLS) ──────────────
+    // .eq('status', idea.status) is the concurrency guard: the UPDATE only
+    // matches the row if its status in the DB still equals what we read above.
+    // If another admin updated the same idea between our read and this write,
+    // their change will have altered the stored status and this predicate will
+    // match nothing — Supabase returns an empty array rather than a row.
+    // We use .select() (array) instead of .single() so a no-match returns []
+    // rather than a PostgREST 406 error, letting us distinguish "conflict" from
+    // "DB error" cleanly.
+    const { data: updatedRows, error: updateError } = (await (adminClient as any)
   .from('ideas')
   .update({
     status,
@@ -152,15 +157,29 @@ export async function POST(request: NextRequest) {
     impact_link:    status === 'implemented' ? (impactLinkStr || null) : null,
   })
   .eq('id', ideaId)
-  .select()
-  .single()) as unknown as { data: unknown; error: { message: string } | null }
+  .eq('status', idea.status)   // ← optimistic lock: only update if status unchanged
+  .select()) as unknown as { data: unknown[]; error: { message: string } | null }
 
     if (updateError) {
       return NextResponse.json({ error: updateError.message }, { status: 500 })
     }
 
+    // Empty array means the predicate matched nothing — another request already
+    // changed the status. Return 409 so the client can prompt the admin to reload.
+    if (!Array.isArray(updatedRows) || updatedRows.length === 0) {
+      return NextResponse.json(
+        { error: 'This idea was updated by someone else. Reload the page and try again.' },
+        { status: 409 },
+      )
+    }
+
+    const updated = updatedRows[0]
+
     // ── Send notification email (fire-and-forget) ─────────────────────────────
-    // Only send if: status actually changed AND new status warrants a notification
+    // statusChanged is now derived after the guarded write succeeds, so emails
+    // are only sent when this request actually owned the transition — not when
+    // the status was read as different but the update was then lost to a race.
+    const statusChanged = idea.status !== status
     if (statusChanged && EMAIL_STATUSES.includes(status as IdeaStatus)) {
       sendStatusEmail({
         authorId: idea.user_id,

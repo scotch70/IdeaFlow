@@ -117,6 +117,12 @@
       "namedRegex": "^/api/members/remove(?:/)?$"
     },
     {
+      "page": "/api/onboard",
+      "regex": "^/api/onboard(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/onboard(?:/)?$"
+    },
+    {
       "page": "/api/stripe/checkout",
       "regex": "^/api/stripe/checkout(?:/)?$",
       "routeKeys": {},

@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
     const { data: updated, error: updateError } = await (adminClient as any)
       .from('companies')
       .update(patch)
-      .eq('id', companyId)
+      .eq('id', profile.company_id)  // use server-verified value, not body
       .select('id')   // request the row back — Supabase returns [] if 0 rows matched
 
     if (updateError) {
