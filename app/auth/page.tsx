@@ -26,6 +26,15 @@ function AuthPageInner() {
   const nextUrl = params.get('next') || '/dashboard'
   const supabase = createClient()
 
+  const ERROR_PARAM_MESSAGES: Record<string, string> = {
+    temporary_error:   'Something went wrong on our end — please try signing in again.',
+    onboarding_failed: 'We could not set up your workspace. Please contact support if this keeps happening.',
+  }
+  const pageError = (() => {
+    const e = params.get('error')
+    return e ? (ERROR_PARAM_MESSAGES[e] ?? 'An unexpected error occurred.') : null
+  })()
+
   // If the user arrived here from an invite link, they already have context —
   // skip the choose screen and go straight to sign-in / create account.
   const comingFromInvite = nextUrl.includes('/join')
@@ -50,7 +59,7 @@ function AuthPageInner() {
     try {
       if (mode === 'signup') {
         if (!fullName.trim()) throw new Error('Full name is required')
-        if (!companyName.trim()) throw new Error('Company name is required')
+        if (!comingFromInvite && !companyName.trim()) throw new Error('Company name is required')
         const { data: signUpData, error } = await supabase.auth.signUp({
           email,
           password,
@@ -317,6 +326,23 @@ function AuthPageInner() {
           </div>
 
           {INVITE_BANNER}
+
+          {pageError && (
+            <div
+              style={{
+                marginBottom: '1rem',
+                borderRadius: '0.625rem',
+                border: '1px solid rgba(220,38,38,0.18)',
+                background: 'rgba(220,38,38,0.05)',
+                padding: '0.625rem 0.875rem',
+                fontSize: '0.825rem',
+                color: '#dc2626',
+                lineHeight: 1.5,
+              }}
+            >
+              {pageError}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             {mode === 'signup' && (
