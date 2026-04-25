@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import LogoMark from '@/components/LogoMark'
 
@@ -27,6 +27,11 @@ export default function JoinPageClient() {
   const [inviteEmail, setInviteEmail] = useState<string | null>(null)
   const [inviteCheckDone, setInviteCheckDone] = useState(false)
   const [mismatchDismissed, setMismatchDismissed] = useState(false)
+
+  // Prevents the auto-join effect from retrying after a failure or success.
+  // Without this, resetting `loading` to false re-triggers the effect and
+  // creates an infinite request loop.
+  const autoJoinAttempted = useRef(false)
 
   useEffect(() => {
     const savedCode = window.localStorage.getItem(INVITE_CODE_STORAGE_KEY)
@@ -105,10 +110,14 @@ export default function JoinPageClient() {
 
   useEffect(() => {
     async function autoJoinIfReady() {
-      if (!isLoggedIn || !trimmedCode || !name.trim() || loading) return
+      if (!isLoggedIn || !trimmedCode || !name.trim()) return
       if (!inviteCheckDone) return
       if (accountMismatch) return
       if (params.get('autoJoin') !== '1') return
+      // Guard: only attempt once — resetting `loading` to false after a failure
+      // would otherwise re-trigger this effect, creating an infinite retry loop.
+      if (autoJoinAttempted.current) return
+      autoJoinAttempted.current = true
 
       setLoading(true)
       setError('')
@@ -133,7 +142,7 @@ export default function JoinPageClient() {
       }
     }
     autoJoinIfReady()
-  }, [isLoggedIn, trimmedCode, name, loading, inviteCheckDone, accountMismatch, params, router])
+  }, [isLoggedIn, trimmedCode, name, inviteCheckDone, accountMismatch, params, router])
 
   async function handleJoin(e: React.FormEvent) {
     e.preventDefault()
