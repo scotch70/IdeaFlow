@@ -46,10 +46,13 @@ export async function GET(request: NextRequest) {
   }
 
   if (existingProfileError) {
+    // Transient DB read failure — the user's session is still valid.
+    // Signing them out here would force a full re-signup for a temporary blip.
+    // Redirect with a recoverable error code so the auth page can show a
+    // "something went wrong, please try again" message without losing the session.
     console.error('[api/onboard] existing profile lookup failed:', existingProfileError.message)
-    await supabase.auth.signOut()
     return NextResponse.redirect(
-      new URL('/auth?error=onboarding_failed', request.url)
+      new URL('/auth?error=temporary_error', request.url)
     )
   }
 
@@ -82,10 +85,12 @@ export async function GET(request: NextRequest) {
   .single()
 
   if (companyError || !company) {
+    // Transient DB write failure — no company row was created, so no
+    // partial state exists.  Preserve the session so the user can retry
+    // without re-entering their email and password.
     console.error('[api/onboard] company insert failed:', companyError?.message)
-    await supabase.auth.signOut()
     return NextResponse.redirect(
-      new URL('/auth?error=onboarding_failed', request.url)
+      new URL('/auth?error=temporary_error', request.url)
     )
   }
 

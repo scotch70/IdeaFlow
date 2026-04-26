@@ -90,6 +90,16 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: error.message }, { status: 500 })
       }
 
+      // RLS can silently block inserts — Supabase returns {data:null, error:null}
+      // when a policy rejects the write.  Treat a null result as a hard failure
+      // so the client shows an error rather than closing the form silently.
+      if (!data) {
+        return NextResponse.json(
+          { error: 'Could not save your idea — please try again' },
+          { status: 500 },
+        )
+      }
+
       return NextResponse.json(data)
     }
 

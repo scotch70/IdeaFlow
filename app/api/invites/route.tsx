@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { resend } from '../../../lib/supabase/resend'
 import { canAddMembers } from '@/lib/billing'
+import { checkRateLimit, getClientIp } from '@/lib/ratelimit'
 
 function generateInviteCode(companyName: string) {
   const prefix = companyName
@@ -17,6 +18,18 @@ function generateInviteCode(companyName: string) {
 }
 
 export async function POST(request: NextRequest) {
+  // ── Rate limit — checked before any auth or DB work ───────────────────────
+  // 10 requests per IP per 60 s. Admin-only, but still capped to prevent
+  // credential-stuffing that escalates into bulk invite generation.
+  const ip = getClientIp(request)
+  const allowed = await checkRateLimit(`invites:${ip}`, 60, 10)
+  if (!allowed) {
+    return NextResponse.json(
+      { error: 'Too many invite requests. Please wait a moment and try again.' },
+      { status: 429, headers: { 'Retry-After': '60' } },
+    )
+  }
+
   try {
     const supabase = await createClient()
 

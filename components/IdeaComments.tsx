@@ -24,18 +24,23 @@ function timeAgo(dateStr: string) {
 export default function IdeaComments({ ideaId, currentUserId }: IdeaCommentsProps) {
   const [comments, setComments]     = useState<Comment[]>([])
   const [loading, setLoading]       = useState(true)
+  const [loadFailed, setLoadFailed] = useState(false)
   const [content, setContent]       = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError]           = useState('')
   const inputRef                    = useRef<HTMLInputElement>(null)
 
-  useEffect(() => {
+  function fetchComments() {
+    setLoading(true)
+    setLoadFailed(false)
     fetch(`/api/comments?ideaId=${ideaId}`)
       .then(r => r.json())
       .then((data: Comment[]) => setComments(Array.isArray(data) ? data : []))
-      .catch(() => {/* silently ignore — not critical */})
+      .catch(() => setLoadFailed(true))
       .finally(() => setLoading(false))
-  }, [ideaId])
+  }
+
+  useEffect(() => { fetchComments() }, [ideaId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -106,7 +111,20 @@ export default function IdeaComments({ ideaId, currentUserId }: IdeaCommentsProp
         </div>
       )}
 
-      {/* Error */}
+      {/* Load failure */}
+      {loadFailed && (
+        <p style={{ fontSize: '0.72rem', color: '#dc2626', marginBottom: '0.375rem' }}>
+          Could not load comments.{' '}
+          <button
+            onClick={fetchComments}
+            style={{ background: 'none', border: 'none', padding: 0, fontSize: 'inherit', color: '#dc2626', cursor: 'pointer', textDecoration: 'underline' }}
+          >
+            Retry
+          </button>
+        </p>
+      )}
+
+      {/* Submit error */}
       {error && (
         <p style={{ fontSize: '0.72rem', color: '#dc2626', marginBottom: '0.375rem' }}>
           {error}

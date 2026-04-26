@@ -23,6 +23,10 @@ function timeAgo(dateStr: string) {
   return `${days}d ago`
 }
 
+function isSafeUrl(url: string): boolean {
+  try { return new URL(url).protocol === 'https:' } catch { return false }
+}
+
 function HeartIcon({ filled }: { filled: boolean }) {
   return (
     <svg
@@ -47,6 +51,7 @@ export default function IdeaCard({ idea, currentUserId, isAdmin }: IdeaCardProps
   const [deleting, setDeleting] = useState(false)
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [actionError, setActionError] = useState('')
   const [editTitle, setEditTitle] = useState(idea.title)
   const [editDescription, setEditDescription] = useState(idea.description ?? '')
   const [statusModalOpen, setStatusModalOpen] = useState(false)
@@ -78,7 +83,7 @@ export default function IdeaCard({ idea, currentUserId, isAdmin }: IdeaCardProps
     } catch (error) {
       setLiked(previousLiked)
       setLikesCount(previousCount)
-      alert(error instanceof Error ? error.message : 'Failed to update like')
+      setActionError(error instanceof Error ? error.message : 'Failed to update like')
     } finally {
       setLoading(false)
     }
@@ -98,13 +103,13 @@ export default function IdeaCard({ idea, currentUserId, isAdmin }: IdeaCardProps
       if (!res.ok) throw new Error(data.error || 'Failed to delete idea')
       window.location.reload()
     } catch (error) {
-      alert(error instanceof Error ? error.message : 'Failed to delete idea')
+      setActionError(error instanceof Error ? error.message : 'Failed to delete idea')
       setDeleting(false)
     }
   }
 
   async function handleSaveEdit() {
-    if (!editTitle.trim()) { alert('Title is required'); return }
+    if (!editTitle.trim()) { setActionError('Title is required'); return }
     setSaving(true)
     try {
       const res = await fetch('/api/ideas', {
@@ -121,7 +126,7 @@ export default function IdeaCard({ idea, currentUserId, isAdmin }: IdeaCardProps
       if (!res.ok) throw new Error(data.error || 'Failed to update idea')
       window.location.reload()
     } catch (error) {
-      alert(error instanceof Error ? error.message : 'Failed to update idea')
+      setActionError(error instanceof Error ? error.message : 'Failed to update idea')
       setSaving(false)
     }
   }
@@ -187,6 +192,9 @@ export default function IdeaCard({ idea, currentUserId, isAdmin }: IdeaCardProps
                 onChange={e => setEditDescription(e.target.value)}
                 placeholder="Add more details (optional)"
               />
+              {actionError && (
+                <p style={{ fontSize: '0.75rem', color: '#dc2626' }}>{actionError}</p>
+              )}
               <div style={{ display: 'flex', gap: '0.5rem' }}>
                 <button
                   onClick={handleSaveEdit}
@@ -273,6 +281,12 @@ export default function IdeaCard({ idea, currentUserId, isAdmin }: IdeaCardProps
 
               </div>
 
+              {actionError && (
+                <p style={{ marginTop: '0.35rem', fontSize: '0.75rem', color: '#dc2626' }}>
+                  {actionError}
+                </p>
+              )}
+
               {/* Status note — shown for resolved statuses */}
               {isResolved && idea.status_note && (
                 <div
@@ -331,7 +345,7 @@ export default function IdeaCard({ idea, currentUserId, isAdmin }: IdeaCardProps
                           {idea.impact_type.replace('_', ' ')}
                         </span>
                       )}
-                      {idea.impact_link && (
+                      {idea.impact_link && isSafeUrl(idea.impact_link) && (
                         <a
                           href={idea.impact_link}
                           target="_blank"

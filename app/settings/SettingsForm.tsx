@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import InnerPageHeader from '@/components/InnerPageHeader'
 import PageContainer from '@/components/PageContainer'
+import DeleteAccountButton from '@/components/DeleteAccountButton'
 
 interface Props {
   userId: string
@@ -292,6 +293,34 @@ export default function SettingsForm({
           </div>
 
         </form>
+
+        {/* ── Danger zone ── */}
+        <div
+          style={{
+            marginTop: '2rem',
+            background: '#fff',
+            borderRadius: '1.25rem',
+            border: '1px solid rgba(220,38,38,0.15)',
+            padding: '2rem',
+            boxShadow: '0 2px 12px rgba(6,14,38,0.05)',
+          }}
+        >
+          <p style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#dc2626', marginBottom: '1rem' }}>
+            Danger zone
+          </p>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+            <div>
+              <p style={{ fontSize: '0.875rem', fontWeight: 600, color: '#0d1f35', marginBottom: '0.2rem' }}>
+                Delete my account
+              </p>
+              <p style={{ fontSize: '0.78rem', color: '#9ab0c8', lineHeight: 1.5, maxWidth: '28rem' }}>
+                Permanently removes your account and personal profile. Your ideas and comments remain in the workspace but will display as &ldquo;Deleted user&rdquo;. This cannot be undone.
+              </p>
+            </div>
+            <DeleteAccountButton />
+          </div>
+        </div>
+
       </PageContainer>
     </main>
   )

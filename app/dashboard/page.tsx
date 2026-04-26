@@ -459,6 +459,7 @@ export default async function DashboardPage({
               topContributors={topContributors}
               dailyActivity={dailyActivity}
               topIdea={topIdea}
+              heading="Workspace insights"
             />
           </div>
         </PageContainer>

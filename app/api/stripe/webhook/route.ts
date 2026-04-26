@@ -48,8 +48,17 @@ export async function POST(req: Request) {
       const subscriptionId = typeof session.subscription === 'string' ? session.subscription : null
 
       if (!companyId) {
-        console.warn('[stripe/webhook] checkout.session.completed missing company_id metadata')
-        return NextResponse.json({ received: true })
+        // Return 400 (not 200) so Stripe retries the event automatically.
+        // A 200 here would tell Stripe the event was handled successfully,
+        // leaving the company permanently on the free plan despite payment.
+        console.error(
+          '[stripe/webhook] checkout.session.completed missing company_id in session metadata — returning 400 to trigger Stripe retry. Session ID:',
+          session.id,
+        )
+        return NextResponse.json(
+          { error: 'missing company_id metadata' },
+          { status: 400 },
+        )
       }
 
       const { error } = await (adminClient as any)

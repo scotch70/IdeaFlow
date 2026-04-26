@@ -1,8 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { canAddMembers } from '@/lib/billing'
+import { checkRateLimit, getClientIp } from '@/lib/ratelimit'
 
 export async function POST(request: NextRequest) {
+  // ── Rate limit — checked before any auth or DB work ───────────────────────
+  // 5 requests per IP per 60 s. Tighter than /api/invites because this is the
+  // endpoint an attacker would use to enumerate invite codes.
+  const ip = getClientIp(request)
+  const allowed = await checkRateLimit(`join:${ip}`, 60, 5)
+  if (!allowed) {
+    return NextResponse.json(
+      { error: 'Too many attempts. Please wait a moment and try again.' },
+      { status: 429, headers: { 'Retry-After': '60' } },
+    )
+  }
+
   try {
     const supabase = await createClient()
 
@@ -158,11 +171,26 @@ export async function POST(request: NextRequest) {
     }
 
     if (!claimedInvite) {
-      // Another request claimed the invite between our initial read and now.
-      return NextResponse.json(
-        { error: 'This invite has already been used', errorCode: 'INVITE_USED' },
-        { status: 400 },
-      )
+      // The conditional UPDATE returned no row — either a concurrent request
+      // already claimed it, or this is a retry after a network drop between the
+      // claim and the profile upsert.  Check whether *this* user was the one
+      // who claimed the invite.  If so, fall through to the profile upsert so
+      // the join completes; if not, the invite genuinely belongs to someone else.
+      const { data: ownClaim, error: ownClaimError } = await (supabase as any)
+        .from('invites')
+        .select('id')
+        .eq('id', invite.id)
+        .eq('joined_user_id', user.id)
+        .maybeSingle()
+
+      if (ownClaimError || !ownClaim) {
+        return NextResponse.json(
+          { error: 'This invite has already been used', errorCode: 'INVITE_USED' },
+          { status: 400 },
+        )
+      }
+      // ownClaim is set — this is a retry after a network drop.  Fall through
+      // to the profile upsert so the join completes idempotently.
     }
 
     // ── Upsert profile ──────────────────────────────────────────────────────

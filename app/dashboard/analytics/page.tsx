@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import AnalyticsPanel from '@/components/AnalyticsPanel'
 import type { DailyPoint, Contributor } from '@/components/AnalyticsPanel'
 import PageContainer from '@/components/PageContainer'
+import DownloadReportButton from '@/components/DownloadReportButton'
 
 export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Analytics — IdeaFlow' }
@@ -34,6 +35,15 @@ export default async function AnalyticsPage() {
     .select('*, profiles(full_name)')
     .eq('company_id', profile.company_id!)
     .order('created_at', { ascending: false })) as unknown as { data: IdeaRow[] | null }
+
+  // Fetch plan for the PDF export button gating
+  const { data: company } = (await supabase
+    .from('companies')
+    .select('plan')
+    .eq('id', profile.company_id!)
+    .single()) as unknown as { data: { plan: string } | null }
+
+  const isPro = company?.plan === 'pro'
 
   const now = new Date()
   const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
@@ -89,12 +99,18 @@ export default async function AnalyticsPage() {
         }}
       >
         <PageContainer style={{ paddingTop: '1.125rem', paddingBottom: '1.125rem' }}>
-          <p style={{ fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#9ab0c8', marginBottom: '0.2rem' }}>
-            Management
-          </p>
-          <h1 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0d1f35', letterSpacing: '-0.02em' }}>
-            Analytics
-          </h1>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+            <div>
+              <p style={{ fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#9ab0c8', marginBottom: '0.2rem' }}>
+                Management
+              </p>
+              <h1 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0d1f35', letterSpacing: '-0.02em' }}>
+                Analytics
+              </h1>
+            </div>
+            {/* PDF export button — pro gated */}
+            <DownloadReportButton isPro={isPro} />
+          </div>
         </PageContainer>
       </div>
       <main>

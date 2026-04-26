@@ -99,6 +99,19 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // ── Impact link must be a valid https:// URL if provided ─────────────────
+    if (impactLinkStr) {
+      try {
+        const parsed = new URL(impactLinkStr)
+        if (parsed.protocol !== 'https:') throw new Error()
+      } catch {
+        return NextResponse.json(
+          { error: 'Impact link must be a valid https:// URL.' },
+          { status: 400 },
+        )
+      }
+    }
+
     // ── Impact summary required when marking implemented ─────────────────────
     if (status === 'implemented' && impactSummaryStr.length < 10) {
       return NextResponse.json(

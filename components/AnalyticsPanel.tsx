@@ -19,6 +19,9 @@ interface AnalyticsPanelProps {
   topContributors: Contributor[]
   dailyActivity: DailyPoint[]
   topIdea: { title: string; likes: number } | null
+  /** Optional section heading shown above the stat cards. Omit on pages that
+   *  already have their own page-level heading (e.g. /dashboard/analytics). */
+  heading?: string
 }
 
 function StatCard({
@@ -100,6 +103,7 @@ export default function AnalyticsPanel({
   topContributors,
   dailyActivity,
   topIdea,
+  heading,
 }: AnalyticsPanelProps) {
   const maxActivity = Math.max(...dailyActivity.map(d => d.count), 1)
   const maxContrib = Math.max(...topContributors.map(c => c.count), 1)
@@ -107,24 +111,16 @@ export default function AnalyticsPanel({
 
   return (
     <div>
-      {/* Section header */}
-      <div style={{ marginBottom: '1.25rem' }}>
-        <p
-          style={{
-            fontSize: '0.68rem',
-            fontWeight: 700,
-            letterSpacing: '0.16em',
-            textTransform: 'uppercase',
-            color: 'var(--ink-light)',
-            marginBottom: '0.2rem',
-          }}
-        >
-          Analytics
-        </p>
-        <h2 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--ink)' }}>
-          Workspace insights
-        </h2>
-      </div>
+      {heading && (
+        <div style={{ marginBottom: '1.25rem' }}>
+          <p style={{ fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--ink-light)', marginBottom: '0.2rem' }}>
+            Analytics
+          </p>
+          <h2 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--ink)' }}>
+            {heading}
+          </h2>
+        </div>
+      )}
 
       {/* Stats row */}
       <div
