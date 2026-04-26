@@ -6,6 +6,7 @@ import PageContainer from '@/components/PageContainer'
 import type { Idea } from '@/types/database'
 import type { Database } from '@/types/database'
 import { getEffectiveRoundStatus } from '@/lib/rounds/getEffectiveRoundStatus'
+import RoundGateCard from '@/components/RoundGateCard'
 
 type IdeaJoinResult = Database['public']['Tables']['ideas']['Row'] & {
   profiles: { full_name: string | null } | null
@@ -126,35 +127,69 @@ export default async function IdeasPage() {
         <PageContainer style={{ paddingTop: '1.75rem', paddingBottom: '3rem' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
 
-            {/* ── New idea form ── */}
-            <div
-              style={{
-                borderRadius: '1.25rem',
-                border: '1px solid rgba(26,107,191,0.11)',
-                background: 'linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(248,250,255,1) 100%)',
-                boxShadow: '0 6px 24px rgba(6,14,38,0.04)',
-                padding: '1.25rem',
-              }}
-            >
-              <NewIdeaForm
-                userId={user.id}
-                companyId={profile.company_id}
-                isAdmin={profile.role === 'admin'}
-                customPrompt={company?.custom_idea_prompt ?? null}
-                roundActive={isRoundActive}
-                roundName={roundData?.idea_round_name ?? null}
-                defaultOpen={totalIdeas === 0}
-                roundIsDraft={effectiveStatus === 'draft'}
-              />
-            </div>
+            {effectiveStatus === 'active' ? (
+              <>
+                {/* ── New idea form ── */}
+                <div
+                  style={{
+                    borderRadius: '1.25rem',
+                    border: '1px solid rgba(26,107,191,0.11)',
+                    background: 'linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(248,250,255,1) 100%)',
+                    boxShadow: '0 6px 24px rgba(6,14,38,0.04)',
+                    padding: '1.25rem',
+                  }}
+                >
+                  <NewIdeaForm
+                    userId={user.id}
+                    companyId={profile.company_id}
+                    isAdmin={profile.role === 'admin'}
+                    customPrompt={company?.custom_idea_prompt ?? null}
+                    roundActive={true}
+                    roundName={roundData?.idea_round_name ?? null}
+                    defaultOpen={totalIdeas === 0}
+                    roundIsDraft={false}
+                  />
+                </div>
 
-            {/* ── Idea list with filters ── */}
-            <IdeaList
-              ideas={ideasWithLikeStatus}
-              currentUserId={user.id}
-              companyId={profile.company_id}
-              isAdmin={profile.role === 'admin'}
-            />
+                {/* ── Idea list with filters ── */}
+                <IdeaList
+                  ideas={ideasWithLikeStatus}
+                  currentUserId={user.id}
+                  companyId={profile.company_id}
+                  isAdmin={profile.role === 'admin'}
+                />
+              </>
+            ) : (
+              <>
+                {/* ── Gate card: closed or draft ── */}
+                <RoundGateCard
+                  status={effectiveStatus}
+                  isAdmin={profile.role === 'admin'}
+                />
+
+                {/* ── Previous ideas (read-only) ── */}
+                {ideasWithLikeStatus.length > 0 && (
+                  <>
+                    <div style={{ paddingTop: '0.25rem' }}>
+                      <p style={{
+                        fontSize: '0.68rem', fontWeight: 700,
+                        letterSpacing: '0.16em', textTransform: 'uppercase',
+                        color: '#9ab0c8',
+                      }}>
+                        Previous ideas
+                      </p>
+                    </div>
+                    <IdeaList
+                      ideas={ideasWithLikeStatus}
+                      currentUserId={user.id}
+                      companyId={profile.company_id}
+                      isAdmin={profile.role === 'admin'}
+                    />
+                  </>
+                )}
+              </>
+            )}
+
           </div>
         </PageContainer>
       </main>

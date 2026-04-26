@@ -9,6 +9,7 @@ import UpgradeButton from '@/components/UpgradeButton'
 import ImplementedIdeas from '@/components/ImplementedIdeas'
 import PageContainer from '@/components/PageContainer'
 import IdeaRoundBanner from '@/components/IdeaRoundBanner'
+import RoundGateCard from '@/components/RoundGateCard'
 import { getEffectiveRoundStatus } from '@/lib/rounds/getEffectiveRoundStatus'
 
 type ProfileResult = Pick<
@@ -363,82 +364,114 @@ export default async function DashboardPage({
 
           <section className="space-y-6">
 
-            {/* ── Onboarding empty state ── */}
-            {ideasWithLikeStatus.length === 0 && (
-              <div style={{
-                background: '#ffffff',
-                border: '1px solid rgba(26,107,191,0.10)',
-                borderRadius: '1.25rem',
-                padding: '2.5rem 2rem',
-                textAlign: 'center',
-                boxShadow: '0 2px 12px rgba(6,14,38,0.05)',
-              }}>
-                <div style={{
-                  width: '3rem', height: '3rem',
-                  borderRadius: '0.875rem',
-                  background: 'rgba(249,115,22,0.08)',
-                  border: '1px solid rgba(249,115,22,0.15)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  margin: '0 auto 1.25rem',
-                  fontSize: '1.25rem',
-                }}>
-                  💡
+            {effectiveStatus === 'active' ? (
+              <>
+                {/* ── Onboarding empty state ── */}
+                {ideasWithLikeStatus.length === 0 && (
+                  <div style={{
+                    background: '#ffffff',
+                    border: '1px solid rgba(26,107,191,0.10)',
+                    borderRadius: '1.25rem',
+                    padding: '2.5rem 2rem',
+                    textAlign: 'center',
+                    boxShadow: '0 2px 12px rgba(6,14,38,0.05)',
+                  }}>
+                    <div style={{
+                      width: '3rem', height: '3rem',
+                      borderRadius: '0.875rem',
+                      background: 'rgba(249,115,22,0.08)',
+                      border: '1px solid rgba(249,115,22,0.15)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      margin: '0 auto 1.25rem',
+                      fontSize: '1.25rem',
+                    }}>
+                      💡
+                    </div>
+                    <h2 style={{
+                      fontSize: '1.05rem', fontWeight: 800,
+                      color: '#0d1f35', letterSpacing: '-0.02em',
+                      marginBottom: '0.4rem',
+                    }}>
+                      No ideas yet
+                    </h2>
+                    <p style={{
+                      fontSize: '0.875rem', color: '#9ab0c8',
+                      lineHeight: 1.6, maxWidth: '22rem',
+                      margin: '0 auto 1.75rem',
+                    }}>
+                      The best ideas come from the people doing the work. Be the first to share one.
+                    </p>
+                    <div style={{ display: 'flex', gap: '0.625rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                      <a
+                        href="#new-idea-form"
+                        className="btn-primary"
+                        style={{ fontSize: '0.85rem', padding: '0.55rem 1.25rem', textDecoration: 'none' }}
+                      >
+                        Post your first idea →
+                      </a>
+                    </div>
+                  </div>
+                )}
+
+                <div
+                  id="new-idea-form"
+                  style={{
+                    borderRadius: '1.25rem',
+                    border: '1px solid rgba(26,107,191,0.11)',
+                    background: 'linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(248,250,255,1) 100%)',
+                    boxShadow: '0 6px 24px rgba(6,14,38,0.04)',
+                    padding: '1.25rem',
+                  }}
+                >
+                  <NewIdeaForm
+                    userId={user.id}
+                    companyId={profile.company_id}
+                    isAdmin={profile.role === 'admin'}
+                    customPrompt={company?.custom_idea_prompt ?? null}
+                    roundActive={true}
+                    roundName={roundData?.idea_round_name ?? null}
+                    defaultOpen={ideasWithLikeStatus.length === 0}
+                    roundIsDraft={false}
+                  />
                 </div>
-                <h2 style={{
-                  fontSize: '1.05rem', fontWeight: 800,
-                  color: '#0d1f35', letterSpacing: '-0.02em',
-                  marginBottom: '0.4rem',
-                }}>
-                  No ideas yet
-                </h2>
-                <p style={{
-                  fontSize: '0.875rem', color: '#9ab0c8',
-                  lineHeight: 1.6, maxWidth: '22rem',
-                  margin: '0 auto 1.75rem',
-                }}>
-                  The best ideas come from the people doing the work. Be the first to share one.
-                </p>
-                <div style={{ display: 'flex', gap: '0.625rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-                  <a
-                    href="#new-idea-form"
-                    className="btn-primary"
-                    style={{ fontSize: '0.85rem', padding: '0.55rem 1.25rem', textDecoration: 'none' }}
-                  >
-                    Post your first idea →
-                  </a>
-                </div>
-              </div>
+
+                <IdeaList
+                  ideas={ideasWithLikeStatus}
+                  currentUserId={user.id}
+                  companyId={profile.company_id}
+                  isAdmin={profile.role === 'admin'}
+                />
+              </>
+            ) : (
+              <>
+                {/* ── Gate card: closed or draft ── */}
+                <RoundGateCard
+                  status={effectiveStatus}
+                  isAdmin={profile.role === 'admin'}
+                />
+
+                {/* ── Previous ideas (read-only) ── */}
+                {ideasWithLikeStatus.length > 0 && (
+                  <>
+                    <div style={{ paddingTop: '0.25rem' }}>
+                      <p style={{
+                        fontSize: '0.68rem', fontWeight: 700,
+                        letterSpacing: '0.16em', textTransform: 'uppercase',
+                        color: '#9ab0c8',
+                      }}>
+                        Previous ideas
+                      </p>
+                    </div>
+                    <IdeaList
+                      ideas={ideasWithLikeStatus}
+                      currentUserId={user.id}
+                      companyId={profile.company_id}
+                      isAdmin={profile.role === 'admin'}
+                    />
+                  </>
+                )}
+              </>
             )}
-
-            <div
-              id="new-idea-form"
-              style={{
-                borderRadius: '1.25rem',
-                border: '1px solid rgba(26,107,191,0.11)',
-                background:
-                  'linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(248,250,255,1) 100%)',
-                boxShadow: '0 6px 24px rgba(6,14,38,0.04)',
-                padding: '1.25rem',
-              }}
-            >
-              <NewIdeaForm
-                userId={user.id}
-                companyId={profile.company_id}
-                isAdmin={profile.role === 'admin'}
-                customPrompt={company?.custom_idea_prompt ?? null}
-                roundActive={isRoundActive}
-                roundName={roundData?.idea_round_name ?? null}
-                defaultOpen={ideasWithLikeStatus.length === 0}
-                roundIsDraft={effectiveStatus === 'draft'}
-              />
-            </div>
-
-            <IdeaList
-              ideas={ideasWithLikeStatus}
-              currentUserId={user.id}
-              companyId={profile.company_id}
-              isAdmin={profile.role === 'admin'}
-            />
           </section>
 
           <div
