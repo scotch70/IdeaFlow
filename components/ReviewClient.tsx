@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import type { Idea } from '@/types/database'
 import StatusBadge from './StatusBadge'
 import StatusModal from './StatusModal'
@@ -54,6 +55,8 @@ const QUICK_ACTIONS: Record<string, { label: string; target: string }[]> = {
 // ─── Root component ───────────────────────────────────────────────────────────
 
 export default function ReviewClient({ ideas: initialIdeas }: { ideas: Idea[] }) {
+
+  const router = useRouter()
 
   const [ideaMap, setIdeaMap] = useState<Map<string, Idea>>(
     () => new Map(initialIdeas.map((i) => [i.id, i])),
@@ -220,7 +223,7 @@ export default function ReviewClient({ ideas: initialIdeas }: { ideas: Idea[] })
           ideaId={modalIdea.id}
           ideaTitle={modalIdea.title}
           currentStatus={modalPresel}
-          onClose={() => setModalIdea(null)}
+          onClose={() => { setModalIdea(null); router.refresh() }}
         />
       )}
     </div>

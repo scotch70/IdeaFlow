@@ -360,7 +360,7 @@ export default function IdeaCard({ idea, currentUserId, isAdmin }: IdeaCardProps
                 </div>
               )}
               {/* Comments — always visible, fetched on mount */}
-              <IdeaComments ideaId={idea.id} currentUserId={currentUserId} />
+              <IdeaComments ideaId={idea.id} currentUserId={currentUserId} isAdmin={isAdmin} />
             </>
           )}
         </div>
