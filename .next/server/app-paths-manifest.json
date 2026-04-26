@@ -1,7 +1,10 @@
 {
   "/_global-error/page": "app/_global-error/page.js",
   "/_not-found/page": "app/_not-found/page.js",
+  "/api/account/route": "app/api/account/route.js",
+  "/api/comments/[id]/route": "app/api/comments/[id]/route.js",
   "/api/comments/route": "app/api/comments/route.js",
+  "/api/company/round-status/route": "app/api/company/round-status/route.js",
   "/api/company/update-prompt/route": "app/api/company/update-prompt/route.js",
   "/api/company/update-round/route": "app/api/company/update-round/route.js",
   "/api/cron/weekly-summary/route": "app/api/cron/weekly-summary/route.js",
@@ -14,6 +17,7 @@
   "/api/likes/route": "app/api/likes/route.js",
   "/api/members/remove/route": "app/api/members/remove/route.js",
   "/api/onboard/route": "app/api/onboard/route.js",
+  "/api/reports/summary/route": "app/api/reports/summary/route.js",
   "/api/stripe/checkout/route": "app/api/stripe/checkout/route.js",
   "/api/stripe/webhook/route": "app/api/stripe/webhook/route.js",
   "/auth/callback/route": "app/auth/callback/route.js",

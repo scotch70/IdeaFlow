@@ -81,6 +81,12 @@ export async function POST(request: NextRequest) {
       patch.idea_round_ends_at = parsedEndsAt
     }
 
+    // When archiving (status cleared to null), also clear manual_override so it
+    // doesn't linger on a fresh IdeaFlow setup.
+    if (status === null) {
+      patch.idea_round_manual_override = null
+    }
+
     if (Object.keys(patch).length === 0) {
       return NextResponse.json({ error: 'No fields to update' }, { status: 400 })
     }

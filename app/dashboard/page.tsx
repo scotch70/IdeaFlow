@@ -9,6 +9,7 @@ import UpgradeButton from '@/components/UpgradeButton'
 import ImplementedIdeas from '@/components/ImplementedIdeas'
 import PageContainer from '@/components/PageContainer'
 import IdeaRoundBanner from '@/components/IdeaRoundBanner'
+import { getEffectiveRoundStatus } from '@/lib/rounds/getEffectiveRoundStatus'
 
 type ProfileResult = Pick<
   Database['public']['Tables']['profiles']['Row'],
@@ -33,7 +34,7 @@ type CompanyResult = Pick<
 // Round data — only present after the add_idea_round migration has been applied.
 type RoundDataResult = Pick<
   Database['public']['Tables']['companies']['Row'],
-  'idea_round_name' | 'idea_round_status' | 'idea_round_starts_at' | 'idea_round_ends_at'
+  'idea_round_name' | 'idea_round_status' | 'idea_round_starts_at' | 'idea_round_ends_at' | 'idea_round_manual_override'
 >
 
 export const dynamic = 'force-dynamic'
@@ -182,22 +183,28 @@ export default async function DashboardPage({
   // Falls back to null gracefully if the columns don't exist yet.
   const { data: roundData } = (await supabase
     .from('companies')
-    .select('idea_round_name, idea_round_status, idea_round_starts_at, idea_round_ends_at')
+    .select('idea_round_name, idea_round_status, idea_round_starts_at, idea_round_ends_at, idea_round_manual_override')
     .eq('id', profile.company_id)
     .single()) as unknown as {
     data: RoundDataResult | null
   }
 
   // ── Idea round logic ──────────────────────────────────────────────────────
-  // null status = feature not activated → always open (backward-compat)
-  // 'draft'     = being configured; employees cannot submit
-  // 'active'    = open, unless the end date has already passed
-  // 'closed'    = explicitly closed by admin
-  const roundStatus  = roundData?.idea_round_status  ?? null
-  const roundEndsAt  = roundData?.idea_round_ends_at ?? null
-  const roundExpired = roundStatus === 'active' && roundEndsAt !== null && new Date(roundEndsAt) < new Date()
-  const isRoundActive     = roundStatus === null || (roundStatus === 'active' && !roundExpired)
-  const showRoundBanner   = roundStatus === 'active' || roundStatus === 'closed' || roundExpired || roundStatus === 'draft'
+  // manual_override always wins; null raw_status (not configured) → 'draft'
+  // (locked by default — admin must open IdeaFlow for members to submit)
+  const roundStatus         = roundData?.idea_round_status          ?? null
+  const roundEndsAt         = roundData?.idea_round_ends_at         ?? null
+  const roundManualOverride = roundData?.idea_round_manual_override ?? null
+
+  const effectiveStatus = getEffectiveRoundStatus({
+    raw_status:      roundStatus,
+    manual_override: roundManualOverride,
+    opens_at:        roundData?.idea_round_starts_at ?? null,
+    closes_at:       roundEndsAt,
+  })
+
+  const isRoundActive   = effectiveStatus === 'active'
+  const showRoundBanner = roundStatus !== null
 
   const trialEndsAt = company?.trial_ends_at
   const trialDaysLeft = trialEndsAt
@@ -346,9 +353,11 @@ export default async function DashboardPage({
           {showRoundBanner && (
             <IdeaRoundBanner
               name={roundData?.idea_round_name ?? null}
-              status={roundExpired ? 'closed' : (roundStatus as 'draft' | 'active' | 'closed')}
-              autoExpired={roundExpired}
+              status={effectiveStatus ?? 'active'}
               endsAt={roundEndsAt}
+              isAdmin={profile.role === 'admin'}
+              companyId={profile.company_id}
+              manualOverride={roundManualOverride}
             />
           )}
 
@@ -420,7 +429,7 @@ export default async function DashboardPage({
                 roundActive={isRoundActive}
                 roundName={roundData?.idea_round_name ?? null}
                 defaultOpen={ideasWithLikeStatus.length === 0}
-                roundIsDraft={roundStatus === 'draft'}
+                roundIsDraft={effectiveStatus === 'draft'}
               />
             </div>
 

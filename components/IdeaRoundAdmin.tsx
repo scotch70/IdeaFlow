@@ -15,6 +15,7 @@ export interface IdeaRoundAdminProps {
   initialStatus: RoundStatus | null
   initialStartsAt: string | null
   initialEndsAt: string | null
+  initialManualOverride?: 'open' | 'closed' | null
 }
 
 // ── Status badge ──────────────────────────────────────────────────────────────
@@ -174,6 +175,7 @@ function RoundModal({
   status: initStatus,
   startsAt: initStartsAt,
   endsAt: initEndsAt,
+  manualOverride: initManualOverride,
   onClose,
 }: {
   companyId: string
@@ -181,6 +183,7 @@ function RoundModal({
   status: RoundStatus | null
   startsAt: string | null
   endsAt: string | null
+  manualOverride: 'open' | 'closed' | null
   onClose: () => void
 }) {
   const [view, setView]             = useState<ModalView>('main')
@@ -192,6 +195,36 @@ function RoundModal({
   const [error, setError]           = useState('')
   const router  = useRouter()
   const trapRef = useRef<HTMLDivElement>(null)
+
+  // Manual override state (optimistic)
+  const [manualOverride, setManualOverride] = useState<'open' | 'closed' | null>(initManualOverride)
+  const [overrideSaving, setOverrideSaving] = useState(false)
+  const [overrideError, setOverrideError]   = useState('')
+
+  async function applyOverride(action: 'open' | 'close' | 'clear') {
+    setOverrideSaving(true)
+    setOverrideError('')
+    const optimistic: 'open' | 'closed' | null =
+      action === 'open' ? 'open' : action === 'close' ? 'closed' : null
+    setManualOverride(optimistic)
+    try {
+      const res = await fetch('/api/company/round-status', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action }),
+      })
+      if (!res.ok) {
+        const d = await res.json()
+        throw new Error(d.error ?? 'Failed to apply override')
+      }
+      router.refresh()
+    } catch (err: unknown) {
+      setManualOverride(initManualOverride) // roll back
+      setOverrideError(err instanceof Error ? err.message : 'Something went wrong')
+    } finally {
+      setOverrideSaving(false)
+    }
+  }
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -519,6 +552,66 @@ function RoundModal({
                 </>
               )}
 
+              {/* ── Manual control (shown whenever a round exists) ── */}
+              {!isNew && (
+                <div style={{ borderTop: '1px solid rgba(0,0,0,0.07)', paddingTop: '1rem', marginTop: confirmAction ? 0 : '0.25rem' }}>
+                  <p style={{ fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink-light)', marginBottom: '0.625rem' }}>
+                    Manual control
+                  </p>
+
+                  {/* Current state label */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                    <span style={{ fontSize: '0.775rem', color: 'var(--ink-light)' }}>Status:</span>
+                    {manualOverride === 'open' && (
+                      <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#065f46', background: 'rgba(16,185,129,0.09)', border: '1px solid rgba(16,185,129,0.20)', borderRadius: '999px', padding: '0.15rem 0.55rem' }}>
+                        🟢 Open (manual)
+                      </span>
+                    )}
+                    {manualOverride === 'closed' && (
+                      <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#991b1b', background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.18)', borderRadius: '999px', padding: '0.15rem 0.55rem' }}>
+                        🔴 Closed (manual)
+                      </span>
+                    )}
+                    {manualOverride === null && (
+                      <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#5a7fa8', background: 'rgba(26,107,191,0.07)', border: '1px solid rgba(26,107,191,0.15)', borderRadius: '999px', padding: '0.15rem 0.55rem' }}>
+                        📅 Scheduled
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Action buttons */}
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    <ActionBtn
+                      onClick={() => applyOverride('open')}
+                      disabled={overrideSaving || manualOverride === 'open'}
+                      variant={manualOverride === 'open' ? 'ghost' : 'secondary'}
+                    >
+                      🟢 Open now
+                    </ActionBtn>
+                    <ActionBtn
+                      onClick={() => applyOverride('close')}
+                      disabled={overrideSaving || manualOverride === 'closed'}
+                      variant={manualOverride === 'closed' ? 'ghost' : 'danger'}
+                    >
+                      🔴 Close now
+                    </ActionBtn>
+                    {manualOverride !== null && (
+                      <ActionBtn
+                        onClick={() => applyOverride('clear')}
+                        disabled={overrideSaving}
+                        variant="ghost"
+                      >
+                        ↩ Use schedule
+                      </ActionBtn>
+                    )}
+                  </div>
+
+                  {overrideError && (
+                    <p style={{ marginTop: '0.5rem', fontSize: '0.72rem', color: '#dc2626' }}>{overrideError}</p>
+                  )}
+                </div>
+              )}
+
               {/* Error */}
               {error && (
                 <p style={{ marginTop: '0.875rem', fontSize: '0.775rem', color: '#dc2626' }}>{error}</p>
@@ -542,6 +635,7 @@ function RoundModal({
 
 export default function IdeaRoundAdmin({
   companyId, initialName, initialStatus, initialStartsAt, initialEndsAt,
+  initialManualOverride = null,
 }: IdeaRoundAdminProps) {
   const [modalOpen, setModalOpen] = useState(false)
 
@@ -622,6 +716,7 @@ export default function IdeaRoundAdmin({
           status={initialStatus}
           startsAt={initialStartsAt}
           endsAt={initialEndsAt}
+          manualOverride={initialManualOverride}
           onClose={() => setModalOpen(false)}
         />
       )}

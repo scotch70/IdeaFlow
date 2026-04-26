@@ -23,6 +23,7 @@ export interface Database {
     idea_round_status: 'draft' | 'active' | 'closed' | null
     idea_round_starts_at: string | null
     idea_round_ends_at: string | null
+    idea_round_manual_override: 'open' | 'closed' | null
   }
   Insert: {
     id?: string
@@ -37,6 +38,7 @@ export interface Database {
     idea_round_status?: 'draft' | 'active' | 'closed' | null
     idea_round_starts_at?: string | null
     idea_round_ends_at?: string | null
+    idea_round_manual_override?: 'open' | 'closed' | null
   }
   Update: {
     id?: string
@@ -51,6 +53,7 @@ export interface Database {
     idea_round_status?: 'draft' | 'active' | 'closed' | null
     idea_round_starts_at?: string | null
     idea_round_ends_at?: string | null
+    idea_round_manual_override?: 'open' | 'closed' | null
   }
 }
 

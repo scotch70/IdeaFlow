@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { getEffectiveRoundStatus } from '@/lib/rounds/getEffectiveRoundStatus'
 
 export async function POST(request: NextRequest) {
   try {
@@ -43,34 +44,29 @@ export async function POST(request: NextRequest) {
       }
 
       // ── 2. Fetch IdeaFlow round state for this company ────────────────────
-      // Isolated select so a missing migration (columns not yet added) degrades
-      // gracefully: company is null → roundStatus is null → submission allowed.
+      // Includes manual_override so admins can force-open or force-close
+      // regardless of the scheduled dates.
       const { data: company } = await (supabase as any)
         .from('companies')
-        .select('idea_round_status, idea_round_ends_at')
+        .select('idea_round_status, idea_round_starts_at, idea_round_ends_at, idea_round_manual_override')
         .eq('id', profile.company_id)
         .single()
 
-      // ── 3. Enforce round state — mirrors the dashboard logic exactly ──────
-      // null status  = feature not configured → always open (backward-compat)
-      // 'draft'      = not yet launched; no submissions
-      // 'active'     = open unless the end date has already passed
-      // 'closed'     = explicitly shut by admin
-      const roundStatus  = company?.idea_round_status  ?? null
-      const roundEndsAt  = company?.idea_round_ends_at ?? null
-      const roundExpired =
-        roundStatus === 'active' &&
-        roundEndsAt !== null &&
-        new Date(roundEndsAt) < new Date()
-      const isRoundActive =
-        roundStatus === null || (roundStatus === 'active' && !roundExpired)
+      // ── 3. Enforce round state via shared helper ──────────────────────────
+      // Default is 'draft' — brand-new workspaces are locked until an admin
+      // opens IdeaFlow. manual_override always wins over scheduled dates.
+      const effectiveStatus = getEffectiveRoundStatus({
+        raw_status:      company?.idea_round_status          ?? null,
+        manual_override: company?.idea_round_manual_override ?? null,
+        opens_at:        company?.idea_round_starts_at       ?? null,
+        closes_at:       company?.idea_round_ends_at         ?? null,
+      })
 
-      if (!isRoundActive) {
+      if (effectiveStatus !== 'active') {
         const reason =
-          roundStatus === 'draft'  ? 'Idea submission is not open yet.' :
-          roundStatus === 'closed' ? 'Idea submission is currently closed.' :
-          roundExpired             ? 'The submission window has ended.' :
-                                     'Idea submission is not available right now.'
+          effectiveStatus === 'draft'  ? 'Idea submission is not open yet.' :
+          effectiveStatus === 'closed' ? 'Idea submission is currently closed.' :
+                                         'Idea submission is not available right now.'
         return NextResponse.json({ error: reason }, { status: 403 })
       }
 

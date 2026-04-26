@@ -13,6 +13,7 @@ type RoundData = {
   idea_round_status: RoundStatus | null
   idea_round_starts_at: string | null
   idea_round_ends_at: string | null
+  idea_round_manual_override: 'open' | 'closed' | null
 }
 
 export default async function IdeaFlowSetupPage() {
@@ -31,7 +32,7 @@ export default async function IdeaFlowSetupPage() {
 
   const { data: roundData } = (await supabase
     .from('companies')
-    .select('idea_round_name, idea_round_status, idea_round_starts_at, idea_round_ends_at')
+    .select('idea_round_name, idea_round_status, idea_round_starts_at, idea_round_ends_at, idea_round_manual_override')
     .eq('id', profile.company_id!)
     .single()) as unknown as { data: RoundData | null }
 
@@ -64,6 +65,7 @@ export default async function IdeaFlowSetupPage() {
               initialStatus={roundData?.idea_round_status ?? null}
               initialStartsAt={roundData?.idea_round_starts_at ?? null}
               initialEndsAt={roundData?.idea_round_ends_at ?? null}
+              initialManualOverride={roundData?.idea_round_manual_override ?? null}
             />
           </div>
         </PageContainer>

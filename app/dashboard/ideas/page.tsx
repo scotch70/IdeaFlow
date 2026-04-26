@@ -5,6 +5,7 @@ import NewIdeaForm from '@/components/NewIdeaForm'
 import PageContainer from '@/components/PageContainer'
 import type { Idea } from '@/types/database'
 import type { Database } from '@/types/database'
+import { getEffectiveRoundStatus } from '@/lib/rounds/getEffectiveRoundStatus'
 
 type IdeaJoinResult = Database['public']['Tables']['ideas']['Row'] & {
   profiles: { full_name: string | null } | null
@@ -17,7 +18,7 @@ type CompanyResult = Pick<
 
 type RoundDataResult = Pick<
   Database['public']['Tables']['companies']['Row'],
-  'idea_round_name' | 'idea_round_status' | 'idea_round_starts_at' | 'idea_round_ends_at'
+  'idea_round_name' | 'idea_round_status' | 'idea_round_starts_at' | 'idea_round_ends_at' | 'idea_round_manual_override'
 >
 
 export const dynamic = 'force-dynamic'
@@ -73,14 +74,22 @@ export default async function IdeasPage() {
   // ── Round data ─────────────────────────────────────────────────────────────
   const { data: roundData } = (await supabase
     .from('companies')
-    .select('idea_round_name, idea_round_status, idea_round_starts_at, idea_round_ends_at')
+    .select('idea_round_name, idea_round_status, idea_round_starts_at, idea_round_ends_at, idea_round_manual_override')
     .eq('id', profile.company_id)
     .single()) as unknown as { data: RoundDataResult | null }
 
-  const roundStatus  = roundData?.idea_round_status  ?? null
-  const roundEndsAt  = roundData?.idea_round_ends_at ?? null
-  const roundExpired = roundStatus === 'active' && roundEndsAt !== null && new Date(roundEndsAt) < new Date()
-  const isRoundActive = roundStatus === null || (roundStatus === 'active' && !roundExpired)
+  const roundStatus         = roundData?.idea_round_status          ?? null
+  const roundEndsAt         = roundData?.idea_round_ends_at         ?? null
+  const roundManualOverride = roundData?.idea_round_manual_override ?? null
+
+  const effectiveStatus = getEffectiveRoundStatus({
+    raw_status:      roundStatus,
+    manual_override: roundManualOverride,
+    opens_at:        roundData?.idea_round_starts_at ?? null,
+    closes_at:       roundEndsAt,
+  })
+
+  const isRoundActive = effectiveStatus === 'active'
 
   const totalIdeas = ideasWithLikeStatus.length
 
@@ -135,7 +144,7 @@ export default async function IdeasPage() {
                 roundActive={isRoundActive}
                 roundName={roundData?.idea_round_name ?? null}
                 defaultOpen={totalIdeas === 0}
-                roundIsDraft={roundStatus === 'draft'}
+                roundIsDraft={effectiveStatus === 'draft'}
               />
             </div>
 
