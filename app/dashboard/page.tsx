@@ -35,7 +35,7 @@ type CompanyResult = Pick<
 // Round data — only present after the add_idea_round migration has been applied.
 type RoundDataResult = Pick<
   Database['public']['Tables']['companies']['Row'],
-  'idea_round_name' | 'idea_round_status' | 'idea_round_starts_at' | 'idea_round_ends_at' | 'idea_round_manual_override'
+  'idea_round_name' | 'idea_round_status' | 'idea_round_starts_at' | 'idea_round_ends_at' | 'idea_round_manual_override' | 'current_idea_round_id'
 >
 
 export const dynamic = 'force-dynamic'
@@ -86,10 +86,53 @@ export default async function DashboardPage({
     data: { id: string; full_name: string | null; role: string }[] | null
   }
 
-  const { data: ideas } = (await supabase
+  // Billing query — always reliable; never includes optional migrated columns.
+  const { data: company } = (await supabase
+    .from('companies')
+    .select('plan, trial_ends_at, custom_idea_prompt')
+    .eq('id', profile.company_id)
+    .single()) as unknown as {
+    data: CompanyResult | null
+  }
+
+  // Round query — fetched BEFORE the ideas query so we can scope ideas to the
+  // current round. Falls back to null gracefully if columns don't exist yet.
+  const { data: roundData } = (await supabase
+    .from('companies')
+    .select('idea_round_name, idea_round_status, idea_round_starts_at, idea_round_ends_at, idea_round_manual_override, current_idea_round_id')
+    .eq('id', profile.company_id)
+    .single()) as unknown as {
+    data: RoundDataResult | null
+  }
+
+  // ── Idea round logic ──────────────────────────────────────────────────────
+  // manual_override always wins; null raw_status (not configured) → 'draft'
+  // (locked by default — admin must open IdeaFlow for members to submit)
+  const roundStatus         = roundData?.idea_round_status          ?? null
+  const roundEndsAt         = roundData?.idea_round_ends_at         ?? null
+  const roundManualOverride = roundData?.idea_round_manual_override ?? null
+  const currentRoundId      = roundData?.current_idea_round_id      ?? null
+
+  const effectiveStatus = getEffectiveRoundStatus({
+    raw_status:      roundStatus,
+    manual_override: roundManualOverride,
+    opens_at:        roundData?.idea_round_starts_at ?? null,
+    closes_at:       roundEndsAt,
+  })
+
+  // ── Ideas — scoped to current round when active, all ideas otherwise ──────
+  // Active round: only show ideas from this round (for the submission feed).
+  // Non-active: show all company ideas (for the "Previous ideas" read-only list).
+  const ideasQuery = (supabase as any)
     .from('ideas')
     .select('*, profiles(full_name)')
     .eq('company_id', profile.company_id)
+
+  if (effectiveStatus === 'active' && currentRoundId) {
+    ideasQuery.eq('idea_round_id', currentRoundId)
+  }
+
+  const { data: ideas } = (await ideasQuery
     .order('likes_count', { ascending: false })
     .order('created_at', { ascending: false })) as unknown as {
     data: IdeaJoinResult[] | null
@@ -170,39 +213,6 @@ export default async function DashboardPage({
           likes: ideasWithLikeStatus[0].likes_count,
         }
       : null
-
-  // Billing query — always reliable; never includes optional migrated columns.
-  const { data: company } = (await supabase
-    .from('companies')
-    .select('plan, trial_ends_at, custom_idea_prompt')
-    .eq('id', profile.company_id)
-    .single()) as unknown as {
-    data: CompanyResult | null
-  }
-
-  // Round query — isolated so a missing migration cannot break billing data.
-  // Falls back to null gracefully if the columns don't exist yet.
-  const { data: roundData } = (await supabase
-    .from('companies')
-    .select('idea_round_name, idea_round_status, idea_round_starts_at, idea_round_ends_at, idea_round_manual_override')
-    .eq('id', profile.company_id)
-    .single()) as unknown as {
-    data: RoundDataResult | null
-  }
-
-  // ── Idea round logic ──────────────────────────────────────────────────────
-  // manual_override always wins; null raw_status (not configured) → 'draft'
-  // (locked by default — admin must open IdeaFlow for members to submit)
-  const roundStatus         = roundData?.idea_round_status          ?? null
-  const roundEndsAt         = roundData?.idea_round_ends_at         ?? null
-  const roundManualOverride = roundData?.idea_round_manual_override ?? null
-
-  const effectiveStatus = getEffectiveRoundStatus({
-    raw_status:      roundStatus,
-    manual_override: roundManualOverride,
-    opens_at:        roundData?.idea_round_starts_at ?? null,
-    closes_at:       roundEndsAt,
-  })
 
   const isRoundActive   = effectiveStatus === 'active'
   const showRoundBanner = roundStatus !== null

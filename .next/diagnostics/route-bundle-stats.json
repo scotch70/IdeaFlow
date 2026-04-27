@@ -70,14 +70,14 @@
   },
   {
     "route": "/dashboard/idea-flow",
-    "firstLoadUncompressedJsBytes": 787900,
+    "firstLoadUncompressedJsBytes": 787924,
     "firstLoadChunkPaths": [
       ".next/static/chunks/01xlw8hd842-c.js",
       ".next/static/chunks/0d3shmwh5_nmn.js",
       ".next/static/chunks/0ka051yepewro.js",
       ".next/static/chunks/0c0nq81g9fe_7.js",
       ".next/static/chunks/0kv6qmr2-55e0.js",
-      ".next/static/chunks/0i0zt2-0xoht1.js",
+      ".next/static/chunks/0i87uuf10kfdd.js",
       ".next/static/chunks/15pjn.n4_q6le.js",
       ".next/static/chunks/0pqt~8bl3ukh4.js",
       ".next/static/chunks/0n~dq4kpx9xxx.js",

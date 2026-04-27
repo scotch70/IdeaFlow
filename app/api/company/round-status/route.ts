@@ -5,11 +5,13 @@
  *
  * Body: { "action": "open" | "close" | "clear" }
  *   open  → idea_round_manual_override = 'open'   (always active, ignores dates)
+ *           Also generates current_idea_round_id if none exists.
  *   close → idea_round_manual_override = 'closed' (always closed, ignores dates)
  *   clear → idea_round_manual_override = null      (schedule / dates take control)
  *
  * Auth: required. Role: admin only.
  */
+import { randomUUID } from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -54,17 +56,34 @@ export async function PATCH(request: NextRequest) {
 
     // ── 4. Map action → DB value ───────────────────────────────────────────────
     const overrideValue: 'open' | 'closed' | null =
-      action === 'open'  ? 'open'  :
+      action === 'open'  ? 'open'   :
       action === 'close' ? 'closed' :
       null   // 'clear'
 
-    // ── 5. Persist via admin client ────────────────────────────────────────────
+    // ── 5. Build update payload ────────────────────────────────────────────────
     const adminClient = createAdminClient()
+    const patch: Record<string, unknown> = { idea_round_manual_override: overrideValue }
+
+    // When force-opening, ensure there is a round ID to scope ideas to.
+    // Fetch the current round ID first (cheap single-column read).
+    if (action === 'open') {
+      const { data: current } = await (adminClient as any)
+        .from('companies')
+        .select('current_idea_round_id')
+        .eq('id', profile.company_id)
+        .single()
+
+      if (!current?.current_idea_round_id) {
+        patch.current_idea_round_id = randomUUID()
+      }
+    }
+
+    // ── 6. Persist via admin client ────────────────────────────────────────────
     const { data: updated, error: updateError } = await (adminClient as any)
       .from('companies')
-      .update({ idea_round_manual_override: overrideValue })
+      .update(patch)
       .eq('id', profile.company_id)
-      .select('id, idea_round_name, idea_round_status, idea_round_starts_at, idea_round_ends_at, idea_round_manual_override')
+      .select('id, idea_round_name, idea_round_status, idea_round_starts_at, idea_round_ends_at, idea_round_manual_override, current_idea_round_id')
       .single()
 
     if (updateError) {

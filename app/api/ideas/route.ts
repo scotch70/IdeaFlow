@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
       // regardless of the scheduled dates.
       const { data: company } = await (supabase as any)
         .from('companies')
-        .select('idea_round_status, idea_round_starts_at, idea_round_ends_at, idea_round_manual_override')
+        .select('idea_round_status, idea_round_starts_at, idea_round_ends_at, idea_round_manual_override, current_idea_round_id')
         .eq('id', profile.company_id)
         .single()
 
@@ -77,7 +77,8 @@ export async function POST(request: NextRequest) {
           title: title.trim(),
           description: description?.trim() || null,
           user_id: user.id,
-          company_id: profile.company_id,   // server-side value, never from body
+          company_id: profile.company_id,           // server-side value, never from body
+          idea_round_id: company?.current_idea_round_id ?? null,
         })
         .select()
         .single()

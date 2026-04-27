@@ -24,6 +24,7 @@ export interface Database {
     idea_round_starts_at: string | null
     idea_round_ends_at: string | null
     idea_round_manual_override: 'open' | 'closed' | null
+    current_idea_round_id: string | null
   }
   Insert: {
     id?: string
@@ -39,6 +40,7 @@ export interface Database {
     idea_round_starts_at?: string | null
     idea_round_ends_at?: string | null
     idea_round_manual_override?: 'open' | 'closed' | null
+    current_idea_round_id?: string | null
   }
   Update: {
     id?: string
@@ -54,6 +56,7 @@ export interface Database {
     idea_round_starts_at?: string | null
     idea_round_ends_at?: string | null
     idea_round_manual_override?: 'open' | 'closed' | null
+    current_idea_round_id?: string | null
   }
 }
 
@@ -106,6 +109,7 @@ export interface Database {
           impact_summary: string | null
           impact_type: string | null
           impact_link: string | null
+          idea_round_id: string | null
         }
         Insert: {
           id?: string
@@ -122,6 +126,7 @@ export interface Database {
           impact_summary?: string | null
           impact_type?: string | null
           impact_link?: string | null
+          idea_round_id?: string | null
         }
         Update: {
           id?: string
@@ -138,6 +143,7 @@ export interface Database {
           impact_summary?: string | null
           impact_type?: string | null
           impact_link?: string | null
+          idea_round_id?: string | null
         }
       }
 

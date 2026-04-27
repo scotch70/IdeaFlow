@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -22,8 +23,9 @@ export async function POST(request: NextRequest) {
       status?: unknown
       startsAt?: unknown
       endsAt?: unknown
+      newRound?: unknown
     }
-    const { companyId, name, status, startsAt, endsAt } = body
+    const { companyId, name, status, startsAt, endsAt, newRound } = body
 
     if (typeof companyId !== 'string' || !companyId) {
       return NextResponse.json({ error: 'companyId is required' }, { status: 400 })
@@ -81,10 +83,16 @@ export async function POST(request: NextRequest) {
       patch.idea_round_ends_at = parsedEndsAt
     }
 
-    // When archiving (status cleared to null), also clear manual_override so it
-    // doesn't linger on a fresh IdeaFlow setup.
+    // Starting a new round — generate a fresh UUID so ideas from this round are
+    // kept separate from any previous round's ideas.
+    if (status === 'active' && newRound === true) {
+      patch.current_idea_round_id = randomUUID()
+    }
+
+    // Archiving resets everything including the round ID and manual override.
     if (status === null) {
       patch.idea_round_manual_override = null
+      patch.current_idea_round_id      = null
     }
 
     if (Object.keys(patch).length === 0) {

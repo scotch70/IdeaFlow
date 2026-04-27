@@ -273,10 +273,12 @@ function RoundModal({
   })
 
   const handleSaveDraft   = () => callApi({ ...ideaFlowFields(), status: 'draft'  })
-  const handleStartFlow   = () => callApi({ ...ideaFlowFields(), status: 'active' })
+  // newRound: true tells the API to generate a fresh round UUID so this round's
+  // ideas are kept separate from any previous round's submissions.
+  const handleStartFlow   = () => callApi({ ...ideaFlowFields(), status: 'active', newRound: true })
   const handleSaveChanges = () => callApi({ ...ideaFlowFields(), status: initStatus ?? 'active' })
   const handleCloseFlow   = () => callApi({ status: 'closed' })
-  const handleReopen      = () => callApi({ status: 'active' })
+  const handleReopen      = () => callApi({ status: 'active', newRound: true })
   const handleArchive = () => callApi({ name: null, status: null, startsAt: null, endsAt: null })
   // MVP: delete does the same DB operation as archive (no history table yet).
   // The distinction is intentional UX — delete uses stronger confirmation copy.
