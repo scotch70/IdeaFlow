@@ -1,4 +1,3 @@
-import { randomUUID } from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -67,7 +66,85 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    // ── 5. Build update payload ───────────────────────────────────────────────
+    const adminClient = createAdminClient()
+
+    // ── 5. Handle special status transitions ─────────────────────────────────
+
+    // Activating a new round — create an idea_rounds row so ideas have a real FK
+    // target. current_idea_round_id will point to this row.
+    if (status === 'active' && newRound === true) {
+      const roundName = (typeof name === 'string' && name.trim()) ? name.trim() : 'IdeaFlow'
+
+      const { data: newRoundRow, error: insertError } = await (adminClient as any)
+        .from('idea_rounds')
+        .insert({ company_id: profile.company_id, name: roundName, status: 'active' })
+        .select('id')
+        .single()
+
+      if (insertError) {
+        console.error('[update-round] idea_rounds insert:', insertError)
+        return NextResponse.json({ error: insertError.message }, { status: 500 })
+      }
+
+      // Build the companies patch — includes round config + the new round pointer.
+      const activatePatch: Record<string, unknown> = {
+        idea_round_status:     'active',
+        current_idea_round_id: newRoundRow.id,
+      }
+      if (name !== undefined)          activatePatch.idea_round_name     = (typeof name === 'string' ? name.trim() : null) || null
+      if (parsedStartsAt !== undefined) activatePatch.idea_round_starts_at = parsedStartsAt
+      if (parsedEndsAt   !== undefined) activatePatch.idea_round_ends_at   = parsedEndsAt
+
+      const { error: updateError } = await (adminClient as any)
+        .from('companies')
+        .update(activatePatch)
+        .eq('id', profile.company_id)
+
+      if (updateError) {
+        console.error('[update-round] companies activate:', updateError)
+        return NextResponse.json({ error: updateError.message }, { status: 500 })
+      }
+
+      return NextResponse.json({ ok: true })
+    }
+
+    // Archiving — close the current round row and wipe the pointer.
+    if (status === null) {
+      // Fetch current round id so we can close it.
+      const { data: currentCompany } = await (adminClient as any)
+        .from('companies')
+        .select('current_idea_round_id')
+        .eq('id', profile.company_id)
+        .single()
+
+      if (currentCompany?.current_idea_round_id) {
+        await (adminClient as any)
+          .from('idea_rounds')
+          .update({ status: 'closed', closed_at: new Date().toISOString() })
+          .eq('id', currentCompany.current_idea_round_id)
+      }
+
+      const { error: updateError } = await (adminClient as any)
+        .from('companies')
+        .update({
+          idea_round_name:           null,
+          idea_round_status:         null,
+          idea_round_starts_at:      null,
+          idea_round_ends_at:        null,
+          idea_round_manual_override: null,
+          current_idea_round_id:     null,
+        })
+        .eq('id', profile.company_id)
+
+      if (updateError) {
+        console.error('[update-round] companies archive:', updateError)
+        return NextResponse.json({ error: updateError.message }, { status: 500 })
+      }
+
+      return NextResponse.json({ ok: true })
+    }
+
+    // ── 6. Standard update (draft / close / field edits) ─────────────────────
     const patch: Record<string, unknown> = {}
 
     if (name !== undefined) {
@@ -75,6 +152,25 @@ export async function POST(request: NextRequest) {
     }
     if (status !== undefined) {
       patch.idea_round_status = status as RoundStatus | null
+
+      // When explicitly closing via status (not archive), mark the round row.
+      if (status === 'closed') {
+        const { data: currentCompany } = await (adminClient as any)
+          .from('companies')
+          .select('current_idea_round_id')
+          .eq('id', profile.company_id)
+          .single()
+
+        if (currentCompany?.current_idea_round_id) {
+          await (adminClient as any)
+            .from('idea_rounds')
+            .update({ status: 'closed', closed_at: new Date().toISOString() })
+            .eq('id', currentCompany.current_idea_round_id)
+        }
+
+        // Clear the pointer so dashboard treats this as no active round.
+        patch.current_idea_round_id = null
+      }
     }
     if (parsedStartsAt !== undefined) {
       patch.idea_round_starts_at = parsedStartsAt
@@ -83,39 +179,21 @@ export async function POST(request: NextRequest) {
       patch.idea_round_ends_at = parsedEndsAt
     }
 
-    // Starting a new round — generate a fresh UUID so ideas from this round are
-    // kept separate from any previous round's ideas.
-    if (status === 'active' && newRound === true) {
-      patch.current_idea_round_id = randomUUID()
-    }
-
-    // Archiving resets everything including the round ID and manual override.
-    if (status === null) {
-      patch.idea_round_manual_override = null
-      patch.current_idea_round_id      = null
-    }
-
     if (Object.keys(patch).length === 0) {
       return NextResponse.json({ error: 'No fields to update' }, { status: 400 })
     }
 
-    // ── 6. Persist via service-role client (bypasses RLS) ─────────────────────
-    // Auth and authorisation are already enforced above via the SSR client.
-    // We use select() to get the updated row back so we can detect a no-match.
-    const adminClient = createAdminClient()
     const { data: updated, error: updateError } = await (adminClient as any)
       .from('companies')
       .update(patch)
-      .eq('id', profile.company_id)  // use server-verified value, not body
-      .select('id')   // request the row back — Supabase returns [] if 0 rows matched
+      .eq('id', profile.company_id)
+      .select('id')
 
     if (updateError) {
       console.error('[update-round] DB error:', updateError)
       return NextResponse.json({ error: updateError.message }, { status: 500 })
     }
 
-    // If the array is empty, the .eq() matched nothing — company row not found.
-    // This should never happen after a successful auth check, but guard anyway.
     if (!Array.isArray(updated) || updated.length === 0) {
       console.error('[update-round] Update matched 0 rows for companyId:', companyId)
       return NextResponse.json({ error: 'Company not found' }, { status: 404 })

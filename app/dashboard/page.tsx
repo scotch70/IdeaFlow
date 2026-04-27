@@ -120,32 +120,33 @@ export default async function DashboardPage({
     closes_at:       roundEndsAt,
   })
 
-  // ── Ideas — scoped to current round when active, all ideas otherwise ──────
-  // Active round: only show ideas from this round (for the submission feed).
-  // Non-active: show all company ideas (for the "Previous ideas" read-only list).
-  const ideasQuery = (supabase as any)
-    .from('ideas')
-    .select('*, profiles(full_name)')
-    .eq('company_id', profile.company_id)
-
+  // ── Ideas — only fetch when there is an active round with a valid ID ───────
+  // No active round → empty list. Never show legacy/unscoped ideas.
+  let ideas: IdeaJoinResult[] = []
   if (effectiveStatus === 'active' && currentRoundId) {
-    ideasQuery.eq('idea_round_id', currentRoundId)
+    const { data: roundIdeas } = (await (supabase as any)
+      .from('ideas')
+      .select('*, profiles(full_name)')
+      .eq('company_id', profile.company_id)
+      .eq('idea_round_id', currentRoundId)
+      .order('likes_count', { ascending: false })
+      .order('created_at', { ascending: false })) as unknown as {
+      data: IdeaJoinResult[] | null
+    }
+    ideas = roundIdeas ?? []
   }
 
-  const { data: ideas } = (await ideasQuery
-    .order('likes_count', { ascending: false })
-    .order('created_at', { ascending: false })) as unknown as {
-    data: IdeaJoinResult[] | null
+  // Only fetch likes when there are ideas to decorate.
+  let likedIds = new Set<string>()
+  if (ideas.length > 0) {
+    const { data: userLikes } = (await supabase
+      .from('likes')
+      .select('idea_id')
+      .eq('user_id', user.id)) as unknown as {
+      data: LikeResult[] | null
+    }
+    likedIds = new Set((userLikes ?? []).map((like) => like.idea_id))
   }
-
-  const { data: userLikes } = (await supabase
-    .from('likes')
-    .select('idea_id')
-    .eq('user_id', user.id)) as unknown as {
-    data: LikeResult[] | null
-  }
-
-  const likedIds = new Set((userLikes ?? []).map((like) => like.idea_id))
 
   const ideasWithLikeStatus: Idea[] = (ideas ?? []).map((idea) => ({
     ...idea,
@@ -453,34 +454,11 @@ export default async function DashboardPage({
                 />
               </>
             ) : (
-              <>
-                {/* ── Gate card: closed or draft ── */}
-                <RoundGateCard
-                  status={effectiveStatus}
-                  isAdmin={profile.role === 'admin'}
-                />
-
-                {/* ── Previous ideas (read-only) ── */}
-                {ideasWithLikeStatus.length > 0 && (
-                  <>
-                    <div style={{ paddingTop: '0.25rem' }}>
-                      <p style={{
-                        fontSize: '0.68rem', fontWeight: 700,
-                        letterSpacing: '0.16em', textTransform: 'uppercase',
-                        color: '#9ab0c8',
-                      }}>
-                        Previous ideas
-                      </p>
-                    </div>
-                    <IdeaList
-                      ideas={ideasWithLikeStatus}
-                      currentUserId={user.id}
-                      companyId={profile.company_id}
-                      isAdmin={profile.role === 'admin'}
-                    />
-                  </>
-                )}
-              </>
+              /* ── Gate card only: no ideas shown when round is not active ── */
+              <RoundGateCard
+                status={effectiveStatus}
+                isAdmin={profile.role === 'admin'}
+              />
             )}
           </section>
 

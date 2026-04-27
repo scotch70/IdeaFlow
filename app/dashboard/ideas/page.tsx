@@ -69,31 +69,33 @@ export default async function IdeasPage() {
 
   const isRoundActive = effectiveStatus === 'active'
 
-  // ── Ideas — scoped to current round when active, all ideas otherwise ──────
-  const ideasQuery = (supabase as any)
-    .from('ideas')
-    .select('*, profiles(full_name)')
-    .eq('company_id', profile.company_id)
-
+  // ── Ideas — only fetch when there is an active round with a valid ID ───────
+  // Never show legacy/unscoped ideas. No active round → empty list.
+  let ideas: IdeaJoinResult[] = []
   if (isRoundActive && currentRoundId) {
-    ideasQuery.eq('idea_round_id', currentRoundId)
-  }
-
-  const { data: ideas } = (await ideasQuery
-    .order('likes_count', { ascending: false })
-    .order('created_at', { ascending: false })) as unknown as {
-    data: IdeaJoinResult[] | null
+    const { data: roundIdeas } = (await (supabase as any)
+      .from('ideas')
+      .select('*, profiles(full_name)')
+      .eq('company_id', profile.company_id)
+      .eq('idea_round_id', currentRoundId)
+      .order('likes_count', { ascending: false })
+      .order('created_at', { ascending: false })) as unknown as {
+      data: IdeaJoinResult[] | null
+    }
+    ideas = roundIdeas ?? []
   }
 
   // ── User's own likes (for heart toggle state) ──────────────────────────────
-  const { data: userLikes } = await supabase
-    .from('likes')
-    .select('idea_id')
-    .eq('user_id', user.id)
+  let likedIds = new Set<string>()
+  if (ideas.length > 0) {
+    const { data: userLikes } = await supabase
+      .from('likes')
+      .select('idea_id')
+      .eq('user_id', user.id)
+    likedIds = new Set((userLikes ?? []).map((l) => (l as { idea_id: string }).idea_id))
+  }
 
-  const likedIds = new Set((userLikes ?? []).map((l) => (l as { idea_id: string }).idea_id))
-
-  const ideasWithLikeStatus: Idea[] = (ideas ?? []).map((idea) => ({
+  const ideasWithLikeStatus: Idea[] = ideas.map((idea) => ({
     ...idea,
     profiles: idea.profiles ?? undefined,
     liked_by_user: likedIds.has(idea.id),
@@ -167,34 +169,11 @@ export default async function IdeasPage() {
                 />
               </>
             ) : (
-              <>
-                {/* ── Gate card: closed or draft ── */}
-                <RoundGateCard
-                  status={effectiveStatus}
-                  isAdmin={profile.role === 'admin'}
-                />
-
-                {/* ── Previous ideas (read-only) ── */}
-                {ideasWithLikeStatus.length > 0 && (
-                  <>
-                    <div style={{ paddingTop: '0.25rem' }}>
-                      <p style={{
-                        fontSize: '0.68rem', fontWeight: 700,
-                        letterSpacing: '0.16em', textTransform: 'uppercase',
-                        color: '#9ab0c8',
-                      }}>
-                        Previous ideas
-                      </p>
-                    </div>
-                    <IdeaList
-                      ideas={ideasWithLikeStatus}
-                      currentUserId={user.id}
-                      companyId={profile.company_id}
-                      isAdmin={profile.role === 'admin'}
-                    />
-                  </>
-                )}
-              </>
+              /* ── Gate card only: no ideas shown when round is not active ── */
+              <RoundGateCard
+                status={effectiveStatus}
+                isAdmin={profile.role === 'admin'}
+              />
             )}
 
           </div>

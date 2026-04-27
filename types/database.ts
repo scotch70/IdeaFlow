@@ -60,6 +60,33 @@ export interface Database {
   }
 }
 
+      idea_rounds: {
+        Row: {
+          id: string
+          company_id: string
+          name: string
+          status: 'draft' | 'active' | 'closed'
+          created_at: string
+          closed_at: string | null
+        }
+        Insert: {
+          id?: string
+          company_id: string
+          name?: string
+          status?: 'draft' | 'active' | 'closed'
+          created_at?: string
+          closed_at?: string | null
+        }
+        Update: {
+          id?: string
+          company_id?: string
+          name?: string
+          status?: 'draft' | 'active' | 'closed'
+          created_at?: string
+          closed_at?: string | null
+        }
+      }
+
       profiles: {
         Row: {
           id: string

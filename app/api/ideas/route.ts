@@ -70,6 +70,15 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: reason }, { status: 403 })
       }
 
+      // Require a valid round ID — every idea must belong to a round.
+      const currentRoundId = company?.current_idea_round_id ?? null
+      if (!currentRoundId) {
+        return NextResponse.json(
+          { error: 'No active IdeaFlow round found. Please contact your admin.' },
+          { status: 403 },
+        )
+      }
+
       // ── 4. Insert using the server-verified company_id ────────────────────
       const { data, error } = await (supabase as any)
         .from('ideas')
@@ -77,8 +86,8 @@ export async function POST(request: NextRequest) {
           title: title.trim(),
           description: description?.trim() || null,
           user_id: user.id,
-          company_id: profile.company_id,           // server-side value, never from body
-          idea_round_id: company?.current_idea_round_id ?? null,
+          company_id: profile.company_id,  // server-side value, never from body
+          idea_round_id: currentRoundId,
         })
         .select()
         .single()

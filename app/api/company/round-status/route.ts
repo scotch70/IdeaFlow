@@ -5,13 +5,13 @@
  *
  * Body: { "action": "open" | "close" | "clear" }
  *   open  → idea_round_manual_override = 'open'   (always active, ignores dates)
- *           Also generates current_idea_round_id if none exists.
+ *           Creates a new idea_rounds row and sets current_idea_round_id if none exists.
  *   close → idea_round_manual_override = 'closed' (always closed, ignores dates)
+ *           Marks the current round as closed, clears current_idea_round_id.
  *   clear → idea_round_manual_override = null      (schedule / dates take control)
  *
  * Auth: required. Role: admin only.
  */
-import { randomUUID } from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -54,44 +54,112 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden — admins only' }, { status: 403 })
     }
 
-    // ── 4. Map action → DB value ───────────────────────────────────────────────
-    const overrideValue: 'open' | 'closed' | null =
-      action === 'open'  ? 'open'   :
-      action === 'close' ? 'closed' :
-      null   // 'clear'
-
-    // ── 5. Build update payload ────────────────────────────────────────────────
     const adminClient = createAdminClient()
-    const patch: Record<string, unknown> = { idea_round_manual_override: overrideValue }
 
-    // When force-opening, ensure there is a round ID to scope ideas to.
-    // Fetch the current round ID first (cheap single-column read).
-    if (action === 'open') {
-      const { data: current } = await (adminClient as any)
-        .from('companies')
-        .select('current_idea_round_id')
-        .eq('id', profile.company_id)
-        .single()
+    // ── 4. Fetch current company state ─────────────────────────────────────────
+    const { data: company, error: companyError } = await (adminClient as any)
+      .from('companies')
+      .select('idea_round_name, idea_round_status, current_idea_round_id')
+      .eq('id', profile.company_id)
+      .single()
 
-      if (!current?.current_idea_round_id) {
-        patch.current_idea_round_id = randomUUID()
-      }
+    if (companyError) {
+      console.error('[round-status PATCH] company fetch:', companyError)
+      return NextResponse.json({ error: companyError.message }, { status: 500 })
     }
 
-    // ── 6. Persist via admin client ────────────────────────────────────────────
+    // ── 5. Handle each action ──────────────────────────────────────────────────
+
+    if (action === 'open') {
+      // Ensure there is an active idea_rounds row. If the company already has a
+      // current_idea_round_id, just flip the override and status — the round ID
+      // stays the same (no new round is created for a force-open).
+      let roundId: string = company?.current_idea_round_id
+
+      if (!roundId) {
+        // No active round — create one now so ideas have somewhere to attach.
+        const roundName = company?.idea_round_name ?? 'IdeaFlow'
+        const { data: newRound, error: insertError } = await (adminClient as any)
+          .from('idea_rounds')
+          .insert({ company_id: profile.company_id, name: roundName, status: 'active' })
+          .select('id')
+          .single()
+
+        if (insertError) {
+          console.error('[round-status PATCH] idea_rounds insert:', insertError)
+          return NextResponse.json({ error: insertError.message }, { status: 500 })
+        }
+        roundId = newRound.id
+      } else {
+        // Existing round — make sure its status is 'active'.
+        await (adminClient as any)
+          .from('idea_rounds')
+          .update({ status: 'active', closed_at: null })
+          .eq('id', roundId)
+      }
+
+      const { data: updated, error: updateError } = await (adminClient as any)
+        .from('companies')
+        .update({
+          idea_round_manual_override: 'open',
+          idea_round_status:          'active',
+          current_idea_round_id:      roundId,
+        })
+        .eq('id', profile.company_id)
+        .select('id, idea_round_name, idea_round_status, idea_round_starts_at, idea_round_ends_at, idea_round_manual_override, current_idea_round_id')
+        .single()
+
+      if (updateError) {
+        console.error('[round-status PATCH] companies update (open):', updateError)
+        return NextResponse.json({ error: updateError.message }, { status: 500 })
+      }
+
+      return NextResponse.json({ ok: true, round: updated })
+    }
+
+    if (action === 'close') {
+      // Mark the current round as closed, then clear the pointer so the dashboard
+      // treats the workspace as having no active round.
+      if (company?.current_idea_round_id) {
+        await (adminClient as any)
+          .from('idea_rounds')
+          .update({ status: 'closed', closed_at: new Date().toISOString() })
+          .eq('id', company.current_idea_round_id)
+      }
+
+      const { data: updated, error: updateError } = await (adminClient as any)
+        .from('companies')
+        .update({
+          idea_round_manual_override: 'closed',
+          current_idea_round_id:      null,
+        })
+        .eq('id', profile.company_id)
+        .select('id, idea_round_name, idea_round_status, idea_round_starts_at, idea_round_ends_at, idea_round_manual_override, current_idea_round_id')
+        .single()
+
+      if (updateError) {
+        console.error('[round-status PATCH] companies update (close):', updateError)
+        return NextResponse.json({ error: updateError.message }, { status: 500 })
+      }
+
+      return NextResponse.json({ ok: true, round: updated })
+    }
+
+    // action === 'clear' — remove manual override, let schedule/status drive state
     const { data: updated, error: updateError } = await (adminClient as any)
       .from('companies')
-      .update(patch)
+      .update({ idea_round_manual_override: null })
       .eq('id', profile.company_id)
       .select('id, idea_round_name, idea_round_status, idea_round_starts_at, idea_round_ends_at, idea_round_manual_override, current_idea_round_id')
       .single()
 
     if (updateError) {
-      console.error('[round-status PATCH]', updateError)
+      console.error('[round-status PATCH] companies update (clear):', updateError)
       return NextResponse.json({ error: updateError.message }, { status: 500 })
     }
 
     return NextResponse.json({ ok: true, round: updated })
+
   } catch (err) {
     console.error('[api/company/round-status]', err)
     return NextResponse.json({ error: 'Something went wrong' }, { status: 500 })
