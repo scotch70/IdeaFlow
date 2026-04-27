@@ -13,11 +13,6 @@ type IdeaJoinResult = Database['public']['Tables']['ideas']['Row'] & {
   profiles: { full_name: string | null } | null
 }
 
-type CompanyResult = Pick<
-  Database['public']['Tables']['companies']['Row'],
-  'plan' | 'trial_ends_at'
->
-
 type RoundDataResult = Pick<
   Database['public']['Tables']['companies']['Row'],
   'idea_round_name' | 'idea_round_status' | 'idea_round_starts_at' | 'idea_round_ends_at' | 'idea_round_manual_override' | 'current_idea_round_id'
@@ -41,13 +36,6 @@ export default async function IdeasPage() {
   }
 
   if (!profile?.company_id) redirect('/dashboard')
-
-  // ── Company (billing) ─────────────────────────────────────────────────────
-  const { data: company } = (await supabase
-    .from('companies')
-    .select('plan, trial_ends_at')
-    .eq('id', profile.company_id)
-    .single()) as unknown as { data: CompanyResult | null }
 
   // ── Round data (fetched before ideas so we can scope the query) ────────────
   const { data: roundData } = (await supabase

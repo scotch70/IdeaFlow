@@ -228,7 +228,6 @@ export default async function DashboardPage({
         }
       : null
 
-  const isRoundActive   = effectiveStatus === 'active'
   const showRoundBanner = roundStatus !== null
 
   const trialEndsAt = company?.trial_ends_at
@@ -465,6 +464,16 @@ export default async function DashboardPage({
                   companyId={profile.company_id}
                   isAdmin={profile.role === 'admin'}
                 />
+
+                {/* ── Implemented ideas — only during an active round ── */}
+                <div
+                  style={{
+                    paddingTop: '0.5rem',
+                    borderTop: '1px solid var(--tint-border)',
+                  }}
+                >
+                  <ImplementedIdeas ideas={ideasWithLikeStatus} />
+                </div>
               </>
             ) : (
               /* ── Gate card only: no ideas shown when round is not active ── */
@@ -474,16 +483,6 @@ export default async function DashboardPage({
               />
             )}
           </section>
-
-          <div
-            style={{
-              marginTop: '2rem',
-              paddingTop: '2rem',
-              borderTop: '1px solid var(--tint-border)',
-            }}
-          >
-            <ImplementedIdeas ideas={ideasWithLikeStatus} />
-          </div>
 
           {/* id=analytics — sidebar "Analytics" link scrolls here */}
           <div
