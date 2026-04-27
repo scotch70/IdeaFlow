@@ -65,6 +65,7 @@ export interface Database {
           id: string
           company_id: string
           name: string
+          prompt: string | null
           status: 'draft' | 'active' | 'closed'
           created_at: string
           closed_at: string | null
@@ -73,6 +74,7 @@ export interface Database {
           id?: string
           company_id: string
           name?: string
+          prompt?: string | null
           status?: 'draft' | 'active' | 'closed'
           created_at?: string
           closed_at?: string | null
@@ -81,6 +83,7 @@ export interface Database {
           id?: string
           company_id?: string
           name?: string
+          prompt?: string | null
           status?: 'draft' | 'active' | 'closed'
           created_at?: string
           closed_at?: string | null

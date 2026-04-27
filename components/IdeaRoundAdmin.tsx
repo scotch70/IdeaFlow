@@ -12,6 +12,7 @@ type ModalView = 'main' | 'new-form'
 export interface IdeaRoundAdminProps {
   companyId: string
   initialName: string | null
+  initialPrompt: string | null
   initialStatus: RoundStatus | null
   initialStartsAt: string | null
   initialEndsAt: string | null
@@ -172,6 +173,7 @@ function ConfirmPanel({ action, onConfirm, onCancel, saving }: {
 function RoundModal({
   companyId,
   name: initName,
+  prompt: initPrompt,
   status: initStatus,
   startsAt: initStartsAt,
   endsAt: initEndsAt,
@@ -180,6 +182,7 @@ function RoundModal({
 }: {
   companyId: string
   name: string | null
+  prompt: string | null
   status: RoundStatus | null
   startsAt: string | null
   endsAt: string | null
@@ -189,6 +192,7 @@ function RoundModal({
   const [view, setView]             = useState<ModalView>('main')
   const [confirmAction, setConfirm] = useState<ConfirmAction | null>(null)
   const [name, setName]             = useState(initName ?? '')
+  const [prompt, setPrompt]         = useState(initPrompt ?? '')
   const [startsAt, setStartsAt]     = useState(toDatetimeLocal(initStartsAt))
   const [endsAt, setEndsAt]         = useState(toDatetimeLocal(initEndsAt))
   const [saving, setSaving]         = useState(false)
@@ -268,6 +272,7 @@ function RoundModal({
   // ── Handlers ─────────────────────────────────────────────────────────────────
   const ideaFlowFields = () => ({
     name:     name.trim() || 'IdeaFlow',
+    prompt:   prompt.trim() || null,
     startsAt: fromDatetimeLocal(startsAt),
     endsAt:   fromDatetimeLocal(endsAt),
   })
@@ -286,6 +291,7 @@ function RoundModal({
 
   function openNewForm() {
     setName('')
+    setPrompt('')
     setStartsAt('')
     setEndsAt('')
     setConfirm(null)
@@ -390,6 +396,13 @@ function RoundModal({
                 <input className="input" value={name} onChange={e => setName(e.target.value)}
                   placeholder="e.g. Q3 improvements, Innovation week…" maxLength={60} disabled={saving} autoFocus />
               </FormField>
+              <FormField label="Question">
+                <input className="input" value={prompt} onChange={e => setPrompt(e.target.value)}
+                  placeholder="What should your team improve?" maxLength={120} disabled={saving} />
+                <p style={{ fontSize: '0.72rem', color: 'var(--ink-light)', marginTop: '0.3rem' }}>
+                  This is what members see when submitting ideas.
+                </p>
+              </FormField>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.625rem', marginBottom: '1.25rem' }}>
                 <FormField label="Opens (optional)" noMargin>
                   <input type="datetime-local" className="input" value={startsAt}
@@ -431,6 +444,13 @@ function RoundModal({
                     <input className="input" value={name} onChange={e => setName(e.target.value)}
                       placeholder="e.g. Q3 improvements, Innovation week…" maxLength={60} disabled={saving} autoFocus />
                   </FormField>
+                  <FormField label="Question">
+                    <input className="input" value={prompt} onChange={e => setPrompt(e.target.value)}
+                      placeholder="What should your team improve?" maxLength={120} disabled={saving} />
+                    <p style={{ fontSize: '0.72rem', color: 'var(--ink-light)', marginTop: '0.3rem' }}>
+                      This is what members see when submitting ideas.
+                    </p>
+                  </FormField>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.625rem', marginBottom: '1.25rem' }}>
                     <FormField label="Opens (optional)" noMargin>
                       <input type="datetime-local" className="input" value={startsAt}
@@ -458,6 +478,13 @@ function RoundModal({
                   <FormField label="IdeaFlow name">
                     <input className="input" value={name} onChange={e => setName(e.target.value)}
                       placeholder="IdeaFlow name" maxLength={60} disabled={saving} autoFocus />
+                  </FormField>
+                  <FormField label="Question">
+                    <input className="input" value={prompt} onChange={e => setPrompt(e.target.value)}
+                      placeholder="What should your team improve?" maxLength={120} disabled={saving} />
+                    <p style={{ fontSize: '0.72rem', color: 'var(--ink-light)', marginTop: '0.3rem' }}>
+                      This is what members see when submitting ideas.
+                    </p>
                   </FormField>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.625rem', marginBottom: '1.25rem' }}>
                     <FormField label="Opens (optional)" noMargin>
@@ -636,7 +663,7 @@ function RoundModal({
 // ══════════════════════════════════════════════════════════════════════════════
 
 export default function IdeaRoundAdmin({
-  companyId, initialName, initialStatus, initialStartsAt, initialEndsAt,
+  companyId, initialName, initialPrompt, initialStatus, initialStartsAt, initialEndsAt,
   initialManualOverride = null,
 }: IdeaRoundAdminProps) {
   const [modalOpen, setModalOpen] = useState(false)
@@ -715,6 +742,7 @@ export default function IdeaRoundAdmin({
         <RoundModal
           companyId={companyId}
           name={initialName}
+          prompt={initialPrompt}
           status={initialStatus}
           startsAt={initialStartsAt}
           endsAt={initialEndsAt}

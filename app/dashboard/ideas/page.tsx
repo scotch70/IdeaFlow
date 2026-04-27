@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import IdeaList from '@/components/IdeaList'
 import NewIdeaForm from '@/components/NewIdeaForm'
 import PageContainer from '@/components/PageContainer'
@@ -14,7 +15,7 @@ type IdeaJoinResult = Database['public']['Tables']['ideas']['Row'] & {
 
 type CompanyResult = Pick<
   Database['public']['Tables']['companies']['Row'],
-  'plan' | 'trial_ends_at' | 'custom_idea_prompt'
+  'plan' | 'trial_ends_at'
 >
 
 type RoundDataResult = Pick<
@@ -41,10 +42,10 @@ export default async function IdeasPage() {
 
   if (!profile?.company_id) redirect('/dashboard')
 
-  // ── Company (billing + custom prompt) ─────────────────────────────────────
+  // ── Company (billing) ─────────────────────────────────────────────────────
   const { data: company } = (await supabase
     .from('companies')
-    .select('plan, trial_ends_at, custom_idea_prompt')
+    .select('plan, trial_ends_at')
     .eq('id', profile.company_id)
     .single()) as unknown as { data: CompanyResult | null }
 
@@ -68,6 +69,18 @@ export default async function IdeasPage() {
   })
 
   const isRoundActive = effectiveStatus === 'active'
+
+  // ── Fetch prompt from the current idea_rounds row ────────────────────────
+  let roundPrompt: string | null = null
+  if (currentRoundId) {
+    const adminClient = createAdminClient()
+    const { data: roundRow } = await (adminClient as any)
+      .from('idea_rounds')
+      .select('prompt')
+      .eq('id', currentRoundId)
+      .single() as { data: { prompt: string | null } | null }
+    roundPrompt = roundRow?.prompt ?? null
+  }
 
   // ── Ideas — only fetch when there is an active round with a valid ID ───────
   // Never show legacy/unscoped ideas. No active round → empty list.
@@ -152,7 +165,7 @@ export default async function IdeasPage() {
                     userId={user.id}
                     companyId={profile.company_id}
                     isAdmin={profile.role === 'admin'}
-                    customPrompt={company?.custom_idea_prompt ?? null}
+                    roundPrompt={roundPrompt}
                     roundActive={true}
                     roundName={roundData?.idea_round_name ?? null}
                     defaultOpen={totalIdeas === 0}

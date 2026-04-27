@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import IdeaRoundAdmin from '@/components/IdeaRoundAdmin'
 import PageContainer from '@/components/PageContainer'
 
@@ -14,6 +15,7 @@ type RoundData = {
   idea_round_starts_at: string | null
   idea_round_ends_at: string | null
   idea_round_manual_override: 'open' | 'closed' | null
+  current_idea_round_id: string | null
 }
 
 export default async function IdeaFlowSetupPage() {
@@ -32,9 +34,21 @@ export default async function IdeaFlowSetupPage() {
 
   const { data: roundData } = (await supabase
     .from('companies')
-    .select('idea_round_name, idea_round_status, idea_round_starts_at, idea_round_ends_at, idea_round_manual_override')
+    .select('idea_round_name, idea_round_status, idea_round_starts_at, idea_round_ends_at, idea_round_manual_override, current_idea_round_id')
     .eq('id', profile.company_id!)
     .single()) as unknown as { data: RoundData | null }
+
+  // Fetch the prompt from the current idea_rounds row
+  let initialPrompt: string | null = null
+  if (roundData?.current_idea_round_id) {
+    const adminClient = createAdminClient()
+    const { data: roundRow } = await (adminClient as any)
+      .from('idea_rounds')
+      .select('prompt')
+      .eq('id', roundData.current_idea_round_id)
+      .single() as { data: { prompt: string | null } | null }
+    initialPrompt = roundRow?.prompt ?? null
+  }
 
   return (
     <div>
@@ -66,6 +80,7 @@ export default async function IdeaFlowSetupPage() {
               initialStartsAt={roundData?.idea_round_starts_at ?? null}
               initialEndsAt={roundData?.idea_round_ends_at ?? null}
               initialManualOverride={roundData?.idea_round_manual_override ?? null}
+              initialPrompt={initialPrompt}
             />
           </div>
         </PageContainer>

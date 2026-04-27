@@ -23,8 +23,9 @@ export async function POST(request: NextRequest) {
       startsAt?: unknown
       endsAt?: unknown
       newRound?: unknown
+      prompt?: unknown
     }
-    const { companyId, name, status, startsAt, endsAt, newRound } = body
+    const { companyId, name, status, startsAt, endsAt, newRound, prompt } = body
 
     if (typeof companyId !== 'string' || !companyId) {
       return NextResponse.json({ error: 'companyId is required' }, { status: 400 })
@@ -33,6 +34,25 @@ export async function POST(request: NextRequest) {
     // ── 3. Validate optional fields ──────────────────────────────────────────
     if (name !== undefined && name !== null && typeof name !== 'string') {
       return NextResponse.json({ error: 'name must be a string' }, { status: 400 })
+    }
+
+    // Validate prompt if provided
+    let parsedPrompt: string | null | undefined = undefined
+    if (prompt !== undefined) {
+      if (prompt === null || prompt === '') {
+        parsedPrompt = null
+      } else if (typeof prompt !== 'string') {
+        return NextResponse.json({ error: 'prompt must be a string' }, { status: 400 })
+      } else {
+        const trimmed = prompt.trim()
+        if (trimmed.length < 5) {
+          return NextResponse.json({ error: 'Question must be at least 5 characters' }, { status: 400 })
+        }
+        if (trimmed.length > 120) {
+          return NextResponse.json({ error: 'Question must be 120 characters or fewer' }, { status: 400 })
+        }
+        parsedPrompt = trimmed
+      }
     }
 
     // null is allowed — it clears the status (archive / reset)
@@ -77,7 +97,12 @@ export async function POST(request: NextRequest) {
 
       const { data: newRoundRow, error: insertError } = await (adminClient as any)
         .from('idea_rounds')
-        .insert({ company_id: profile.company_id, name: roundName, status: 'active' })
+        .insert({
+          company_id: profile.company_id,
+          name: roundName,
+          status: 'active',
+          ...(parsedPrompt !== undefined ? { prompt: parsedPrompt } : {}),
+        })
         .select('id')
         .single()
 
@@ -179,7 +204,25 @@ export async function POST(request: NextRequest) {
       patch.idea_round_ends_at = parsedEndsAt
     }
 
+    // Update prompt on the idea_rounds row if provided
+    if (parsedPrompt !== undefined) {
+      const { data: currentCompany } = await (adminClient as any)
+        .from('companies')
+        .select('current_idea_round_id')
+        .eq('id', profile.company_id)
+        .single()
+
+      if (currentCompany?.current_idea_round_id) {
+        await (adminClient as any)
+          .from('idea_rounds')
+          .update({ prompt: parsedPrompt })
+          .eq('id', currentCompany.current_idea_round_id)
+      }
+    }
+
+    // If only prompt was updated (no company-level patch), return early.
     if (Object.keys(patch).length === 0) {
+      if (parsedPrompt !== undefined) return NextResponse.json({ ok: true })
       return NextResponse.json({ error: 'No fields to update' }, { status: 400 })
     }
 
