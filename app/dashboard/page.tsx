@@ -112,7 +112,7 @@ export default async function DashboardPage({
   const roundStatus         = roundData?.idea_round_status          ?? null
   const roundEndsAt         = roundData?.idea_round_ends_at         ?? null
   const roundManualOverride = roundData?.idea_round_manual_override ?? null
-  const currentRoundId      = roundData?.current_idea_round_id      ?? null
+  const currentRoundId = roundData?.current_idea_round_id ?? null
 
   const effectiveStatus = getEffectiveRoundStatus({
     raw_status:      roundStatus,
@@ -121,7 +121,7 @@ export default async function DashboardPage({
     closes_at:       roundEndsAt,
   })
 
-  // ── Fetch prompt from the current idea_rounds row ────────────────────────
+  // ── Fetch prompt from the current idea_rounds row ─────────────────────────
   let roundPrompt: string | null = null
   if (currentRoundId) {
     const adminClient = createAdminClient()
@@ -132,6 +132,7 @@ export default async function DashboardPage({
       .single() as { data: { prompt: string | null } | null }
     roundPrompt = roundRow?.prompt ?? null
   }
+
 
   // ── Ideas — only fetch when there is an active round with a valid ID ───────
   // No active round → empty list. Never show legacy/unscoped ideas.

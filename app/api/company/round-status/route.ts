@@ -71,13 +71,25 @@ export async function PATCH(request: NextRequest) {
     // ── 5. Handle each action ──────────────────────────────────────────────────
 
     if (action === 'open') {
-      // Ensure there is an active idea_rounds row. If the company already has a
-      // current_idea_round_id, just flip the override and status — the round ID
-      // stays the same (no new round is created for a force-open).
-      let roundId: string = company?.current_idea_round_id
+      // Only reuse an existing round if it is genuinely open (active or draft).
+      // A closed round must never be reactivated — that would surface old ideas.
+      let existingRoundId: string | null = company?.current_idea_round_id ?? null
+      if (existingRoundId) {
+        const { data: existingRound } = await (adminClient as any)
+          .from('idea_rounds')
+          .select('status')
+          .eq('id', existingRoundId)
+          .single() as { data: { status: string } | null }
 
-      if (!roundId) {
-        // No active round — create one now so ideas have somewhere to attach.
+        if (existingRound?.status === 'closed') {
+          existingRoundId = null // closed round — must not be reactivated
+        }
+      }
+
+      let roundId: string
+
+      if (!existingRoundId) {
+        // No usable round — create a fresh one.
         const roundName = company?.idea_round_name ?? 'IdeaFlow'
         const { data: newRound, error: insertError } = await (adminClient as any)
           .from('idea_rounds')
@@ -91,11 +103,12 @@ export async function PATCH(request: NextRequest) {
         }
         roundId = newRound.id
       } else {
-        // Existing round — make sure its status is 'active'.
+        // Existing non-closed round — mark it active (handles draft → active).
         await (adminClient as any)
           .from('idea_rounds')
           .update({ status: 'active', closed_at: null })
-          .eq('id', roundId)
+          .eq('id', existingRoundId)
+        roundId = existingRoundId
       }
 
       const { data: updated, error: updateError } = await (adminClient as any)
@@ -118,8 +131,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     if (action === 'close') {
-      // Mark the current round as closed, then clear the pointer so the dashboard
-      // treats the workspace as having no active round.
+      // Mark the current idea_rounds row as closed.
       if (company?.current_idea_round_id) {
         await (adminClient as any)
           .from('idea_rounds')
@@ -127,9 +139,13 @@ export async function PATCH(request: NextRequest) {
           .eq('id', company.current_idea_round_id)
       }
 
+      // Set status to 'closed' and ALWAYS clear the pointer.
+      // Also clear any open manual override so effective status is never 'active'
+      // when the pointer is gone.
       const { data: updated, error: updateError } = await (adminClient as any)
         .from('companies')
         .update({
+          idea_round_status:          'closed',
           idea_round_manual_override: 'closed',
           current_idea_round_id:      null,
         })

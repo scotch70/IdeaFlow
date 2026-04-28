@@ -122,6 +122,7 @@ create table if not exists idea_rounds (
   id         uuid        primary key default gen_random_uuid(),
   company_id uuid        not null references companies(id) on delete cascade,
   name       text        not null default 'IdeaFlow',
+  prompt     text,
   status     text        not null default 'active'
              check (status in ('draft', 'active', 'closed')),
   created_at timestamptz not null default now(),
@@ -219,6 +220,10 @@ alter table invites
 -- comments: edit timestamp
 alter table comments
   add column if not exists updated_at timestamptz;
+
+-- idea_rounds: custom question per round
+alter table idea_rounds
+  add column if not exists prompt text;
 
 -- Legacy rename: body → content (safe no-op if already renamed)
 do $$

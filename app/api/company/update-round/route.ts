@@ -178,7 +178,8 @@ export async function POST(request: NextRequest) {
     if (status !== undefined) {
       patch.idea_round_status = status as RoundStatus | null
 
-      // When explicitly closing via status (not archive), mark the round row.
+      // When explicitly closing via status (not archive), mark the round row
+      // and wipe every field that could cause the round to appear active again.
       if (status === 'closed') {
         const { data: currentCompany } = await (adminClient as any)
           .from('companies')
@@ -193,8 +194,10 @@ export async function POST(request: NextRequest) {
             .eq('id', currentCompany.current_idea_round_id)
         }
 
-        // Clear the pointer so dashboard treats this as no active round.
-        patch.current_idea_round_id = null
+        // Clear the pointer AND the manual override so effective status is
+        // never 'active' after a close, regardless of manual_override state.
+        patch.current_idea_round_id      = null
+        patch.idea_round_manual_override = null
       }
     }
     if (parsedStartsAt !== undefined) {
