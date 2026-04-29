@@ -56,23 +56,23 @@ export default async function ReviewPage() {
 
   const currentRoundId = roundData?.current_idea_round_id ?? null
 
-  // ── Fetch ideas — scoped to current round when active ─────────────────────
-  // Review page shows the "inbox" for the active round. When no round is active
-  // (draft/closed), still show all ideas so admins can review past submissions.
-  // Excludes terminal statuses (implemented / dismissed) to keep inbox clean.
-  const ideasQuery = (supabase as any)
-    .from('ideas')
-    .select('*, profiles(full_name)')
-    .eq('company_id', profile.company_id)
-    .in('status', ['open', 'under_review', 'planned', 'in_progress'])
+  // ── Fetch ideas — always scoped to current round ──────────────────────────
+  // Never show ideas from old/closed rounds. If there is no current round,
+  // return an empty list rather than spilling unrelated submissions.
+  // Excludes terminal statuses (implemented / declined) to keep inbox clean.
+  let rawIdeas: IdeaJoinResult[] | null = null
 
-  if (effectiveStatus === 'active' && currentRoundId) {
-    ideasQuery.eq('idea_round_id', currentRoundId)
-  }
-
-  const { data: rawIdeas } = (await ideasQuery
-    .order('created_at', { ascending: true })) as unknown as {
-    data: IdeaJoinResult[] | null
+  if (currentRoundId) {
+    const { data } = (await (supabase as any)
+      .from('ideas')
+      .select('*, profiles(full_name)')
+      .eq('company_id', profile.company_id)
+      .eq('idea_round_id', currentRoundId)
+      .in('status', ['open', 'under_review', 'planned', 'in_progress'])
+      .order('created_at', { ascending: true })) as unknown as {
+      data: IdeaJoinResult[] | null
+    }
+    rawIdeas = data
   }
 
   const ideas: Idea[] = (rawIdeas ?? []).map((idea) => ({

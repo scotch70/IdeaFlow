@@ -133,31 +133,74 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: true })
     }
 
-    // Archiving — close the current round row and wipe the pointer.
+    // Archiving / deleting — cascade-delete all ideas (and their comments/likes)
+    // that belong to the round, then close the round row and wipe the pointer.
     if (status === null) {
-      // Fetch current round id so we can close it.
+      // Fetch current round id so we can scope the deletions.
       const { data: currentCompany } = await (adminClient as any)
         .from('companies')
         .select('current_idea_round_id')
         .eq('id', profile.company_id)
         .single()
 
-      if (currentCompany?.current_idea_round_id) {
+      const roundId: string | null = currentCompany?.current_idea_round_id ?? null
+
+      if (roundId) {
+        // ── 1. Collect all idea IDs in this round ─────────────────────────
+        const { data: roundIdeas } = await (adminClient as any)
+          .from('ideas')
+          .select('id')
+          .eq('idea_round_id', roundId) as { data: { id: string }[] | null }
+
+        const ideaIds: string[] = (roundIdeas ?? []).map((r: { id: string }) => r.id)
+
+        // ── 2. Delete comments → likes → ideas (dependency order) ─────────
+        if (ideaIds.length > 0) {
+          const { error: delCommentsErr } = await (adminClient as any)
+            .from('comments')
+            .delete()
+            .in('idea_id', ideaIds)
+          if (delCommentsErr) {
+            console.error('[update-round] delete comments:', delCommentsErr)
+            return NextResponse.json({ error: delCommentsErr.message }, { status: 500 })
+          }
+
+          const { error: delLikesErr } = await (adminClient as any)
+            .from('likes')
+            .delete()
+            .in('idea_id', ideaIds)
+          if (delLikesErr) {
+            console.error('[update-round] delete likes:', delLikesErr)
+            return NextResponse.json({ error: delLikesErr.message }, { status: 500 })
+          }
+
+          const { error: delIdeasErr } = await (adminClient as any)
+            .from('ideas')
+            .delete()
+            .eq('idea_round_id', roundId)
+          if (delIdeasErr) {
+            console.error('[update-round] delete ideas:', delIdeasErr)
+            return NextResponse.json({ error: delIdeasErr.message }, { status: 500 })
+          }
+        }
+
+        // ── 3. Close the round row itself ─────────────────────────────────
         await (adminClient as any)
           .from('idea_rounds')
           .update({ status: 'closed', closed_at: new Date().toISOString() })
-          .eq('id', currentCompany.current_idea_round_id)
+          .eq('id', roundId)
       }
 
+      // ── 4. Clear all round fields on the company row ──────────────────────
       const { error: updateError } = await (adminClient as any)
         .from('companies')
         .update({
-          idea_round_name:           null,
-          idea_round_status:         null,
-          idea_round_starts_at:      null,
-          idea_round_ends_at:        null,
+          idea_round_name:            null,
+          idea_round_status:          null,
+          idea_round_starts_at:       null,
+          idea_round_ends_at:         null,
           idea_round_manual_override: null,
-          current_idea_round_id:     null,
+          current_idea_round_id:      null,
         })
         .eq('id', profile.company_id)
 

@@ -168,6 +168,18 @@ export default async function DashboardPage({
     liked_by_user: likedIds.has(idea.id),
   }))
 
+  // ── DEBUG: confirm round/role state and which ideas are returned ──────────
+  console.log('[dashboard role/round debug]', {
+    userId: user.id,
+    role: profile.role,
+    currentRoundId,
+    effectiveStatus,
+    ideas: ideasWithLikeStatus.map(i => ({
+      title: i.title,
+      idea_round_id: (i as unknown as { idea_round_id: string | null }).idea_round_id,
+    })),
+  })
+
   const firstName = profile.full_name?.split(' ')[0] ?? 'there'
   const memberCount = members?.length ?? 0
   const totalLikes = ideasWithLikeStatus.reduce(
