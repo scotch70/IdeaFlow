@@ -174,6 +174,8 @@ export default async function IdeasPage() {
               <RoundGateCard
                 status={effectiveStatus}
                 isAdmin={profile.role === 'admin'}
+                companyId={profile.company_id}
+                roundName={roundData?.idea_round_name ?? null}
               />
             )}
 

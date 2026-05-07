@@ -61,11 +61,18 @@ export default function NewIdeaForm({
       const res = await fetch('/api/ideas', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, description, companyId, userId }),
+        // companyId, userId, and idea_round_id are intentionally omitted —
+        // the server derives all three from the authenticated session.
+        body: JSON.stringify({ title, description }),
       })
 
       if (!res.ok) {
         const data = await res.json()
+        // 403 means the round is not open — show a clean, user-facing message
+        // regardless of the specific server reason.
+        if (res.status === 403) {
+          throw new Error('IdeaFlow is not open for submissions.')
+        }
         throw new Error(data.error ?? 'Failed to create idea')
       }
 
@@ -169,9 +176,7 @@ export default function NewIdeaForm({
             +
           </span>
           <span style={{ fontSize: '0.875rem', fontWeight: 500 }}>
-            {isAdmin
-              ? 'Share an idea your team should work on…'
-              : 'Share a new idea…'}
+            Share a new idea…
           </span>
         </button>
       </div>
@@ -189,11 +194,7 @@ export default function NewIdeaForm({
       >
         <input
           className="input"
-          placeholder={
-            isAdmin
-              ? 'Share an idea your team should work on...'
-              : 'Share a new idea...'
-          }
+          placeholder="Share a new idea..."
           value={title}
           onChange={e => setTitle(e.target.value)}
           required

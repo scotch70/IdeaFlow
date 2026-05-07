@@ -169,9 +169,10 @@ export default async function DashboardPage({
   }))
 
   // ── DEBUG: confirm round/role state and which ideas are returned ──────────
-  console.log('[dashboard role/round debug]', {
+  console.log('[dashboard round debug]', {
     userId: user.id,
     role: profile.role,
+    companyId: profile.company_id,
     currentRoundId,
     effectiveStatus,
     ideas: ideasWithLikeStatus.map(i => ({
@@ -493,6 +494,8 @@ export default async function DashboardPage({
               <RoundGateCard
                 status={effectiveStatus}
                 isAdmin={profile.role === 'admin'}
+                companyId={profile.company_id}
+                roundName={roundData?.idea_round_name ?? null}
               />
             )}
           </section>

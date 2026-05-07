@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { getEffectiveRoundStatus } from '@/lib/rounds/getEffectiveRoundStatus'
 
 export async function POST(request: NextRequest) {
@@ -17,44 +18,80 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
 
-    // companyId is intentionally excluded — the client cannot be trusted to
-    // supply it. We derive it server-side from the authenticated user's profile.
+    // Only title, description, action, and ideaId are read from the body.
+    // companyId, userId, and idea_round_id are intentionally excluded —
+    // all three are derived server-side from the authenticated session.
     const { action, ideaId, title, description } = body
 
+    // ──────────────────────────────────────────────────────────────────────────
     // CREATE IDEA
+    // ──────────────────────────────────────────────────────────────────────────
     if (!action) {
       if (!title?.trim()) {
         return NextResponse.json({ error: 'Title is required' }, { status: 400 })
       }
 
-      // ── 1. Resolve real company_id from the authenticated user's profile ──
-      // Never read company_id from the request body — a forged value would let
-      // any user insert ideas into an arbitrary workspace.
+      // ── 1. Resolve company_id from the authenticated session ──────────────
       const { data: profile, error: profileError } = await (supabase as any)
         .from('profiles')
-        .select('company_id')
+        .select('company_id, role')
         .eq('id', user.id)
         .single()
 
       if (profileError || !profile?.company_id) {
+        console.error('[api ideas] profile fetch failed', profileError)
         return NextResponse.json(
           { error: 'Could not verify your workspace' },
           { status: 403 },
         )
       }
 
-      // ── 2. Fetch IdeaFlow round state for this company ────────────────────
-      // Includes manual_override so admins can force-open or force-close
-      // regardless of the scheduled dates.
-      const { data: company } = await (supabase as any)
+      // ── 2. Fetch company row — source of round pointer + override state ───
+      const { data: company, error: companyError } = await (supabase as any)
         .from('companies')
-        .select('idea_round_status, idea_round_starts_at, idea_round_ends_at, idea_round_manual_override, current_idea_round_id')
+        .select(
+          'current_idea_round_id, idea_round_status, ' +
+          'idea_round_starts_at, idea_round_ends_at, idea_round_manual_override',
+        )
         .eq('id', profile.company_id)
         .single()
 
-      // ── 3. Enforce round state via shared helper ──────────────────────────
-      // Default is 'draft' — brand-new workspaces are locked until an admin
-      // opens IdeaFlow. manual_override always wins over scheduled dates.
+      if (companyError) {
+        console.error('[api ideas] company fetch failed', companyError)
+      }
+
+      // ── 3. Fail fast if no round pointer ─────────────────────────────────
+      // Every idea must belong to a round. Never fall back, never create one.
+      const currentRoundId: string | null = company?.current_idea_round_id ?? null
+
+      if (!currentRoundId) {
+        console.warn('[api ideas] no current_idea_round_id on company', {
+          companyId: profile.company_id,
+          company,
+        })
+        return NextResponse.json(
+          { error: 'IdeaFlow is not open for submissions.' },
+          { status: 403 },
+        )
+      }
+
+      // ── 4. Fetch the round row via admin client ────────────────────────────
+      // `idea_rounds` has no RLS and no GRANT for the authenticated role, so
+      // the SSR client returns null. Use the admin client (service role) which
+      // is exactly how the dashboard reads the round prompt.
+      const adminClient = createAdminClient()
+      const { data: currentRound, error: roundError } = await (adminClient as any)
+        .from('idea_rounds')
+        .select('id, status, company_id')
+        .eq('id', currentRoundId)
+        .eq('company_id', profile.company_id)
+        .single()
+
+      if (roundError) {
+        console.error('[api ideas] idea_rounds fetch failed', roundError)
+      }
+
+      // ── 5. Compute effective status from company-level fields ─────────────
       const effectiveStatus = getEffectiveRoundStatus({
         raw_status:      company?.idea_round_status          ?? null,
         manual_override: company?.idea_round_manual_override ?? null,
@@ -62,32 +99,63 @@ export async function POST(request: NextRequest) {
         closes_at:       company?.idea_round_ends_at         ?? null,
       })
 
-      if (effectiveStatus !== 'active') {
-        const reason =
-          effectiveStatus === 'draft'  ? 'Idea submission is not open yet.' :
-          effectiveStatus === 'closed' ? 'Idea submission is currently closed.' :
-                                         'Idea submission is not available right now.'
-        return NextResponse.json({ error: reason }, { status: 403 })
-      }
+      // ── DEBUG: full state snapshot immediately before insert decision ─────
+      console.log('[api ideas create debug]', {
+        userId:               user.id,
+        profileCompanyId:     profile?.company_id,
+        profileRole:          profile?.role,
+        companyCurrentRoundId: company?.current_idea_round_id,
+        companyRoundStatus:   company?.idea_round_status,
+        companyManualOverride: company?.idea_round_manual_override,
+        currentRoundId,
+        currentRound,
+        effectiveStatus,
+        title,
+      })
 
-      // Require a valid round ID — every idea must belong to a round.
-      const currentRoundId = company?.current_idea_round_id ?? null
-      if (!currentRoundId) {
+      // ── 6. Gate: both company status and round row must be active ─────────
+      if (!currentRound) {
         return NextResponse.json(
-          { error: 'No active IdeaFlow round found. Please contact your admin.' },
+          { error: 'IdeaFlow is not open for submissions.' },
           { status: 403 },
         )
       }
 
-      // ── 4. Insert using the server-verified company_id ────────────────────
+      if (effectiveStatus !== 'active') {
+        return NextResponse.json(
+          { error: 'IdeaFlow is not open for submissions.' },
+          { status: 403 },
+        )
+      }
+
+      if (currentRound.status !== 'active') {
+        return NextResponse.json(
+          { error: 'IdeaFlow is not open for submissions.' },
+          { status: 403 },
+        )
+      }
+
+      // ── 7. Final safety check: idea_round_id must never be null ──────────
+      // The DB trigger `require_idea_round_id_on_ideas` enforces this at the
+      // DB level too, but we catch it here first with a clear error.
+      const ideaRoundId: string = currentRound.id
+      if (!ideaRoundId) {
+        console.error('[api ideas] currentRound.id is falsy — aborting insert', currentRound)
+        return NextResponse.json(
+          { error: 'IdeaFlow is not open for submissions.' },
+          { status: 403 },
+        )
+      }
+
+      // ── 8. Insert — idea_round_id is always currentRound.id ──────────────
       const { data, error } = await (supabase as any)
         .from('ideas')
         .insert({
-          title: title.trim(),
-          description: description?.trim() || null,
-          user_id: user.id,
-          company_id: profile.company_id,  // server-side value, never from body
-          idea_round_id: currentRoundId,
+          title:         title.trim(),
+          description:   description?.trim() || null,
+          user_id:       user.id,
+          company_id:    profile.company_id,  // from session, never body
+          idea_round_id: ideaRoundId,          // from round row, never body
         })
         .select()
         .single()
@@ -96,9 +164,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: error.message }, { status: 500 })
       }
 
-      // RLS can silently block inserts — Supabase returns {data:null, error:null}
-      // when a policy rejects the write.  Treat a null result as a hard failure
-      // so the client shows an error rather than closing the form silently.
+      // RLS can silently block inserts (data:null, error:null). Treat as failure.
       if (!data) {
         return NextResponse.json(
           { error: 'Could not save your idea — please try again' },
@@ -109,11 +175,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(data)
     }
 
+    // ──────────────────────────────────────────────────────────────────────────
     // DELETE IDEA
+    // ──────────────────────────────────────────────────────────────────────────
     if (action === 'delete') {
-      // Guard: if the user has been removed from the company their profile has
-      // company_id: null. Without this check they could still delete old ideas
-      // by ID even after losing membership.
       const { data: deleteProfile, error: deleteProfileError } = await (supabase as any)
         .from('profiles')
         .select('company_id')
@@ -132,7 +197,7 @@ export async function POST(request: NextRequest) {
         .delete()
         .eq('id', ideaId)
         .eq('user_id', user.id)
-        .eq('company_id', deleteProfile.company_id)  // scope to current membership
+        .eq('company_id', deleteProfile.company_id)
 
       if (error) {
         return NextResponse.json({ error: error.message }, { status: 500 })
@@ -141,13 +206,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true })
     }
 
+    // ──────────────────────────────────────────────────────────────────────────
     // UPDATE IDEA
+    // ──────────────────────────────────────────────────────────────────────────
     if (action === 'update') {
       if (!title?.trim()) {
         return NextResponse.json({ error: 'Title is required' }, { status: 400 })
       }
 
-      // Same membership guard as delete — prevent ex-members editing stale ideas.
       const { data: updateProfile, error: updateProfileError } = await (supabase as any)
         .from('profiles')
         .select('company_id')
@@ -164,12 +230,12 @@ export async function POST(request: NextRequest) {
       const { data, error } = await (supabase as any)
         .from('ideas')
         .update({
-          title: title.trim(),
+          title:       title.trim(),
           description: description?.trim() || null,
         })
         .eq('id', ideaId)
         .eq('user_id', user.id)
-        .eq('company_id', updateProfile.company_id)  // scope to current membership
+        .eq('company_id', updateProfile.company_id)
         .select()
         .single()
 
@@ -188,7 +254,7 @@ export async function POST(request: NextRequest) {
       {
         error: error instanceof Error ? error.message : 'Something went wrong',
       },
-      { status: 500 }
+      { status: 500 },
     )
   }
 }

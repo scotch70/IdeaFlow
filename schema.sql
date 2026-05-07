@@ -558,6 +558,29 @@ create trigger on_like_change
 update ideas
 set likes_count = (select count(*) from likes where idea_id = ideas.id);
 
+-- Ideas: require idea_round_id on every new INSERT.
+-- This is a DB-level backstop against application code regressing and
+-- inserting ideas without a round. NOT NULL is not used on the column
+-- because legacy rows pre-dating rounds may have idea_round_id = NULL.
+create or replace function prevent_null_idea_round_for_new_ideas()
+returns trigger
+language plpgsql
+as $$
+begin
+  if new.idea_round_id is null then
+    raise exception 'idea_round_id is required for new ideas';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists require_idea_round_id_on_ideas on ideas;
+
+create trigger require_idea_round_id_on_ideas
+  before insert on ideas
+  for each row
+  execute function prevent_null_idea_round_for_new_ideas();
+
 
 -- ── 10. Storage: avatars ──────────────────────────────────────────────────────
 
