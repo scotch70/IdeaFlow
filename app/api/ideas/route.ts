@@ -177,7 +177,7 @@ export async function POST(request: NextRequest) {
     if (action === 'delete') {
       const { data: deleteProfile, error: deleteProfileError } = await (supabase as any)
         .from('profiles')
-        .select('company_id')
+        .select('company_id, role')
         .eq('id', user.id)
         .single()
 
@@ -188,12 +188,18 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      const { error } = await (supabase as any)
+      // Admins can delete any idea in their company; members only their own.
+      const deleteQuery = (supabase as any)
         .from('ideas')
         .delete()
         .eq('id', ideaId)
-        .eq('user_id', user.id)
         .eq('company_id', deleteProfile.company_id)
+
+      if (deleteProfile.role !== 'admin') {
+        deleteQuery.eq('user_id', user.id)
+      }
+
+      const { error } = await deleteQuery
 
       if (error) {
         return NextResponse.json({ error: error.message }, { status: 500 })

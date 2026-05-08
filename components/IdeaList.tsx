@@ -6,16 +6,12 @@ import { createClient } from '@/lib/supabase/client'
 import IdeaCard from './IdeaCard'
 import type { Idea } from '@/types/database'
 
-type FilterKey = 'all' | 'open' | 'under_review' | 'planned' | 'in_progress' | 'implemented' | 'declined'
+type FilterKey = 'all' | 'open' | 'planned'
 
 const FILTERS: { key: FilterKey; label: string }[] = [
-  { key: 'all',          label: 'All'         },
-  { key: 'open',         label: 'Open'        },
-  { key: 'under_review', label: 'In Review'   },
-  { key: 'planned',      label: 'Planned'     },
-  { key: 'in_progress',  label: 'In Progress' },
-  { key: 'implemented',  label: 'Implemented' },
-  { key: 'declined',     label: 'Declined'    },
+  { key: 'all',     label: 'All'     },
+  { key: 'open',    label: 'Open'    },
+  { key: 'planned', label: 'Planned' },
 ]
 
 interface IdeaListProps {

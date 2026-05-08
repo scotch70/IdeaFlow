@@ -68,7 +68,7 @@ export default async function ReviewPage() {
       .select('*, profiles(full_name)')
       .eq('company_id', profile.company_id)
       .eq('idea_round_id', currentRoundId)
-      .in('status', ['open', 'under_review', 'planned', 'in_progress'])
+      .in('status', ['open', 'planned'])
       .order('created_at', { ascending: true })) as unknown as {
       data: IdeaJoinResult[] | null
     }
