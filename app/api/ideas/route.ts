@@ -12,6 +12,8 @@ export async function POST(request: NextRequest) {
       error: userError,
     } = await supabase.auth.getUser()
 
+    console.log('[AUTH USER]', user)
+
     if (userError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -38,15 +40,17 @@ export async function POST(request: NextRequest) {
         .eq('id', user.id)
         .single()
 
+      console.log('[PROFILE QUERY]', { profile, profileError })
+
       if (profileError || !profile?.company_id) {
-        console.error('[api ideas] profile fetch failed', profileError)
+        console.error('[api ideas] profile missing or no company_id', { profileError, profile })
         return NextResponse.json(
           { error: 'Could not verify your workspace' },
           { status: 403 },
         )
       }
 
-      // ── 2. Fetch company row — source of round pointer + override state ───
+      // ── 2. Fetch company row ───────────────────────────────────────────────
       const { data: company, error: companyError } = await (supabase as any)
         .from('companies')
         .select(
@@ -56,16 +60,21 @@ export async function POST(request: NextRequest) {
         .eq('id', profile.company_id)
         .single()
 
+      console.log('[COMPANY QUERY]', { company, companyError })
+
       if (companyError) {
         console.error('[api ideas] company fetch failed', companyError)
       }
 
-      // ── 3. Fail fast if no round pointer ─────────────────────────────────
-      // Every idea must belong to a round. Never fall back, never create one.
-      const currentRoundId: string | null = company?.current_idea_round_id ?? null
+      // ── 3. Read round pointer from company — this is the ID we will insert ─
+      // We store it now before any async calls so we never accidentally use
+      // currentRound.id (which may be undefined if the query returns null).
+      const activeRoundId: string | null = company?.current_idea_round_id ?? null
 
-      if (!currentRoundId) {
-        console.warn('[api ideas] no current_idea_round_id on company', {
+      console.log('[ACTIVE ROUND ID]', activeRoundId)
+
+      if (!activeRoundId) {
+        console.warn('[api ideas] no current_idea_round_id', {
           companyId: profile.company_id,
           company,
         })
@@ -75,23 +84,41 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      // ── 4. Fetch the round row via admin client ────────────────────────────
-      // `idea_rounds` has no RLS and no GRANT for the authenticated role, so
-      // the SSR client returns null. Use the admin client (service role) which
-      // is exactly how the dashboard reads the round prompt.
+      // ── 4. Fetch the round row via admin client to validate it is active ───
+      // `idea_rounds` has no RLS and no GRANT for the `authenticated` role.
+      // The SSR client silently returns null — the admin (service role) client
+      // bypasses all grants and is the only reliable way to read this table.
       const adminClient = createAdminClient()
-      const { data: currentRound, error: roundError } = await (adminClient as any)
+      const { data: currentRound, error: currentRoundError } = await (adminClient as any)
         .from('idea_rounds')
         .select('id, status, company_id')
-        .eq('id', currentRoundId)
+        .eq('id', activeRoundId)
         .eq('company_id', profile.company_id)
         .single()
 
-      if (roundError) {
-        console.error('[api ideas] idea_rounds fetch failed', roundError)
+      console.log('[ROUND QUERY]', { currentRound, currentRoundError })
+
+      if (!currentRound) {
+        console.warn('[api ideas] round row not found', {
+          activeRoundId,
+          companyId: profile.company_id,
+        })
+        return NextResponse.json(
+          { error: 'IdeaFlow is not open for submissions.' },
+          { status: 403 },
+        )
       }
 
-      // ── 5. Compute effective status from company-level fields ─────────────
+      // ── 5. Validate round row status ──────────────────────────────────────
+      if (currentRound.status !== 'active') {
+        console.warn('[api ideas] round row status not active', { roundStatus: currentRound.status })
+        return NextResponse.json(
+          { error: 'IdeaFlow is not open for submissions.' },
+          { status: 403 },
+        )
+      }
+
+      // ── 6. Compute effective status from company-level fields ─────────────
       const effectiveStatus = getEffectiveRoundStatus({
         raw_status:      company?.idea_round_status          ?? null,
         manual_override: company?.idea_round_manual_override ?? null,
@@ -99,64 +126,33 @@ export async function POST(request: NextRequest) {
         closes_at:       company?.idea_round_ends_at         ?? null,
       })
 
-      // ── DEBUG: full state snapshot immediately before insert decision ─────
-      console.log('[api ideas create debug]', {
-        userId:               user.id,
-        profileCompanyId:     profile?.company_id,
-        profileRole:          profile?.role,
-        companyCurrentRoundId: company?.current_idea_round_id,
-        companyRoundStatus:   company?.idea_round_status,
-        companyManualOverride: company?.idea_round_manual_override,
-        currentRoundId,
-        currentRound,
-        effectiveStatus,
-        title,
-      })
-
-      // ── 6. Gate: both company status and round row must be active ─────────
-      if (!currentRound) {
-        return NextResponse.json(
-          { error: 'IdeaFlow is not open for submissions.' },
-          { status: 403 },
-        )
-      }
+      console.log('[EFFECTIVE STATUS]', effectiveStatus)
 
       if (effectiveStatus !== 'active') {
+        console.warn('[api ideas] effectiveStatus not active', { effectiveStatus })
         return NextResponse.json(
           { error: 'IdeaFlow is not open for submissions.' },
           { status: 403 },
         )
       }
 
-      if (currentRound.status !== 'active') {
-        return NextResponse.json(
-          { error: 'IdeaFlow is not open for submissions.' },
-          { status: 403 },
-        )
+      // ── 7. Build insert payload ───────────────────────────────────────────
+      // idea_round_id comes from activeRoundId (company.current_idea_round_id),
+      // NOT from currentRound.id — the round query is for validation only.
+      const insertPayload = {
+        title:         title.trim(),
+        description:   description?.trim() || null,
+        company_id:    profile.company_id,   // from session, never from body
+        user_id:       user.id,              // from session, never from body
+        idea_round_id: activeRoundId,        // from company row, never from body
       }
 
-      // ── 7. Final safety check: idea_round_id must never be null ──────────
-      // The DB trigger `require_idea_round_id_on_ideas` enforces this at the
-      // DB level too, but we catch it here first with a clear error.
-      const ideaRoundId: string = currentRound.id
-      if (!ideaRoundId) {
-        console.error('[api ideas] currentRound.id is falsy — aborting insert', currentRound)
-        return NextResponse.json(
-          { error: 'IdeaFlow is not open for submissions.' },
-          { status: 403 },
-        )
-      }
+      console.log('[FINAL IDEA INSERT PAYLOAD]', insertPayload)
 
-      // ── 8. Insert — idea_round_id is always currentRound.id ──────────────
+      // ── 8. Insert ─────────────────────────────────────────────────────────
       const { data, error } = await (supabase as any)
         .from('ideas')
-        .insert({
-          title:         title.trim(),
-          description:   description?.trim() || null,
-          user_id:       user.id,
-          company_id:    profile.company_id,  // from session, never body
-          idea_round_id: ideaRoundId,          // from round row, never body
-        })
+        .insert(insertPayload)
         .select()
         .single()
 
