@@ -12,8 +12,6 @@ export async function POST(request: NextRequest) {
       error: userError,
     } = await supabase.auth.getUser()
 
-    console.log('[AUTH USER]', user)
-
     if (userError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -40,10 +38,8 @@ export async function POST(request: NextRequest) {
         .eq('id', user.id)
         .single()
 
-      console.log('[PROFILE QUERY]', { profile, profileError })
-
       if (profileError || !profile?.company_id) {
-        console.error('[api ideas] profile missing or no company_id', { profileError, profile })
+        console.error('[api ideas] profile missing or no company_id', profileError?.message)
         return NextResponse.json(
           { error: 'Could not verify your workspace' },
           { status: 403 },
@@ -60,8 +56,6 @@ export async function POST(request: NextRequest) {
         .eq('id', profile.company_id)
         .single()
 
-      console.log('[COMPANY QUERY]', { company, companyError })
-
       if (companyError) {
         console.error('[api ideas] company fetch failed', companyError)
       }
@@ -71,13 +65,7 @@ export async function POST(request: NextRequest) {
       // currentRound.id (which may be undefined if the query returns null).
       const activeRoundId: string | null = company?.current_idea_round_id ?? null
 
-      console.log('[ACTIVE ROUND ID]', activeRoundId)
-
       if (!activeRoundId) {
-        console.warn('[api ideas] no current_idea_round_id', {
-          companyId: profile.company_id,
-          company,
-        })
         return NextResponse.json(
           { error: 'IdeaFlow is not open for submissions.' },
           { status: 403 },
@@ -96,13 +84,7 @@ export async function POST(request: NextRequest) {
         .eq('company_id', profile.company_id)
         .single()
 
-      console.log('[ROUND QUERY]', { currentRound, currentRoundError })
-
       if (!currentRound) {
-        console.warn('[api ideas] round row not found', {
-          activeRoundId,
-          companyId: profile.company_id,
-        })
         return NextResponse.json(
           { error: 'IdeaFlow is not open for submissions.' },
           { status: 403 },
@@ -111,7 +93,6 @@ export async function POST(request: NextRequest) {
 
       // ── 5. Validate round row status ──────────────────────────────────────
       if (currentRound.status !== 'active') {
-        console.warn('[api ideas] round row status not active', { roundStatus: currentRound.status })
         return NextResponse.json(
           { error: 'IdeaFlow is not open for submissions.' },
           { status: 403 },
@@ -126,10 +107,7 @@ export async function POST(request: NextRequest) {
         closes_at:       company?.idea_round_ends_at         ?? null,
       })
 
-      console.log('[EFFECTIVE STATUS]', effectiveStatus)
-
       if (effectiveStatus !== 'active') {
-        console.warn('[api ideas] effectiveStatus not active', { effectiveStatus })
         return NextResponse.json(
           { error: 'IdeaFlow is not open for submissions.' },
           { status: 403 },
@@ -146,8 +124,6 @@ export async function POST(request: NextRequest) {
         user_id:       user.id,              // from session, never from body
         idea_round_id: activeRoundId,        // from company row, never from body
       }
-
-      console.log('[FINAL IDEA INSERT PAYLOAD]', insertPayload)
 
       // ── 8. Insert ─────────────────────────────────────────────────────────
       const { data, error } = await (supabase as any)
