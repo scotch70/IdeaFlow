@@ -44,6 +44,7 @@ export default function IdeaCard({ idea, currentUserId, isAdmin }: IdeaCardProps
   const [likesCount, setLikesCount] = useState(idea.likes_count)
   const [loading, setLoading]       = useState(false)
   const [deleting, setDeleting]     = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const [planning, setPlanning]     = useState(false)
   const [editing, setEditing]       = useState(false)
   const [saving, setSaving]         = useState(false)
@@ -86,9 +87,9 @@ export default function IdeaCard({ idea, currentUserId, isAdmin }: IdeaCardProps
   }
 
   async function handleDelete() {
-    const confirmed = window.confirm('Delete this idea?')
-    if (!confirmed) return
+    if (!confirmDelete) { setConfirmDelete(true); return }
     setDeleting(true)
+    setConfirmDelete(false)
     try {
       const res = await fetch('/api/ideas', {
         method: 'POST',
@@ -262,7 +263,7 @@ export default function IdeaCard({ idea, currentUserId, isAdmin }: IdeaCardProps
                   </button>
                 )}
 
-                {isAdmin && (
+                {isAdmin && !confirmDelete && (
                   <button
                     onClick={handleDelete}
                     disabled={deleting || planning}
@@ -283,6 +284,43 @@ export default function IdeaCard({ idea, currentUserId, isAdmin }: IdeaCardProps
                   >
                     {deleting ? '…' : 'Delete'}
                   </button>
+                )}
+
+                {isAdmin && confirmDelete && (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                    <button
+                      onClick={handleDelete}
+                      style={{
+                        padding: '0.2rem 0.45rem',
+                        borderRadius: '0.375rem',
+                        fontSize: '0.68rem',
+                        fontWeight: 700,
+                        border: '1px solid rgba(220,38,38,0.40)',
+                        background: 'rgba(220,38,38,0.10)',
+                        color: '#dc2626',
+                        cursor: 'pointer',
+                        lineHeight: 1,
+                      }}
+                    >
+                      Sure?
+                    </button>
+                    <button
+                      onClick={() => setConfirmDelete(false)}
+                      style={{
+                        padding: '0.2rem 0.35rem',
+                        borderRadius: '0.375rem',
+                        fontSize: '0.68rem',
+                        fontWeight: 500,
+                        border: '1px solid rgba(0,0,0,0.10)',
+                        background: 'transparent',
+                        color: 'var(--ink-light)',
+                        cursor: 'pointer',
+                        lineHeight: 1,
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </span>
                 )}
               </div>
             </div>
@@ -310,13 +348,31 @@ export default function IdeaCard({ idea, currentUserId, isAdmin }: IdeaCardProps
                     Edit
                   </button>
                   <span style={{ color: 'var(--dot-color)' }}>·</span>
-                  <button
-                    onClick={handleDelete}
-                    disabled={deleting || saving}
-                    style={{ background: 'none', border: 'none', padding: 0, fontSize: 'inherit', cursor: deleting ? 'default' : 'pointer', color: '#dc2626', fontWeight: 500, opacity: deleting ? 0.5 : 1 }}
-                  >
-                    {deleting ? 'Deleting…' : 'Delete'}
-                  </button>
+                  {!confirmDelete ? (
+                    <button
+                      onClick={() => setConfirmDelete(true)}
+                      disabled={deleting || saving}
+                      style={{ background: 'none', border: 'none', padding: 0, fontSize: 'inherit', cursor: 'pointer', color: '#dc2626', fontWeight: 500, opacity: deleting ? 0.5 : 1 }}
+                    >
+                      {deleting ? 'Deleting…' : 'Delete'}
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        onClick={handleDelete}
+                        style={{ background: 'none', border: 'none', padding: 0, fontSize: 'inherit', cursor: 'pointer', color: '#dc2626', fontWeight: 700 }}
+                      >
+                        Sure?
+                      </button>
+                      <span style={{ color: 'var(--dot-color)' }}>·</span>
+                      <button
+                        onClick={() => setConfirmDelete(false)}
+                        style={{ background: 'none', border: 'none', padding: 0, fontSize: 'inherit', cursor: 'pointer', color: 'var(--ink-light)', fontWeight: 500 }}
+                      >
+                        Cancel
+                      </button>
+                    </>
+                  )}
                 </>
               )}
 
