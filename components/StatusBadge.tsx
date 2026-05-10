@@ -1,10 +1,6 @@
 export const IDEA_STATUSES = [
   'open',
-  'under_review',
   'planned',
-  'in_progress',
-  'implemented',
-  'declined',
 ] as const
 
 export type IdeaStatus = (typeof IDEA_STATUSES)[number]
@@ -16,12 +12,8 @@ interface StatusConfig {
 }
 
 export const STATUS_CONFIG: Record<IdeaStatus, StatusConfig> = {
-  open:         { label: 'Open',        bg: 'rgba(0,0,0,0.05)',       color: '#6b7280' },
-  under_review: { label: 'In Review',   bg: 'rgba(59,130,246,0.09)',  color: '#1d4ed8' },
-  planned:      { label: 'Planned',     bg: 'rgba(99,102,241,0.09)', color: '#4338ca' },
-  in_progress:  { label: 'In Progress', bg: 'rgba(249,115,22,0.09)', color: '#c2540a' },
-  implemented:  { label: 'Implemented', bg: 'rgba(16,185,129,0.09)', color: '#059669' },
-  declined:     { label: 'Declined',    bg: 'rgba(239,68,68,0.08)',  color: '#b91c1c' },
+  open:    { label: 'Open',    bg: 'rgba(0,0,0,0.05)',      color: '#6b7280' },
+  planned: { label: 'Planned', bg: 'rgba(99,102,241,0.09)', color: '#4338ca' },
 }
 
 export function isValidStatus(s: string): s is IdeaStatus {

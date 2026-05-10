@@ -10,7 +10,7 @@ export async function sendWeeklySummary({
   stats: {
     totalIdeas: number
     needsReview: number
-    implemented: number
+    planned: number
   }
 }) {
   const html = `
@@ -21,8 +21,8 @@ export async function sendWeeklySummary({
 
       <ul>
         <li><strong>${stats.totalIdeas}</strong> ideas submitted</li>
-        <li><strong>${stats.needsReview}</strong> need your review</li>
-        <li><strong>${stats.implemented}</strong> implemented</li>
+        <li><strong>${stats.needsReview}</strong> open and waiting for review</li>
+        <li><strong>${stats.planned}</strong> planned this week</li>
       </ul>
 
       <p>

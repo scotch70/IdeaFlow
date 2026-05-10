@@ -6,7 +6,7 @@ import SiteHeader from '@/components/SiteHeader'
 export const metadata = {
   title: 'Features — IdeaFlow',
   description:
-    'Explore every IdeaFlow feature: idea capture, voting, status tracking, manager accountability, outcomes, and more.',
+    'Explore every IdeaFlow feature: idea capture, voting, status tracking, manager accountability, and team analytics.',
 }
 
 // ── Tiny shared primitives — same tokens as the rest of the site ──────────
@@ -103,7 +103,7 @@ export default async function FeaturesPage() {
               {
                 icon: <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
                 title: 'Status tracking',
-                body: 'Six clear statuses move every idea from open to outcome. Nothing falls through the cracks.',
+                body: 'Ideas move from Open to Planned when a manager commits. Nothing falls through the cracks.',
               },
               {
                 icon: <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
@@ -111,9 +111,9 @@ export default async function FeaturesPage() {
                 body: 'A review inbox flags stale ideas and keeps admins honest. No idea quietly ignored.',
               },
               {
-                icon: <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>,
-                title: 'Outcomes & impact',
-                body: 'Implemented ideas log real results — revenue, efficiency, culture. Proof that ideas matter.',
+                icon: <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>,
+                title: 'Rounds & focus',
+                body: 'Time-boxed IdeaFlow rounds keep feedback fresh. Open when ready, close when you have what you need.',
               },
               {
                 icon: <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>,
@@ -222,17 +222,13 @@ export default async function FeaturesPage() {
                 Every idea has a place to go next
               </h2>
               <p style={{ fontSize: '0.875rem', lineHeight: 1.75, color: '#7a9ab8', marginBottom: '1.25rem' }}>
-                Six clear statuses move an idea from submission to outcome. Nothing falls through the cracks.
+                Two deliberate statuses keep it simple: an idea is either still being considered, or it&apos;s been picked up. Nothing falls through the cracks.
               </p>
               {/* Status chips */}
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginBottom: '1.25rem' }}>
                 {[
-                  { label: 'Open',         bg: 'rgba(26,107,191,0.08)',  color: '#1a6bbf' },
-                  { label: 'Under review', bg: 'rgba(245,158,11,0.10)',  color: '#b45309' },
-                  { label: 'Planned',      bg: 'rgba(139,92,246,0.09)',  color: '#6d28d9' },
-                  { label: 'In progress',  bg: 'rgba(249,115,22,0.10)',  color: '#c2410c' },
-                  { label: 'Implemented',  bg: 'rgba(16,185,129,0.09)',  color: '#065f46' },
-                  { label: 'Declined',     bg: 'rgba(239,68,68,0.08)',   color: '#991b1b' },
+                  { label: 'Open',    bg: 'rgba(0,0,0,0.05)',       color: '#6b7280' },
+                  { label: 'Planned', bg: 'rgba(99,102,241,0.09)',  color: '#4338ca' },
                 ].map((s) => (
                   <span key={s.label} style={{
                     fontSize: '0.72rem', fontWeight: 700,
@@ -244,9 +240,9 @@ export default async function FeaturesPage() {
                 ))}
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
-                <Check>Admins add a context note on every status change</Check>
-                <Check>Authors notified by email at each step — no chasing</Check>
-                <Check>Status and latest note always visible on the idea card</Check>
+                <Check>One-click Plan action promotes an idea directly from the inbox</Check>
+                <Check>Status always visible on the idea card — no digging around</Check>
+                <Check>Stale alerts flag open ideas older than 7 days in the review inbox</Check>
               </div>
             </div>
 
@@ -275,28 +271,28 @@ export default async function FeaturesPage() {
       </section>
 
 
-      {/* 3. OUTCOMES & ADMIN */}
+      {/* 3. ROUNDS & ADMIN */}
       <section style={{ background: '#ffffff', padding: '3rem 0', ...DIVIDER }}>
         <PageContainer>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '3rem', alignItems: 'start' }}>
 
             <div>
-              <Overline>Outcomes &amp; impact</Overline>
+              <Overline>Rounds &amp; focus</Overline>
               <h2 style={{
                 fontFamily: "'Instrument Serif', serif", fontStyle: 'italic',
                 fontSize: 'clamp(1.375rem, 2.5vw, 1.75rem)',
                 letterSpacing: '-0.02em', color: '#0d1f35', lineHeight: 1.25, marginBottom: '0.75rem',
               }}>
-                Show what the team actually built
+                Collect ideas when the timing is right
               </h2>
               <p style={{ fontSize: '0.875rem', lineHeight: 1.75, color: '#7a9ab8', marginBottom: '1.25rem' }}>
-                Implemented ideas live on as a record of real change. Log the outcome, not just the decision.
+                IdeaFlow rounds give you a deliberate window for input — open when you need ideas, close when you have what you need.
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
-                <Check>Dedicated &ldquo;Recently implemented&rdquo; section in the dashboard</Check>
-                <Check>Impact summary captures what actually changed</Check>
-                <Check>Impact type tags: revenue, cost saving, productivity, culture</Check>
-                <Check>Optional link to evidence — doc, PR, or announcement</Check>
+                <Check>Open and close rounds manually, or set an automatic schedule</Check>
+                <Check>Custom prompt per round focuses the team on what matters now</Check>
+                <Check>Ideas are scoped to the round — no noise from previous sessions</Check>
+                <Check>Admin can delete a round and start fresh with a clean slate</Check>
               </div>
             </div>
 
@@ -315,7 +311,7 @@ export default async function FeaturesPage() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
                 <Check>Personal invite links per teammate — roles set before they join</Check>
                 <Check>Two clean roles: Admin manages, Member contributes</Check>
-                <Check>Customise the idea submission heading per workspace</Check>
+                <Check>Customise the idea submission prompt per round</Check>
                 <Check>Built-in analytics: volume, contributors, weekly trends</Check>
                 <Check>Workspace isolation — no data bleeds between tenants</Check>
               </div>
@@ -341,12 +337,12 @@ export default async function FeaturesPage() {
                 Everyone knows where their idea stands
               </h2>
               <p style={{ fontSize: '0.875rem', lineHeight: 1.75, color: '#7a9ab8', marginBottom: '1.25rem' }}>
-                Contributors don&apos;t need to log in and check — they&apos;re notified automatically when anything changes.
+                Contributors don&apos;t need to log in and check — they&apos;re notified automatically when their idea is picked up.
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
-                <Check>Triggered automatically on every status change</Check>
-                <Check>Includes new status and the admin&apos;s context note</Check>
+                <Check>Triggered automatically when an idea is marked Planned</Check>
                 <Check>Sent directly to the idea author — no noisy group emails</Check>
+                <Check>Invite reminders nudge teammates who haven&apos;t joined yet</Check>
                 <Check>Keeps contributors engaged without creating inbox noise</Check>
               </div>
             </div>
@@ -363,12 +359,12 @@ export default async function FeaturesPage() {
                 At a glance
               </p>
               {[
-                { label: 'Statuses', value: '6 stages from open to implemented' },
-                { label: 'Notifications', value: 'Automatic email on every status change' },
-                { label: 'Invite model', value: 'Personal links, role assigned at invite' },
-                { label: 'Analytics', value: 'Volume, contributors, trends — built in' },
-                { label: 'Impact types', value: 'Revenue · Cost saving · Productivity · Culture' },
-                { label: 'Workspace', value: 'Fully isolated per company' },
+                { label: 'Statuses',      value: 'Open → Planned' },
+                { label: 'Notifications', value: 'Auto email when idea is planned' },
+                { label: 'Invite model',  value: 'Personal links, role assigned at invite' },
+                { label: 'Analytics',     value: 'Volume, contributors, trends — built in' },
+                { label: 'Rounds',        value: 'Time-boxed, custom prompt per round' },
+                { label: 'Workspace',     value: 'Fully isolated per company' },
               ].map((row, i, arr) => (
                 <div key={row.label} style={{
                   display: 'flex', justifyContent: 'space-between',

@@ -59,7 +59,6 @@ export default async function ReviewPage() {
   // ── Fetch ideas — always scoped to current round ──────────────────────────
   // Never show ideas from old/closed rounds. If there is no current round,
   // return an empty list rather than spilling unrelated submissions.
-  // Excludes terminal statuses (implemented / declined) to keep inbox clean.
   let rawIdeas: IdeaJoinResult[] | null = null
 
   if (currentRoundId) {

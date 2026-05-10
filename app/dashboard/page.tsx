@@ -7,7 +7,6 @@ import type { Database, Idea } from '@/types/database'
 import AnalyticsPanel from '@/components/AnalyticsPanel'
 import type { DailyPoint, Contributor } from '@/components/AnalyticsPanel'
 import UpgradeButton from '@/components/UpgradeButton'
-import ImplementedIdeas from '@/components/ImplementedIdeas'
 import PageContainer from '@/components/PageContainer'
 import IdeaRoundBanner from '@/components/IdeaRoundBanner'
 import RoundGateCard from '@/components/RoundGateCard'
@@ -466,15 +465,6 @@ export default async function DashboardPage({
                   isAdmin={profile.role === 'admin'}
                 />
 
-                {/* ── Implemented ideas — only during an active round ── */}
-                <div
-                  style={{
-                    paddingTop: '0.5rem',
-                    borderTop: '1px solid var(--tint-border)',
-                  }}
-                >
-                  <ImplementedIdeas ideas={ideasWithLikeStatus} />
-                </div>
               </>
             ) : (
               /* ── Gate card only: no ideas shown when round is not active ── */

@@ -1,9 +1,4 @@
-export type EmailStatus =
-  | 'under_review'
-  | 'planned'
-  | 'in_progress'
-  | 'implemented'
-  | 'declined'
+export type EmailStatus = 'planned'
 
 interface StatusEmailParams {
   authorName: string
@@ -33,16 +28,6 @@ const STATUS_META: Record<
     closing: string
   }
 > = {
-  under_review: {
-    subject: (title) => `Your idea is being reviewed: "${title}"`,
-    heading: 'Your idea is under review',
-    intro: (name) =>
-      `Hi ${name}, your idea has been picked up and is now being reviewed by the team.`,
-    badgeLabel: 'In Review',
-    badgeBg: '#EFF6FF',
-    badgeColor: '#1D4ED8',
-    closing: "We'll keep you posted as things move forward.",
-  },
   planned: {
     subject: (title) => `Your idea has been planned: "${title}"`,
     heading: "Your idea is on the roadmap",
@@ -51,41 +36,7 @@ const STATUS_META: Record<
     badgeLabel: 'Planned',
     badgeBg: '#EEF2FF',
     badgeColor: '#4338CA',
-    closing: "We'll let you know when work begins.",
-  },
-  in_progress: {
-    subject: (title) => `Work has started on your idea: "${title}"`,
-    heading: "Your idea is being built",
-    intro: (name) =>
-      `${name}, the team has started working on your idea. It's now in progress.`,
-    badgeLabel: 'In Progress',
-    badgeBg: '#FFF7ED',
-    badgeColor: '#C2540A',
-    closing: "Stay tuned — we'll notify you when it ships.",
-  },
-  implemented: {
-    subject: (title) => `Your idea shipped! 🎉 "${title}"`,
-    heading: "Your idea was implemented 🎉",
-    intro: (name) =>
-      `${name}, your idea has been implemented and is now live. Thank you for speaking up — this kind of contribution makes a real difference.`,
-    badgeLabel: 'Implemented',
-    badgeBg: '#ECFDF5',
-    badgeColor: '#059669',
-    noteHeading: 'What was built',
-    closing:
-      'Your voice shaped something real. Keep the ideas coming.',
-  },
-  declined: {
-    subject: (title) => `An update on your idea: "${title}"`,
-    heading: 'An update on your idea',
-    intro: (name) =>
-      `Hi ${name}, thank you for sharing your idea. After careful consideration, we are not moving forward with it at this time.`,
-    badgeLabel: 'Declined',
-    badgeBg: '#FEF2F2',
-    badgeColor: '#B91C1C',
-    noteHeading: "Why we're not moving forward",
-    closing:
-      "We appreciate you sharing your thinking. Please keep ideas coming — every submission helps us improve.",
+    closing: "Thanks for sharing your thinking — it makes a real difference.",
   },
 }
 

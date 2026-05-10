@@ -17,22 +17,16 @@ import { getCompanyReportData } from '@/lib/reports/getCompanyReportData'
 
 function statusLabel(status: string): string {
   const map: Record<string, string> = {
-    pending:     'Pending review',
-    reviewed:    'Reviewed',
-    approved:    'Approved',
-    implemented: 'Implemented',
-    rejected:    'Not moving forward',
+    open:    'Open',
+    planned: 'Planned',
   }
   return map[status] ?? status
 }
 
 function statusColor(status: string): string {
   const map: Record<string, string> = {
-    implemented: '#059669',
-    approved:    '#0e52a8',
-    reviewed:    '#7c3aed',
-    rejected:    '#dc2626',
-    pending:     '#6b7280',
+    open:    '#6b7280',
+    planned: '#4338ca',
   }
   return map[status] ?? '#6b7280'
 }

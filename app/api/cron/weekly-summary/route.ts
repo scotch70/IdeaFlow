@@ -48,12 +48,11 @@ export async function GET(request: NextRequest) {
 
     const needsReview =
       ideas?.filter(
-        (i: any) =>
-          i.status === 'open' || i.status === 'under_review'
+        (i: any) => !i.status || i.status === 'open'
       ).length ?? 0
 
-    const implemented =
-      recentIdeas.filter((i: any) => i.status === 'implemented')
+    const planned =
+      recentIdeas.filter((i: any) => i.status === 'planned')
         .length ?? 0
 
     // 4. Send to each admin
@@ -69,7 +68,7 @@ export async function GET(request: NextRequest) {
         stats: {
           totalIdeas: recentIdeas.length,
           needsReview,
-          implemented,
+          planned,
         },
       })
     }

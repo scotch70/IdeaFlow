@@ -74,11 +74,11 @@ export default function IdeaList({
     <div className="space-y-3">
       {/* Header + filter tabs */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
-        <div className="flex items-center justify-between">
-          <h2 className="text-xs font-medium text-stone-400 uppercase tracking-wider">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <h2 style={{ fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#9ab0c8', margin: 0 }}>
             Ideas · sorted by likes
           </h2>
-          <span className="text-xs text-stone-400">
+          <span style={{ fontSize: '0.72rem', color: '#9ab0c8', fontVariantNumeric: 'tabular-nums' }}>
             {filtered.length}{activeFilter !== 'all' ? ` / ${ideas.length}` : ''} total
           </span>
         </div>

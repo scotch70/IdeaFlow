@@ -275,7 +275,7 @@ export default async function HomePage() {
           {/* ── "See all features" nudge ── */}
           <div style={{ marginTop: '2.5rem', paddingTop: '2rem', borderTop: '1px solid rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
             <p style={{ fontSize: '0.875rem', color: '#9ab0c8' }}>
-              Status tracking, manager accountability, outcomes, analytics and more.
+              Status tracking, manager accountability, built-in analytics and more.
             </p>
             <Link href="/features" style={{ fontSize: '0.875rem', fontWeight: 600, color: '#f97316', textDecoration: 'none', whiteSpace: 'nowrap' }}>
               See all features →
