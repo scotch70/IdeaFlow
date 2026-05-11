@@ -154,231 +154,234 @@ export default async function FeaturesPage() {
       </section>
 
 
-      {/* ── DEEP SECTIONS ────────────────────────────────────────────────── */}
-
-      {/* 1. CAPTURE & DISCUSSION */}
-      <section style={{ background: '#ffffff', padding: '3rem 0', ...DIVIDER }}>
-        <PageContainer>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '3rem', alignItems: 'start' }}>
-
-            <div>
-              <Overline>Idea capture</Overline>
-              <h2 style={{
-                fontFamily: "'Instrument Serif', serif", fontStyle: 'italic',
-                fontSize: 'clamp(1.375rem, 2.5vw, 1.75rem)',
-                letterSpacing: '-0.02em', color: '#0d1f35', lineHeight: 1.25, marginBottom: '0.75rem',
-              }}>
-                Zero friction from thought to post
-              </h2>
-              <p style={{ fontSize: '0.875rem', lineHeight: 1.75, color: '#7a9ab8', marginBottom: '1.25rem' }}>
-                Anyone on the team can share an idea in seconds — no forms, no approval needed.
-              </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
-                <Check>Title and optional description field keeps ideas clear</Check>
-                <Check>Admins can customise the submission heading per workspace</Check>
-                <Check>Ideas are immediately visible to the entire team</Check>
-                <Check>No length requirements — short ideas are just as valid</Check>
-              </div>
-            </div>
-
-            <div>
-              <Overline>Voting &amp; discussion</Overline>
-              <h2 style={{
-                fontFamily: "'Instrument Serif', serif", fontStyle: 'italic',
-                fontSize: 'clamp(1.375rem, 2.5vw, 1.75rem)',
-                letterSpacing: '-0.02em', color: '#0d1f35', lineHeight: 1.25, marginBottom: '0.75rem',
-              }}>
-                The best ideas rise automatically
-              </h2>
-              <p style={{ fontSize: '0.875rem', lineHeight: 1.75, color: '#7a9ab8', marginBottom: '1.25rem' }}>
-                Every team member votes for the ideas they genuinely support. The ranking updates in real time.
-              </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
-                <Check>One-click upvote — no accounts, no friction</Check>
-                <Check>Live ranked list always shows the most-supported ideas first</Check>
-                <Check>Comments let teammates add context and build on ideas</Check>
-                <Check>Vote counts are visible to everyone — fully transparent</Check>
-              </div>
-            </div>
-
-          </div>
-        </PageContainer>
-      </section>
-
-
-      {/* 2. STATUS TRACKING */}
-      <section style={{ padding: '3rem 0', ...DIVIDER }}>
+      {/* ── ANALYTICS SHOWCASE ───────────────────────────────────────────── */}
+      <section style={{ background: '#ffffff', padding: 'clamp(3rem,6vw,5rem) 0', ...DIVIDER }}>
         <PageContainer>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '3rem', alignItems: 'start' }}>
-
-            <div>
-              <Overline>Status tracking</Overline>
-              <h2 style={{
-                fontFamily: "'Instrument Serif', serif", fontStyle: 'italic',
-                fontSize: 'clamp(1.375rem, 2.5vw, 1.75rem)',
-                letterSpacing: '-0.02em', color: '#0d1f35', lineHeight: 1.25, marginBottom: '0.75rem',
-              }}>
-                Every idea has a place to go next
-              </h2>
-              <p style={{ fontSize: '0.875rem', lineHeight: 1.75, color: '#7a9ab8', marginBottom: '1.25rem' }}>
-                Two deliberate statuses keep it simple: an idea is either still being considered, or it&apos;s been picked up. Nothing falls through the cracks.
-              </p>
-              {/* Status chips */}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginBottom: '1.25rem' }}>
-                {[
-                  { label: 'Open',    bg: 'rgba(0,0,0,0.05)',       color: '#6b7280' },
-                  { label: 'Planned', bg: 'rgba(99,102,241,0.09)',  color: '#4338ca' },
-                ].map((s) => (
-                  <span key={s.label} style={{
-                    fontSize: '0.72rem', fontWeight: 700,
-                    padding: '0.2rem 0.65rem', borderRadius: '999px',
-                    background: s.bg, color: s.color,
-                  }}>
-                    {s.label}
-                  </span>
-                ))}
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
-                <Check>One-click Plan action promotes an idea directly from the inbox</Check>
-                <Check>Status always visible on the idea card — no digging around</Check>
-                <Check>Stale alerts flag open ideas older than 7 days in the review inbox</Check>
-              </div>
-            </div>
-
-            <div>
-              <Overline>Manager accountability</Overline>
-              <h2 style={{
-                fontFamily: "'Instrument Serif', serif", fontStyle: 'italic',
-                fontSize: 'clamp(1.375rem, 2.5vw, 1.75rem)',
-                letterSpacing: '-0.02em', color: '#0d1f35', lineHeight: 1.25, marginBottom: '0.75rem',
-              }}>
-                No idea quietly ignored
-              </h2>
-              <p style={{ fontSize: '0.875rem', lineHeight: 1.75, color: '#7a9ab8', marginBottom: '1.25rem' }}>
-                A dedicated review inbox surfaces ideas that need attention before the team notices they&apos;ve been forgotten.
-              </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
-                <Check>Stale alerts flag open ideas older than 7 days</Check>
-                <Check>Manager queue shows a &ldquo;needs attention&rdquo; count at a glance</Check>
-                <Check>One-click status update directly from the review inbox</Check>
-                <Check>Dedicated <em>/review</em> page for focused triage sessions</Check>
-              </div>
-            </div>
-
-          </div>
-        </PageContainer>
-      </section>
-
-
-      {/* 3. ROUNDS & ADMIN */}
-      <section style={{ background: '#ffffff', padding: '3rem 0', ...DIVIDER }}>
-        <PageContainer>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '3rem', alignItems: 'start' }}>
-
-            <div>
-              <Overline>Rounds &amp; focus</Overline>
-              <h2 style={{
-                fontFamily: "'Instrument Serif', serif", fontStyle: 'italic',
-                fontSize: 'clamp(1.375rem, 2.5vw, 1.75rem)',
-                letterSpacing: '-0.02em', color: '#0d1f35', lineHeight: 1.25, marginBottom: '0.75rem',
-              }}>
-                Collect ideas when the timing is right
-              </h2>
-              <p style={{ fontSize: '0.875rem', lineHeight: 1.75, color: '#7a9ab8', marginBottom: '1.25rem' }}>
-                IdeaFlow rounds give you a deliberate window for input — open when you need ideas, close when you have what you need.
-              </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
-                <Check>Open and close rounds manually, or set an automatic schedule</Check>
-                <Check>Custom prompt per round focuses the team on what matters now</Check>
-                <Check>Ideas are scoped to the round — no noise from previous sessions</Check>
-                <Check>Admin can delete a round and start fresh with a clean slate</Check>
-              </div>
-            </div>
-
-            <div>
-              <Overline>Admin tools</Overline>
-              <h2 style={{
-                fontFamily: "'Instrument Serif', serif", fontStyle: 'italic',
-                fontSize: 'clamp(1.375rem, 2.5vw, 1.75rem)',
-                letterSpacing: '-0.02em', color: '#0d1f35', lineHeight: 1.25, marginBottom: '0.75rem',
-              }}>
-                Full control, zero overhead
-              </h2>
-              <p style={{ fontSize: '0.875rem', lineHeight: 1.75, color: '#7a9ab8', marginBottom: '1.25rem' }}>
-                Admins manage the workspace without it becoming a second job.
-              </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
-                <Check>Personal invite links per teammate — roles set before they join</Check>
-                <Check>Two clean roles: Admin manages, Member contributes</Check>
-                <Check>Customise the idea submission prompt per round</Check>
-                <Check>Built-in analytics: volume, contributors, weekly trends</Check>
-                <Check>Workspace isolation — no data bleeds between tenants</Check>
-              </div>
-            </div>
-
-          </div>
-        </PageContainer>
-      </section>
-
-
-      {/* 4. NOTIFICATIONS */}
-      <section style={{ padding: '3rem 0', ...DIVIDER }}>
-        <PageContainer>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '3rem', alignItems: 'start' }}>
-
-            <div>
-              <Overline>Email notifications</Overline>
-              <h2 style={{
-                fontFamily: "'Instrument Serif', serif", fontStyle: 'italic',
-                fontSize: 'clamp(1.375rem, 2.5vw, 1.75rem)',
-                letterSpacing: '-0.02em', color: '#0d1f35', lineHeight: 1.25, marginBottom: '0.75rem',
-              }}>
-                Everyone knows where their idea stands
-              </h2>
-              <p style={{ fontSize: '0.875rem', lineHeight: 1.75, color: '#7a9ab8', marginBottom: '1.25rem' }}>
-                Contributors don&apos;t need to log in and check — they&apos;re notified automatically when their idea is picked up.
-              </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
-                <Check>Triggered automatically when an idea is marked Planned</Check>
-                <Check>Sent directly to the idea author — no noisy group emails</Check>
-                <Check>Invite reminders nudge teammates who haven&apos;t joined yet</Check>
-                <Check>Keeps contributors engaged without creating inbox noise</Check>
-              </div>
-            </div>
-
-            {/* Compact feature summary — replacing the oversized email mockup */}
-            <div style={{
-              background: '#ffffff',
-              border: '1px solid rgba(26,107,191,0.10)',
-              borderRadius: '1rem',
-              padding: '1.5rem',
-              boxShadow: '0 1px 8px rgba(6,14,38,0.05)',
+          {/* Section header */}
+          <div style={{ maxWidth: '36rem', marginBottom: '2.75rem' }}>
+            <Overline>Analytics</Overline>
+            <h2 style={{
+              fontFamily: "'Instrument Serif', serif", fontStyle: 'italic',
+              fontSize: 'clamp(1.625rem, 3vw, 2.25rem)',
+              letterSpacing: '-0.02em', color: '#0d1f35', lineHeight: 1.2,
+              marginBottom: '0.75rem',
             }}>
-              <p style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#9ab0c8', marginBottom: '1rem' }}>
-                At a glance
-              </p>
+              See what your team cares about
+            </h2>
+            <p style={{ fontSize: '0.9375rem', lineHeight: 1.75, color: '#7a9ab8' }}>
+              Track idea volume, top contributors, most-supported ideas, and weekly activity — without any extra reporting work.
+            </p>
+          </div>
+
+          {/* Dashboard mockup */}
+          <div style={{
+            background: '#f8f9fb',
+            border: '1px solid rgba(26,107,191,0.10)',
+            borderRadius: '1.5rem',
+            padding: 'clamp(1.25rem, 3vw, 2rem)',
+            boxShadow: '0 4px 32px rgba(6,14,38,0.06)',
+          }}>
+
+            {/* Stat cards */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+              gap: '0.75rem',
+              marginBottom: '0.875rem',
+            }}>
               {[
-                { label: 'Statuses',      value: 'Open → Planned' },
-                { label: 'Notifications', value: 'Auto email when idea is planned' },
-                { label: 'Invite model',  value: 'Personal links, role assigned at invite' },
-                { label: 'Analytics',     value: 'Volume, contributors, trends — built in' },
-                { label: 'Rounds',        value: 'Time-boxed, custom prompt per round' },
-                { label: 'Workspace',     value: 'Fully isolated per company' },
-              ].map((row, i, arr) => (
-                <div key={row.label} style={{
-                  display: 'flex', justifyContent: 'space-between',
-                  alignItems: 'baseline', gap: '1rem',
-                  padding: '0.6rem 0',
-                  borderBottom: i < arr.length - 1 ? '1px solid rgba(26,107,191,0.07)' : 'none',
+                {
+                  value: '24', label: 'Total ideas',
+                  icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z"/><path d="M9 21h6"/></svg>,
+                },
+                {
+                  value: '87', label: 'Total likes', sub: '3.6 avg per idea',
+                  icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>,
+                },
+                {
+                  value: '8', label: 'Ideas this week', sub: '8 ideas posted',
+                  icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>,
+                },
+                {
+                  value: '6', label: 'Active members', sub: '6 members posted',
+                  icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+                },
+              ].map(card => (
+                <div key={card.label} style={{
+                  background: '#ffffff',
+                  border: '1px solid rgba(26,107,191,0.09)',
+                  borderRadius: '0.875rem',
+                  padding: '1rem 1.125rem',
+                  display: 'flex', flexDirection: 'column', gap: '0.5rem',
                 }}>
-                  <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#5a7fa8', flexShrink: 0 }}>{row.label}</span>
-                  <span style={{ fontSize: '0.8rem', color: '#0d1f35', textAlign: 'right' }}>{row.value}</span>
+                  <div style={{
+                    width: '1.875rem', height: '1.875rem', borderRadius: '0.45rem',
+                    background: 'rgba(249,115,22,0.07)', border: '1px solid rgba(249,115,22,0.13)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: '#c2540a',
+                  }}>
+                    {card.icon}
+                  </div>
+                  <div>
+                    <p style={{ fontSize: '1.375rem', fontWeight: 800, color: '#0d1f35', lineHeight: 1, letterSpacing: '-0.03em', fontVariantNumeric: 'tabular-nums' }}>
+                      {card.value}
+                    </p>
+                    <p style={{ fontSize: '0.725rem', fontWeight: 500, color: '#5a7fa8', marginTop: '0.2rem' }}>
+                      {card.label}
+                    </p>
+                    {card.sub && (
+                      <p style={{ fontSize: '0.65rem', color: '#9ab0c8', marginTop: '0.1rem' }}>{card.sub}</p>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
 
+            {/* Charts row */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+              gap: '0.75rem',
+            }}>
+
+              {/* Weekly activity bar chart */}
+              <div style={{
+                background: '#ffffff',
+                border: '1px solid rgba(26,107,191,0.09)',
+                borderRadius: '0.875rem',
+                padding: '1.125rem 1.25rem',
+              }}>
+                <p style={{ fontSize: '0.8rem', fontWeight: 700, color: '#0d1f35', marginBottom: '0.15rem' }}>
+                  Weekly activity
+                </p>
+                <p style={{ fontSize: '0.7rem', color: '#5a7fa8', marginBottom: '1.25rem' }}>
+                  Ideas posted in the last 7 days
+                </p>
+                <div style={{ display: 'flex', alignItems: 'flex-end', gap: '0.375rem', height: '4.5rem' }}>
+                  {[
+                    { label: 'Mo', h: 20, today: false },
+                    { label: 'Tu', h: 55, today: false },
+                    { label: 'We', h: 35, today: false },
+                    { label: 'Th', h: 75, today: false },
+                    { label: 'Fr', h: 60, today: false },
+                    { label: 'Sa', h: 15, today: false },
+                    { label: 'Su', h: 90, today: true  },
+                  ].map((bar, i) => (
+                    <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.35rem', height: '100%', justifyContent: 'flex-end' }}>
+                      <div style={{
+                        width: '100%',
+                        height: bar.h === 0 ? '3px' : `${bar.h}%`,
+                        background: bar.today ? '#f97316' : 'rgba(249,115,22,0.30)',
+                        borderRadius: '3px 3px 0 0',
+                      }} />
+                      <span style={{ fontSize: '0.58rem', fontWeight: bar.today ? 700 : 400, color: bar.today ? '#c2540a' : '#5a7fa8', lineHeight: 1 }}>
+                        {bar.label}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Top contributors */}
+              <div style={{
+                background: '#ffffff',
+                border: '1px solid rgba(26,107,191,0.09)',
+                borderRadius: '0.875rem',
+                padding: '1.125rem 1.25rem',
+              }}>
+                <p style={{ fontSize: '0.8rem', fontWeight: 700, color: '#0d1f35', marginBottom: '0.15rem' }}>
+                  Most active members
+                </p>
+                <p style={{ fontSize: '0.7rem', color: '#5a7fa8', marginBottom: '1.25rem' }}>
+                  Ranked by ideas submitted
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                  {[
+                    { name: 'Alex T.',  count: 7, pct: 100 },
+                    { name: 'Maria K.', count: 5, pct: 71  },
+                    { name: 'James R.', count: 4, pct: 57  },
+                    { name: 'Priya N.', count: 3, pct: 43  },
+                  ].map((c, i) => (
+                    <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: '0.275rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.78rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                          <span style={{ fontSize: '0.6rem', fontWeight: 800, color: i === 0 ? '#c2540a' : 'rgba(90,127,168,0.4)', fontVariantNumeric: 'tabular-nums', minWidth: '1rem' }}>
+                            {String(i + 1).padStart(2, '0')}
+                          </span>
+                          <span style={{ fontWeight: 600, color: '#0d1f35' }}>{c.name}</span>
+                        </div>
+                        <span style={{ fontSize: '0.7rem', fontWeight: 500, color: '#5a7fa8', fontVariantNumeric: 'tabular-nums' }}>
+                          {c.count} ideas
+                        </span>
+                      </div>
+                      <div style={{ height: '3px', background: 'rgba(26,107,191,0.07)', borderRadius: '999px', overflow: 'hidden' }}>
+                        <div style={{
+                          height: '100%', width: `${c.pct}%`,
+                          background: i === 0 ? '#f97316' : i === 1 ? 'rgba(249,115,22,0.55)' : 'rgba(249,115,22,0.30)',
+                          borderRadius: '999px',
+                        }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Top liked idea */}
+              <div style={{
+                background: '#ffffff',
+                border: '1px solid rgba(249,115,22,0.14)',
+                borderRadius: '0.875rem',
+                padding: '1.125rem 1.25rem',
+                position: 'relative', overflow: 'hidden',
+              }}>
+                <div style={{ position: 'absolute', top: 0, right: 0, width: '60%', height: '100%', background: 'radial-gradient(ellipse at top right, rgba(249,115,22,0.05), transparent 70%)', pointerEvents: 'none' }} />
+                <p style={{ fontSize: '0.8rem', fontWeight: 700, color: '#0d1f35', marginBottom: '0.15rem' }}>
+                  Top liked idea
+                </p>
+                <p style={{ fontSize: '0.7rem', color: '#5a7fa8', marginBottom: '1.25rem' }}>
+                  Most supported by the team
+                </p>
+                <p style={{ fontSize: '0.875rem', fontWeight: 600, color: '#0d1f35', lineHeight: 1.5, marginBottom: '0.75rem' }}>
+                  Switch our standups to async — post a Loom before 9am
+                </p>
+                <div style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '0.35rem',
+                  borderRadius: '999px', padding: '0.25rem 0.625rem',
+                  background: 'rgba(249,115,22,0.09)', border: '1px solid rgba(249,115,22,0.18)',
+                }}>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="#f97316" stroke="none">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                  </svg>
+                  <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#c2540a', fontVariantNumeric: 'tabular-nums' }}>
+                    14 likes
+                  </span>
+                </div>
+              </div>
+
+            </div>
           </div>
+
+          {/* Caption row */}
+          <div style={{
+            marginTop: '1.25rem',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            flexWrap: 'wrap', gap: '0.75rem',
+          }}>
+            <p style={{ fontSize: '0.825rem', color: '#9ab0c8' }}>
+              Built-in analytics — no setup, no integrations, always up to date.
+            </p>
+            {user ? (
+              <Link href="/dashboard" style={{ fontSize: '0.825rem', fontWeight: 600, color: '#f97316', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                Open dashboard →
+              </Link>
+            ) : (
+              <Link href="/auth" style={{ fontSize: '0.825rem', fontWeight: 600, color: '#f97316', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                Try it free →
+              </Link>
+            )}
+          </div>
+
         </PageContainer>
       </section>
 
