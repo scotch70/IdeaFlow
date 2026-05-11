@@ -36,11 +36,15 @@ export async function getCompanyReportData(companyId: string): Promise<CompanyRe
   const admin = createAdminClient()
 
   // ── Company ──────────────────────────────────────────────────────────────
+  // Also fetch current_idea_round_id so ideas can be scoped to the active round,
+  // matching exactly what the dashboard renders (no orphaned / old-round rows).
   const { data: company } = await (admin as any)
     .from('companies')
-    .select('name, plan')
+    .select('name, plan, current_idea_round_id')
     .eq('id', companyId)
     .single()
+
+  const currentRoundId: string | null = company?.current_idea_round_id ?? null
 
   // ── Members ───────────────────────────────────────────────────────────────
   const { count: totalMembers } = await (admin as any)
@@ -49,12 +53,29 @@ export async function getCompanyReportData(companyId: string): Promise<CompanyRe
     .eq('company_id', companyId)
 
   // ── Ideas + author names ───────────────────────────────────────────────────
-  const { data: ideas } = await (admin as any)
+  // Scope to the current round only — same logic as the dashboard.
+  // If there is no active round the report shows no ideas (not old/orphaned rows).
+  let ideasQuery = (admin as any)
     .from('ideas')
     .select('id, title, description, status, likes_count, created_at, user_id, profiles(full_name)')
     .eq('company_id', companyId)
     .order('likes_count', { ascending: false })
     .order('created_at', { ascending: false })
+
+  if (currentRoundId) {
+    ideasQuery = ideasQuery.eq('idea_round_id', currentRoundId)
+  } else {
+    // No round configured — exclude everything so stale rows never appear.
+    ideasQuery = ideasQuery.eq('idea_round_id', 'no-round-configured')
+  }
+
+  const { data: ideas } = await ideasQuery
+
+  console.log('[report ideas]', (ideas ?? []).map((i: { id: string; title: string; idea_round_id: string | null }) => ({
+    id: i.id,
+    title: i.title,
+    round: i.idea_round_id,
+  })))
 
   const ideasArr: Array<{
     id: string

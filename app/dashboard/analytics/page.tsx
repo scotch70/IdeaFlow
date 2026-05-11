@@ -30,20 +30,29 @@ export default async function AnalyticsPage() {
 
   if (!profile || profile.role !== 'admin') redirect('/dashboard')
 
-  const { data: ideas } = (await supabase
+  // Fetch plan + current_idea_round_id together so the ideas query can be
+  // scoped to the current round — matching exactly what the dashboard shows.
+  const { data: company } = (await supabase
+    .from('companies')
+    .select('plan, current_idea_round_id')
+    .eq('id', profile.company_id!)
+    .single()) as unknown as { data: { plan: string; current_idea_round_id: string | null } | null }
+
+  const isPro = company?.plan === 'pro'
+  const currentRoundId = company?.current_idea_round_id ?? null
+
+  // Scope ideas to the current round only — never include orphaned or old-round rows.
+  const ideasQuery = supabase
     .from('ideas')
     .select('*, profiles(full_name)')
     .eq('company_id', profile.company_id!)
-    .order('created_at', { ascending: false })) as unknown as { data: IdeaRow[] | null }
+    .order('created_at', { ascending: false })
 
-  // Fetch plan for the PDF export button gating
-  const { data: company } = (await supabase
-    .from('companies')
-    .select('plan')
-    .eq('id', profile.company_id!)
-    .single()) as unknown as { data: { plan: string } | null }
-
-  const isPro = company?.plan === 'pro'
+  const { data: ideas } = (await (
+    currentRoundId
+      ? (ideasQuery as any).eq('idea_round_id', currentRoundId)
+      : (ideasQuery as any).eq('idea_round_id', 'no-round-configured')
+  )) as unknown as { data: IdeaRow[] | null }
 
   const now = new Date()
   const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
