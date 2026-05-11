@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getEffectiveRoundStatus } from '@/lib/rounds/getEffectiveRoundStatus'
+import { checkRateLimit, getClientIp } from '@/lib/ratelimit'
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,6 +15,16 @@ export async function POST(request: NextRequest) {
 
     if (userError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Rate-limit idea submissions: 10 per minute per user.
+    // Key by user ID so the limit is per-account, not per-IP.
+    const allowed = await checkRateLimit(`ideas:${user.id}`, 60, 10)
+    if (!allowed) {
+      return NextResponse.json(
+        { error: 'Too many requests — please slow down.' },
+        { status: 429 },
+      )
     }
 
     const body = await request.json()

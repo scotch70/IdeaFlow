@@ -21,9 +21,21 @@ const nextConfig = {
               "frame-ancestors 'none'",
             ].join('; '),
           },
+          // Redundant with frame-ancestors in CSP, but kept for older browsers
+          // that don't parse CSP (IE11, some legacy proxies).
           { key: 'X-Frame-Options',         value: 'DENY' },
+          // Stops browsers from sniffing a response body as a different MIME
+          // type — prevents drive-by downloads being mis-executed as scripts.
           { key: 'X-Content-Type-Options',   value: 'nosniff' },
+          // Send full URL only to same-origin requests; strip to origin-only
+          // for cross-origin navigations so internal paths aren't leaked.
           { key: 'Referrer-Policy',          value: 'strict-origin-when-cross-origin' },
+          // Opt out of browser features we never use.  Keeps the attack surface
+          // small if a third-party script ever runs in our context.
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=(), payment=()',
+          },
         ],
       },
     ]

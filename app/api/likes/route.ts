@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { checkRateLimit } from '@/lib/ratelimit'
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,6 +13,15 @@ export async function POST(request: NextRequest) {
 
     if (userError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Rate-limit like/unlike actions: 30 per minute per user.
+    const allowed = await checkRateLimit(`likes:${user.id}`, 60, 30)
+    if (!allowed) {
+      return NextResponse.json(
+        { error: 'Too many requests — please slow down.' },
+        { status: 429 },
+      )
     }
 
     const { ideaId, liked } = await request.json()

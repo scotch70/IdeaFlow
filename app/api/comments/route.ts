@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { checkRateLimit } from '@/lib/ratelimit'
 
 const MAX_LENGTH = 200
 
@@ -78,6 +79,15 @@ export async function POST(request: NextRequest) {
 
     if (userError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Rate-limit comment posts: 20 per minute per user.
+    const allowed = await checkRateLimit(`comments:${user.id}`, 60, 20)
+    if (!allowed) {
+      return NextResponse.json(
+        { error: 'Too many requests — please slow down.' },
+        { status: 429 },
+      )
     }
 
     const { ideaId, content } = (await request.json()) as {

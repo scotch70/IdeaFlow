@@ -52,14 +52,6 @@ export async function POST(request: NextRequest) {
       .eq('id', memberId)
       .single()
 
-    console.log('[remove member]', {
-      adminUserId:    user.id,
-      targetUserId:   memberId,
-      adminCompanyId: adminProfile?.company_id,
-      memberProfile,
-      memberError:    memberError?.message ?? null,
-    })
-
     if (memberError || !memberProfile) {
       return NextResponse.json({ error: 'Member not found' }, { status: 404 })
     }
