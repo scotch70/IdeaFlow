@@ -40,12 +40,13 @@ function avatarColor(name: string | null): { bg: string; color: string } {
 
 export default function TeamMembers({ members, currentUserId, currentUserRole }: Props) {
   const router = useRouter()
-  const [removingId, setRemovingId] = useState<string | null>(null)
-  const [error, setError] = useState('')
+  const [removingId, setRemovingId]   = useState<string | null>(null)
+  const [confirmId, setConfirmId]     = useState<string | null>(null)
+  const [error, setError]             = useState('')
   const isAdmin = currentUserRole === 'admin'
 
-  async function handleRemove(memberId: string, name: string | null) {
-    if (!confirm(`Remove ${name || 'this user'} from the workspace?`)) return
+  async function handleRemove(memberId: string) {
+    setConfirmId(null)
     setRemovingId(memberId)
     setError('')
     try {
@@ -119,13 +120,32 @@ export default function TeamMembers({ members, currentUserId, currentUserRole }:
                     {member.role}
                   </span>
                   {canRemove && (
-                    <button
-                      onClick={() => handleRemove(member.id, member.full_name)}
-                      disabled={removingId === member.id}
-                      style={{ fontSize: '0.72rem', fontWeight: 500, color: '#dc2626', background: 'none', border: 'none', cursor: removingId === member.id ? 'default' : 'pointer', opacity: removingId === member.id ? 0.5 : 1, padding: 0 }}
-                    >
-                      {removingId === member.id ? '…' : 'Remove'}
-                    </button>
+                    removingId === member.id ? (
+                      <span style={{ fontSize: '0.72rem', color: '#9ab0c8' }}>Removing…</span>
+                    ) : confirmId === member.id ? (
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                        <button
+                          onClick={() => handleRemove(member.id)}
+                          style={{ fontSize: '0.72rem', fontWeight: 700, color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                        >
+                          Sure?
+                        </button>
+                        <span style={{ color: 'rgba(154,176,200,0.5)', fontSize: '0.6rem' }}>·</span>
+                        <button
+                          onClick={() => setConfirmId(null)}
+                          style={{ fontSize: '0.72rem', fontWeight: 500, color: '#9ab0c8', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                        >
+                          Cancel
+                        </button>
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => setConfirmId(member.id)}
+                        style={{ fontSize: '0.72rem', fontWeight: 500, color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                      >
+                        Remove
+                      </button>
+                    )
                   )}
                 </div>
               </div>
