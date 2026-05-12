@@ -12,6 +12,7 @@ import { createClient }      from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getEffectiveRoundStatus } from '@/lib/rounds/getEffectiveRoundStatus'
 import { checkRateLimit } from '@/lib/ratelimit'
+import { canCreateFlow }   from '@/lib/billing'
 
 // ── GET ────────────────────────────────────────────────────────────────────────
 
@@ -149,6 +150,29 @@ export async function POST(request: NextRequest) {
     }
 
     const admin = createAdminClient()
+
+    // ── Plan gate: Free plan allows up to 2 active IdeaFlows ─────────────────
+    if (status === 'active') {
+      const { data: companyRow } = await (admin as any)
+        .from('companies')
+        .select('plan')
+        .eq('id', profile.company_id)
+        .single() as { data: { plan: string } | null }
+
+      const { count: activeCount } = await (admin as any)
+        .from('idea_rounds')
+        .select('*', { count: 'exact', head: true })
+        .eq('company_id', profile.company_id)
+        .eq('status', 'active')
+
+      if (!canCreateFlow({ plan: companyRow?.plan ?? 'free', activeFlowCount: activeCount ?? 0 })) {
+        return NextResponse.json(
+          { error: 'Free plan allows up to 2 active IdeaFlows. Upgrade to Pro to create more.' },
+          { status: 403 },
+        )
+      }
+    }
+    // ─────────────────────────────────────────────────────────────────────────
 
     const { data: round, error: insertError } = await (admin as any)
       .from('idea_rounds')

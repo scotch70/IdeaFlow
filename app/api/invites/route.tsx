@@ -92,21 +92,15 @@ if (countError) {
   return NextResponse.json({ error: countError.message }, { status: 500 })
 }
 
-if (
-  !canAddMembers({
-    plan: company.plan,
-    trialEndsAt: company.trial_ends_at,
-    memberCount: memberCount || 0,
-  })
-) {
+if (!canAddMembers({ plan: company.plan, memberCount: memberCount || 0 })) {
   return NextResponse.json(
     {
       error:
-        company.plan === 'free'
-          ? 'Free trial limit reached. Upgrade to Pro to invite more members.'
-          : 'Unable to add more members.',
+        company.plan === 'pro'
+          ? 'Pro plan workspace limit reached (50 members).'
+          : 'Free plan is limited to 10 members. Upgrade to Pro to invite more.',
     },
-    { status: 403 }
+    { status: 403 },
   )
 }
 

@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import InnerPageHeader from '@/components/InnerPageHeader'
 import PageContainer from '@/components/PageContainer'
 import DeleteAccountButton from '@/components/DeleteAccountButton'
+import UpgradeButton from '@/components/UpgradeButton'
 
 interface Props {
   userId: string
@@ -15,6 +16,7 @@ interface Props {
   initialJobFunction: string
   initialAvatarUrl: string
   role: string
+  companyPlan: string
 }
 
 function Initials({ first, last, size = 72 }: { first: string; last: string; size?: number }) {
@@ -37,6 +39,7 @@ function Initials({ first, last, size = 72 }: { first: string; last: string; siz
 export default function SettingsForm({
   userId, email,
   initialFirstName, initialLastName, initialJobFunction, initialAvatarUrl, role,
+  companyPlan,
 }: Props) {
   const [firstName, setFirstName]       = useState(initialFirstName)
   const [lastName, setLastName]         = useState(initialLastName)
@@ -293,6 +296,82 @@ export default function SettingsForm({
           </div>
 
         </form>
+
+        {/* ── Plan & billing ── */}
+        <div style={{ background: '#fff', borderRadius: '1.25rem', border: '1px solid rgba(26,107,191,0.10)', padding: '2rem', boxShadow: '0 2px 12px rgba(6,14,38,0.05)' }}>
+          <p style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#9ab0c8', marginBottom: '1.5rem' }}>
+            Plan &amp; billing
+          </p>
+
+          {companyPlan === 'pro' ? (
+            /* ── Pro plan state ─────────────────────────────────────── */
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+              <div>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.75rem' }}>
+                  <span style={{ fontSize: '1rem', fontWeight: 800, color: '#0d1f35' }}>Pro</span>
+                  <span style={{ fontSize: '0.6rem', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', background: '#f97316', color: '#fff', borderRadius: '999px', padding: '2px 7px' }}>
+                    Active
+                  </span>
+                </div>
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                  {[
+                    'Up to 50 workspace members',
+                    'Unlimited IdeaFlows',
+                    'Full analytics dashboard',
+                    'PDF report export',
+                    'Admin controls & roles',
+                  ].map(item => (
+                    <li key={item} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.825rem', color: '#2c4a6e' }}>
+                      <svg width="12" height="12" viewBox="0 0 15 15" fill="none" style={{ flexShrink: 0, color: '#10b981' }}>
+                        <path d="M12.5 3.5L6 10 3 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.875rem', borderRadius: '0.625rem', background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)' }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+                <span style={{ fontSize: '0.825rem', fontWeight: 700, color: '#065f46' }}>Pro plan active</span>
+              </div>
+            </div>
+          ) : (
+            /* ── Free plan state ────────────────────────────────────── */
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1.5rem', flexWrap: 'wrap' }}>
+              <div>
+                <p style={{ fontSize: '1rem', fontWeight: 800, color: '#0d1f35', marginBottom: '0.5rem' }}>
+                  Free plan
+                </p>
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.35rem', marginBottom: '1rem' }}>
+                  {[
+                    'Up to 10 workspace members',
+                    'Up to 2 active IdeaFlows',
+                    'Idea collection, voting & comments',
+                    'Basic analytics',
+                  ].map(item => (
+                    <li key={item} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.825rem', color: '#5a7fa8' }}>
+                      <svg width="12" height="12" viewBox="0 0 15 15" fill="none" style={{ flexShrink: 0, color: '#9ab0c8' }}>
+                        <path d="M12.5 3.5L6 10 3 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+                <p style={{ fontSize: '0.775rem', color: '#9ab0c8', lineHeight: 1.5 }}>
+                  Upgrade to Pro for up to 50 members, unlimited IdeaFlows, PDF exports, and full analytics.
+                </p>
+              </div>
+              {role === 'admin' && (
+                <div style={{ flexShrink: 0 }}>
+                  <p style={{ fontSize: '0.7rem', fontWeight: 700, color: '#0d1f35', marginBottom: '0.375rem' }}>
+                    Pro — €49<span style={{ fontWeight: 400, color: '#9ab0c8' }}>/year</span>
+                  </p>
+                  <UpgradeButton />
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* ── Danger zone ── */}
         <div

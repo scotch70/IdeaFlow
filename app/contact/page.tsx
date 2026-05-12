@@ -66,7 +66,7 @@ export default function ContactPage() {
             maxWidth: '30rem',
           }}>
             Interested in seeing how IdeaFlow could work for your organisation?
-            Reach out and I&apos;ll get back to you within one business day.
+            Reach out and we&apos;ll get back to you within one business day.
           </p>
         </div>
       </section>
@@ -96,18 +96,18 @@ export default function ContactPage() {
               </div>
 
               <h2 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0d1f35', marginBottom: '0.4rem', letterSpacing: '-0.01em' }}>
-                Send me an email
+                Send us an email
               </h2>
               <p style={{ fontSize: '0.875rem', color: '#5a7fa8', lineHeight: 1.65, marginBottom: '1.5rem' }}>
-                I personally read every message. No sales team, no auto-responders — just a direct line.
+                We read every message. No auto-responders — just a direct line to the team.
               </p>
 
               <p style={{ fontSize: '0.875rem', fontWeight: 600, color: '#0d1f35', marginBottom: '1.25rem' }}>
-                lars_neeft@live.nl
+                ideaflow@appstimize.nl
               </p>
 
               <a
-                href="mailto:lars_neeft@live.nl?subject=IdeaFlow%20Demo%20Request&body=Hi%20Lars%2C%0A%0AI'm%20interested%20in%20IdeaFlow%20for%20my%20company.%0A%0ACompany%20name%3A%0ATeam%20size%3A%0AWhat%20we%20want%20to%20improve%3A%0A"
+                href="mailto:ideaflow@appstimize.nl?subject=IdeaFlow%20Demo%20Request&body=Hi%2C%0A%0AI'm%20interested%20in%20IdeaFlow%20for%20my%20company.%0A%0ACompany%20name%3A%0ATeam%20size%3A%0AWhat%20we%20want%20to%20improve%3A%0A"
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
                   background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
@@ -192,8 +192,8 @@ export default function ContactPage() {
                 a: 'Most teams are up and running within a day. You create your workspace, invite your team with a code, and you\'re live.',
               },
               {
-                q: 'Do you offer a free trial?',
-                a: 'Yes — IdeaFlow is free to try with your first team. No credit card needed until you\'re ready to scale.',
+                q: 'Is IdeaFlow free to start?',
+                a: 'Yes — IdeaFlow has a free plan you can use with no time limit. No credit card needed to get started.',
               },
               {
                 q: 'How big does my team need to be?',

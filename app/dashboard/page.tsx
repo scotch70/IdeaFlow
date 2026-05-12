@@ -272,15 +272,6 @@ export default async function DashboardPage({
 
   const showRoundBanner = roundStatus !== null
 
-  const trialEndsAt = company?.trial_ends_at
-  const trialDaysLeft = trialEndsAt
-    ? Math.ceil(
-        (new Date(trialEndsAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
-      )
-    : 0
-
-  const trialActive = company?.plan === 'free' && trialDaysLeft > 0
-
   return (
     <>
       {/* ── Page header — sticky below the SiteHeader (3.625rem) ── */}
@@ -370,7 +361,7 @@ export default async function DashboardPage({
                     color: '#047857',
                   }}
                 >
-                  Unlimited members, full feature access. Welcome to the team.
+                  Up to 50 members · unlimited IdeaFlows · PDF exports & full analytics.
                 </p>
               </div>
             </div>
@@ -393,11 +384,7 @@ export default async function DashboardPage({
             >
               <div>
                 <p style={{ fontWeight: 700, fontSize: '0.9rem' }}>
-                  {trialActive
-                    ? `Free trial — ${trialDaysLeft} day${
-                        trialDaysLeft !== 1 ? 's' : ''
-                      } left`
-                    : 'Free trial ended'}
+                  Free plan
                 </p>
                 <p style={{ fontSize: '0.8rem', color: '#7c2d12' }}>
                   {memberCount} / 10 members used

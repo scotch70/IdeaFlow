@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient }      from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getEffectiveRoundStatus } from '@/lib/rounds/getEffectiveRoundStatus'
+import { canCreateFlow } from '@/lib/billing'
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -134,6 +135,27 @@ export async function PATCH(request: NextRequest, { params }: Params) {
         patch.closed_at = new Date().toISOString()
         // Clear manual override so it can't stay 'open' after close
         patch.manual_override = null
+      }
+      // Plan gate: activating a draft counts as creating an active flow
+      if (body.status === 'active' && existing.status !== 'active') {
+        const { data: companyRow } = await (admin as any)
+          .from('companies')
+          .select('plan')
+          .eq('id', profile.company_id)
+          .single() as { data: { plan: string } | null }
+
+        const { count: activeCount } = await (admin as any)
+          .from('idea_rounds')
+          .select('*', { count: 'exact', head: true })
+          .eq('company_id', profile.company_id)
+          .eq('status', 'active')
+
+        if (!canCreateFlow({ plan: companyRow?.plan ?? 'free', activeFlowCount: activeCount ?? 0 })) {
+          return NextResponse.json(
+            { error: 'Free plan allows up to 2 active IdeaFlows. Upgrade to Pro to activate more.' },
+            { status: 403 },
+          )
+        }
       }
     }
     if ('manual_override' in body) {

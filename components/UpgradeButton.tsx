@@ -1,8 +1,16 @@
 'use client'
 
 import { useState } from 'react'
+import React from 'react'
 
-export default function UpgradeButton() {
+interface UpgradeButtonProps {
+  /** Override button styles (merged with the default style) */
+  style?: React.CSSProperties
+  /** Override button label. Defaults to "Upgrade to Pro" */
+  label?: string
+}
+
+export default function UpgradeButton({ style: styleProp, label }: UpgradeButtonProps) {
   const [loading, setLoading] = useState(false)
 
   async function handleUpgrade() {
@@ -32,23 +40,28 @@ export default function UpgradeButton() {
     }
   }
 
+  const defaultStyle: React.CSSProperties = {
+    background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
+    color: '#fff',
+    padding: '0.5rem 0.9rem',
+    borderRadius: '0.6rem',
+    fontSize: '0.875rem',
+    fontWeight: 700,
+    cursor: loading ? 'default' : 'pointer',
+    border: 'none',
+    opacity: loading ? 0.7 : 1,
+    letterSpacing: '0.01em',
+    boxShadow: loading ? 'none' : '0 2px 10px rgba(240,104,0,0.25)',
+    transition: 'opacity 0.15s',
+  }
+
   return (
     <button
       onClick={handleUpgrade}
       disabled={loading}
-      style={{
-        background: '#111827',
-        color: '#fff',
-        padding: '0.5rem 0.9rem',
-        borderRadius: '0.6rem',
-        fontSize: '0.8rem',
-        fontWeight: 600,
-        cursor: loading ? 'default' : 'pointer',
-        border: 'none',
-        opacity: loading ? 0.7 : 1,
-      }}
+      style={{ ...defaultStyle, ...styleProp }}
     >
-      {loading ? 'Redirecting…' : 'Upgrade to Pro'}
+      {loading ? 'Redirecting…' : (label ?? 'Upgrade to Pro')}
     </button>
   )
 }

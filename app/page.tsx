@@ -4,6 +4,7 @@ import LogoMark from '@/components/LogoMark'
 import PageContainer from '@/components/PageContainer'
 import ProductDemo from '@/components/ProductDemo'
 import SiteHeader from '@/components/SiteHeader'
+import UpgradeButton from '@/components/UpgradeButton'
 
 // ── Inline product mockup helpers ─────────────────────────────────────────────
 // These are faithful representations of the actual product UI, not illustrations.
@@ -167,6 +168,24 @@ function FlowSelectorMockup() {
 export default async function HomePage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+
+  // Fetch company plan so the pricing section can show the correct CTA
+  let companyPlan: string = 'free'
+  if (user) {
+    const { data: profileRow } = await supabase
+      .from('profiles')
+      .select('company_id')
+      .eq('id', user.id)
+      .single() as unknown as { data: { company_id: string | null } | null }
+    if (profileRow?.company_id) {
+      const { data: companyRow } = await supabase
+        .from('companies')
+        .select('plan')
+        .eq('id', profileRow.company_id)
+        .single() as unknown as { data: { plan: string } | null }
+      companyPlan = companyRow?.plan ?? 'free'
+    }
+  }
 
   return (
     <>
@@ -767,15 +786,15 @@ export default async function HomePage() {
             {/* Free */}
             <div style={{ background: '#ffffff', border: '1px solid rgba(0,0,0,0.08)', borderRadius: '1.25rem', padding: '2rem', display: 'flex', flexDirection: 'column' }}>
               <div style={{ marginBottom: '1.5rem' }}>
-                <p style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#9ab0c8', marginBottom: '0.5rem' }}>Free trial</p>
-                <p style={{ fontSize: '2.25rem', fontWeight: 800, color: '#0d1f35', letterSpacing: '-0.04em', lineHeight: 1, marginBottom: '0.5rem' }}>$0</p>
-                <p style={{ fontSize: '0.825rem', color: '#9ab0c8' }}>No time limit on your trial</p>
+                <p style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#9ab0c8', marginBottom: '0.5rem' }}>Free</p>
+                <p style={{ fontSize: '2.25rem', fontWeight: 800, color: '#0d1f35', letterSpacing: '-0.04em', lineHeight: 1, marginBottom: '0.5rem' }}>€0</p>
+                <p style={{ fontSize: '0.825rem', color: '#9ab0c8' }}>No credit card required</p>
               </div>
 
               <div style={{ borderTop: '1px solid rgba(0,0,0,0.06)', paddingTop: '1.5rem', marginBottom: '1.75rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', flex: 1 }}>
                 {[
                   'Up to 10 workspace members',
-                  '1 active IdeaFlow at a time',
+                  'Up to 2 active IdeaFlows',
                   'Idea submission and voting',
                   'Comments on ideas',
                   'Basic workspace analytics',
@@ -791,7 +810,7 @@ export default async function HomePage() {
 
               {!user ? (
                 <Link href="/auth" style={{ display: 'block', textAlign: 'center', padding: '0.7rem 1rem', borderRadius: '0.625rem', border: '1px solid rgba(0,0,0,0.12)', fontSize: '0.875rem', fontWeight: 600, color: '#475569', textDecoration: 'none', transition: 'background 0.15s' }}>
-                  Start free trial →
+                  Start free →
                 </Link>
               ) : (
                 <Link href="/dashboard" style={{ display: 'block', textAlign: 'center', padding: '0.7rem 1rem', borderRadius: '0.625rem', border: '1px solid rgba(0,0,0,0.12)', fontSize: '0.875rem', fontWeight: 600, color: '#475569', textDecoration: 'none' }}>
@@ -809,14 +828,17 @@ export default async function HomePage() {
                   <p style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#f97316' }}>Pro</p>
                   <span style={{ fontSize: '0.58rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#f97316', background: 'rgba(249,115,22,0.15)', border: '1px solid rgba(249,115,22,0.25)', borderRadius: '999px', padding: '0.1rem 0.4rem' }}>Popular</span>
                 </div>
-                <p style={{ fontSize: '2.25rem', fontWeight: 800, color: 'rgba(255,255,255,0.96)', letterSpacing: '-0.04em', lineHeight: 1, marginBottom: '0.5rem' }}>Custom</p>
-                <p style={{ fontSize: '0.825rem', color: 'rgba(168,216,240,0.55)' }}>Priced for your team size</p>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.25rem', marginBottom: '0.5rem' }}>
+                  <p style={{ fontSize: '2.25rem', fontWeight: 800, color: 'rgba(255,255,255,0.96)', letterSpacing: '-0.04em', lineHeight: 1 }}>€49</p>
+                  <p style={{ fontSize: '0.875rem', fontWeight: 500, color: 'rgba(168,216,240,0.55)' }}>/year</p>
+                </div>
+                <p style={{ fontSize: '0.825rem', color: 'rgba(168,216,240,0.55)' }}>Billed annually, cancel any time</p>
               </div>
 
               <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '1.5rem', marginBottom: '1.75rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', flex: 1, position: 'relative', zIndex: 1 }}>
                 {[
                   'Everything in Free',
-                  'Unlimited members',
+                  'Up to 50 workspace members',
                   'Unlimited IdeaFlows',
                   'Full analytics dashboard',
                   'PDF report export',
@@ -832,9 +854,24 @@ export default async function HomePage() {
                 ))}
               </div>
 
-              <Link href="/contact" className="btn-primary" style={{ display: 'block', textAlign: 'center', padding: '0.7rem 1rem', fontSize: '0.875rem', textDecoration: 'none', position: 'relative', zIndex: 1 }}>
-                Talk to us →
-              </Link>
+              {/* Pro CTA: context-aware */}
+              {!user ? (
+                // Not logged in — invite them to start free, then upgrade
+                <Link href="/auth" className="btn-primary" style={{ display: 'block', textAlign: 'center', padding: '0.7rem 1rem', fontSize: '0.875rem', textDecoration: 'none', position: 'relative', zIndex: 1 }}>
+                  Start free →
+                </Link>
+              ) : companyPlan === 'pro' ? (
+                // Already on Pro
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.7rem 1rem', borderRadius: '0.625rem', background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.25)', position: 'relative', zIndex: 1 }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+                  <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#065f46' }}>You&apos;re on Pro</span>
+                </div>
+              ) : (
+                // Logged in, on free plan — show the upgrade button
+                <div style={{ position: 'relative', zIndex: 1 }}>
+                  <UpgradeButton style={{ display: 'block', width: '100%', textAlign: 'center', padding: '0.7rem 1rem', fontSize: '0.875rem', borderRadius: '0.625rem' }} label="Upgrade to Pro →" />
+                </div>
+              )}
             </div>
 
           </div>
