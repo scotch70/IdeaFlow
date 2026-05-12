@@ -26,6 +26,11 @@ interface NewIdeaFormProps {
    * from "closed" to "coming soon" so members aren't confused.
    */
   roundIsDraft?: boolean
+  /**
+   * Multi-flow: when set the API uses this specific round rather than the
+   * company-level current_idea_round_id pointer (legacy path).
+   */
+  roundId?: string | null
 }
 
 export default function NewIdeaForm({
@@ -37,6 +42,7 @@ export default function NewIdeaForm({
   roundName = null,
   defaultOpen = false,
   roundIsDraft = false,
+  roundId = null,
 }: NewIdeaFormProps) {
   const [open, setOpen]             = useState(defaultOpen)
   const [title, setTitle]           = useState('')
@@ -61,9 +67,9 @@ export default function NewIdeaForm({
       const res = await fetch('/api/ideas', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        // companyId, userId, and idea_round_id are intentionally omitted —
-        // the server derives all three from the authenticated session.
-        body: JSON.stringify({ title, description }),
+        // companyId and userId are derived server-side.
+        // roundId is passed for multi-flow pages; omitted for legacy single-flow.
+        body: JSON.stringify({ title, description, ...(roundId ? { roundId } : {}) }),
       })
 
       if (!res.ok) {

@@ -69,6 +69,14 @@ export interface Database {
           status: 'draft' | 'active' | 'closed'
           created_at: string
           closed_at: string | null
+          // added by multi-flow migration
+          created_by: string | null
+          starts_at: string | null
+          ends_at: string | null
+          manual_override: 'open' | 'closed' | null
+          // added by icon-color migration
+          icon: string | null   // emoji, e.g. '💡'
+          color: string | null  // hex accent, e.g. '#f97316'
         }
         Insert: {
           id?: string
@@ -78,6 +86,12 @@ export interface Database {
           status?: 'draft' | 'active' | 'closed'
           created_at?: string
           closed_at?: string | null
+          created_by?: string | null
+          starts_at?: string | null
+          ends_at?: string | null
+          manual_override?: 'open' | 'closed' | null
+          icon?: string | null
+          color?: string | null
         }
         Update: {
           id?: string
@@ -87,6 +101,39 @@ export interface Database {
           status?: 'draft' | 'active' | 'closed'
           created_at?: string
           closed_at?: string | null
+          created_by?: string | null
+          starts_at?: string | null
+          ends_at?: string | null
+          manual_override?: 'open' | 'closed' | null
+          icon?: string | null
+          color?: string | null
+        }
+      }
+
+      round_members: {
+        Row: {
+          id: string
+          round_id: string
+          user_id: string
+          company_id: string
+          added_by: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          round_id: string
+          user_id: string
+          company_id: string
+          added_by?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          round_id?: string
+          user_id?: string
+          company_id?: string
+          added_by?: string | null
+          created_at?: string
         }
       }
 
@@ -271,6 +318,25 @@ export interface Database {
       }
     }
   }
+}
+
+// ── Convenience aliases ───────────────────────────────────────────────────────
+
+export type IdeaRound      = Database['public']['Tables']['idea_rounds']['Row']
+export type RoundMember    = Database['public']['Tables']['round_members']['Row']
+
+/** A round row with the effective open/closed/draft status pre-computed. */
+export type IdeaRoundWithStatus = IdeaRound & {
+  effectiveStatus: 'active' | 'closed' | 'draft'
+  ideaCount: number
+  memberCount: number
+}
+
+/** A profile slimmed down for member pickers / assignment lists. */
+export type SlimProfile = {
+  id: string
+  full_name: string | null
+  role: string
 }
 
 export type Idea = Database['public']['Tables']['ideas']['Row'] & {

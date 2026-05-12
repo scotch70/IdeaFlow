@@ -1,0 +1,274 @@
+/**
+ * GET    /api/rounds/[id]  — fetch a single round (with members)
+ * PATCH  /api/rounds/[id]  — update name, prompt, dates, status, manual_override
+ * DELETE /api/rounds/[id]  — delete round + cascade (ideas, comments, likes)
+ *
+ * Admin only for PATCH / DELETE.
+ * GET: admin always; member if assigned (or round has no member restriction).
+ */
+
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient }      from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { getEffectiveRoundStatus } from '@/lib/rounds/getEffectiveRoundStatus'
+
+type Params = { params: Promise<{ id: string }> }
+
+// ── GET ────────────────────────────────────────────────────────────────────────
+
+export async function GET(_request: NextRequest, { params }: Params) {
+  try {
+    const { id } = await params
+
+    const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    const { data: profile } = (await supabase
+      .from('profiles')
+      .select('company_id, role')
+      .eq('id', user.id)
+      .single()) as unknown as { data: { company_id: string | null; role: string } | null }
+
+    if (!profile?.company_id) return NextResponse.json({ error: 'No workspace' }, { status: 403 })
+
+    const admin = createAdminClient()
+
+    const { data: round, error: roundError } = await (admin as any)
+      .from('idea_rounds')
+      .select('*')
+      .eq('id', id)
+      .eq('company_id', profile.company_id)
+      .single()
+
+    if (roundError || !round) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
+    // Access check for non-admins: member must be assigned (or round is open-to-all)
+    if (profile.role !== 'admin') {
+      const { data: memberRows } = await (admin as any)
+        .from('round_members')
+        .select('user_id')
+        .eq('round_id', id)
+
+      const assigned: string[] = (memberRows ?? []).map((r: any) => r.user_id)
+      if (assigned.length > 0 && !assigned.includes(user.id)) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      }
+    }
+
+    // Fetch assigned members (for admin view)
+    const { data: memberRows } = await (admin as any)
+      .from('round_members')
+      .select('user_id, added_by, created_at, profiles(full_name)')
+      .eq('round_id', id)
+
+    const effectiveStatus = getEffectiveRoundStatus({
+      raw_status:      round.status,
+      manual_override: round.manual_override ?? null,
+      opens_at:        round.starts_at ?? null,
+      closes_at:       round.ends_at   ?? null,
+    })
+
+    return NextResponse.json({
+      ...round,
+      effectiveStatus,
+      members: memberRows ?? [],
+    })
+  } catch (err) {
+    console.error('[GET /api/rounds/[id]]', err)
+    return NextResponse.json({ error: 'Something went wrong' }, { status: 500 })
+  }
+}
+
+// ── PATCH ──────────────────────────────────────────────────────────────────────
+
+export async function PATCH(request: NextRequest, { params }: Params) {
+  try {
+    const { id } = await params
+
+    const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    const { data: profile } = (await supabase
+      .from('profiles')
+      .select('company_id, role')
+      .eq('id', user.id)
+      .single()) as unknown as { data: { company_id: string | null; role: string } | null }
+
+    if (!profile?.company_id) return NextResponse.json({ error: 'No workspace' }, { status: 403 })
+    if (profile.role !== 'admin') return NextResponse.json({ error: 'Admins only' }, { status: 403 })
+
+    const admin = createAdminClient()
+
+    // Verify round belongs to this company
+    const { data: existing } = await (admin as any)
+      .from('idea_rounds')
+      .select('id, status')
+      .eq('id', id)
+      .eq('company_id', profile.company_id)
+      .single()
+
+    if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
+    const body = (await request.json()) as Record<string, unknown>
+
+    const VALID_STATUSES   = ['draft', 'active', 'closed']
+    const VALID_OVERRIDES  = ['open', 'closed', null]
+
+    const patch: Record<string, unknown> = {}
+
+    if (body.name !== undefined) {
+      patch.name = (typeof body.name === 'string' && body.name.trim()) ? body.name.trim() : 'IdeaFlow'
+    }
+    if (body.prompt !== undefined) {
+      patch.prompt = (typeof body.prompt === 'string' && body.prompt.trim()) ? body.prompt.trim() : null
+    }
+    if (body.status !== undefined) {
+      if (!VALID_STATUSES.includes(body.status as string)) {
+        return NextResponse.json({ error: 'Invalid status' }, { status: 400 })
+      }
+      patch.status = body.status
+      // When explicitly closing, record the timestamp
+      if (body.status === 'closed' && existing.status !== 'closed') {
+        patch.closed_at = new Date().toISOString()
+        // Clear manual override so it can't stay 'open' after close
+        patch.manual_override = null
+      }
+    }
+    if ('manual_override' in body) {
+      if (!VALID_OVERRIDES.includes(body.manual_override as any)) {
+        return NextResponse.json({ error: 'Invalid manual_override' }, { status: 400 })
+      }
+      patch.manual_override = body.manual_override ?? null
+    }
+
+    const toDate = (v: unknown): string | null | undefined => {
+      if (v === null || v === '') return null
+      if (v === undefined) return undefined
+      if (typeof v !== 'string') return undefined
+      const d = new Date(v)
+      return isNaN(d.getTime()) ? undefined : d.toISOString()
+    }
+
+    const parsedStarts = toDate(body.starts_at)
+    const parsedEnds   = toDate(body.ends_at)
+    if (parsedStarts !== undefined) patch.starts_at = parsedStarts
+    if (parsedEnds   !== undefined) patch.ends_at   = parsedEnds
+
+    // icon + color
+    if ('icon' in body) {
+      patch.icon = (typeof body.icon === 'string' && body.icon.trim()) ? body.icon.trim() : null
+    }
+    if ('color' in body) {
+      const c = typeof body.color === 'string' ? body.color.trim() : ''
+      patch.color = /^#[0-9a-f]{6}$/i.test(c) ? c : null
+    }
+
+    if (Object.keys(patch).length === 0) {
+      return NextResponse.json({ error: 'No fields to update' }, { status: 400 })
+    }
+
+    const { data: updated, error: updateError } = await (admin as any)
+      .from('idea_rounds')
+      .update(patch)
+      .eq('id', id)
+      .eq('company_id', profile.company_id)
+      .select('*')
+      .single()
+
+    if (updateError) {
+      console.error('[PATCH /api/rounds/[id]]', updateError)
+      return NextResponse.json({ error: updateError.message }, { status: 500 })
+    }
+
+    const effectiveStatus = getEffectiveRoundStatus({
+      raw_status:      updated.status,
+      manual_override: updated.manual_override ?? null,
+      opens_at:        updated.starts_at ?? null,
+      closes_at:       updated.ends_at   ?? null,
+    })
+
+    return NextResponse.json({ ...updated, effectiveStatus })
+  } catch (err) {
+    console.error('[PATCH /api/rounds/[id]]', err)
+    return NextResponse.json({ error: 'Something went wrong' }, { status: 500 })
+  }
+}
+
+// ── DELETE ─────────────────────────────────────────────────────────────────────
+
+export async function DELETE(_request: NextRequest, { params }: Params) {
+  try {
+    const { id } = await params
+
+    const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    const { data: profile } = (await supabase
+      .from('profiles')
+      .select('company_id, role')
+      .eq('id', user.id)
+      .single()) as unknown as { data: { company_id: string | null; role: string } | null }
+
+    if (!profile?.company_id) return NextResponse.json({ error: 'No workspace' }, { status: 403 })
+    if (profile.role !== 'admin') return NextResponse.json({ error: 'Admins only' }, { status: 403 })
+
+    const admin = createAdminClient()
+
+    // Verify ownership
+    const { data: existing } = await (admin as any)
+      .from('idea_rounds')
+      .select('id')
+      .eq('id', id)
+      .eq('company_id', profile.company_id)
+      .single()
+
+    if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
+    // ── Cascade delete: comments → likes → ideas → round_members → round ──────
+    const { data: roundIdeas } = await (admin as any)
+      .from('ideas')
+      .select('id')
+      .eq('idea_round_id', id) as { data: { id: string }[] | null }
+
+    const ideaIds = (roundIdeas ?? []).map((r: { id: string }) => r.id)
+
+    if (ideaIds.length > 0) {
+      await (admin as any).from('comments').delete().in('idea_id', ideaIds)
+      await (admin as any).from('likes').delete().in('idea_id', ideaIds)
+      await (admin as any).from('ideas').delete().in('id', ideaIds)
+    }
+
+    await (admin as any).from('round_members').delete().eq('round_id', id)
+
+    const { error: delError } = await (admin as any)
+      .from('idea_rounds')
+      .delete()
+      .eq('id', id)
+      .eq('company_id', profile.company_id)
+
+    if (delError) {
+      console.error('[DELETE /api/rounds/[id]]', delError)
+      return NextResponse.json({ error: delError.message }, { status: 500 })
+    }
+
+    // If this was the company's current_idea_round_id, clear the pointer
+    await (admin as any)
+      .from('companies')
+      .update({
+        current_idea_round_id:      null,
+        idea_round_status:          null,
+        idea_round_name:            null,
+        idea_round_manual_override: null,
+      })
+      .eq('id', profile.company_id)
+      .eq('current_idea_round_id', id)  // only clear if it was pointing here
+
+    return NextResponse.json({ ok: true })
+  } catch (err) {
+    console.error('[DELETE /api/rounds/[id]]', err)
+    return NextResponse.json({ error: 'Something went wrong' }, { status: 500 })
+  }
+}

@@ -29,10 +29,11 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
 
-    // Only title, description, action, and ideaId are read from the body.
-    // companyId, userId, and idea_round_id are intentionally excluded —
-    // all three are derived server-side from the authenticated session.
-    const { action, ideaId, title, description } = body
+    // Only title, description, action, ideaId, and the optional roundId are
+    // read from the body.  companyId and userId are always derived server-side.
+    // roundId may be provided by multi-flow pages (bypasses current_idea_round_id
+    // company lookup).  Legacy pages omit it and use the existing path.
+    const { action, ideaId, title, description, roundId: bodyRoundId } = body
 
     // ──────────────────────────────────────────────────────────────────────────
     // CREATE IDEA
@@ -57,77 +58,123 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      // ── 2. Fetch company row ───────────────────────────────────────────────
-      const { data: company, error: companyError } = await (supabase as any)
-        .from('companies')
-        .select(
-          'current_idea_round_id, idea_round_status, ' +
-          'idea_round_starts_at, idea_round_ends_at, idea_round_manual_override',
-        )
-        .eq('id', profile.company_id)
-        .single()
-
-      if (companyError) {
-        console.error('[api ideas] company fetch failed', companyError)
-      }
-
-      // ── 3. Read round pointer from company — this is the ID we will insert ─
-      // We store it now before any async calls so we never accidentally use
-      // currentRound.id (which may be undefined if the query returns null).
-      const activeRoundId: string | null = company?.current_idea_round_id ?? null
-
-      if (!activeRoundId) {
-        return NextResponse.json(
-          { error: 'IdeaFlow is not open for submissions.' },
-          { status: 403 },
-        )
-      }
-
-      // ── 4. Fetch the round row via admin client to validate it is active ───
-      // `idea_rounds` has no RLS and no GRANT for the `authenticated` role.
-      // The SSR client silently returns null — the admin (service role) client
-      // bypasses all grants and is the only reliable way to read this table.
       const adminClient = createAdminClient()
-      const { data: currentRound, error: currentRoundError } = await (adminClient as any)
-        .from('idea_rounds')
-        .select('id, status, company_id')
-        .eq('id', activeRoundId)
-        .eq('company_id', profile.company_id)
-        .single()
+      let activeRoundId: string | null = null
 
-      if (!currentRound) {
-        return NextResponse.json(
-          { error: 'IdeaFlow is not open for submissions.' },
-          { status: 403 },
-        )
+      if (typeof bodyRoundId === 'string' && bodyRoundId) {
+        // ── Multi-flow path: caller provided explicit roundId ─────────────────
+        // Validate the round exists, belongs to this company, and is active.
+        const { data: explicitRound } = await (adminClient as any)
+          .from('idea_rounds')
+          .select('id, status, company_id, manual_override, starts_at, ends_at')
+          .eq('id', bodyRoundId)
+          .eq('company_id', profile.company_id)
+          .single()
+
+        if (!explicitRound) {
+          return NextResponse.json(
+            { error: 'IdeaFlow not found.' },
+            { status: 404 },
+          )
+        }
+
+        const roundEffective = getEffectiveRoundStatus({
+          raw_status:      explicitRound.status,
+          manual_override: explicitRound.manual_override ?? null,
+          opens_at:        explicitRound.starts_at       ?? null,
+          closes_at:       explicitRound.ends_at         ?? null,
+        })
+
+        if (roundEffective !== 'active') {
+          return NextResponse.json(
+            { error: 'IdeaFlow is not open for submissions.' },
+            { status: 403 },
+          )
+        }
+
+        // Check member access: if round has assigned members, user must be one
+        const { data: memberRows } = await (adminClient as any)
+          .from('round_members')
+          .select('user_id')
+          .eq('round_id', bodyRoundId)
+
+        const assigned: string[] = (memberRows ?? []).map((r: { user_id: string }) => r.user_id)
+        if (assigned.length > 0 && !assigned.includes(user.id)) {
+          return NextResponse.json(
+            { error: 'You are not assigned to this IdeaFlow.' },
+            { status: 403 },
+          )
+        }
+
+        activeRoundId = bodyRoundId
+
+      } else {
+        // ── Legacy path: use company's current_idea_round_id ──────────────────
+        // ── 2. Fetch company row ─────────────────────────────────────────────
+        const { data: company, error: companyError } = await (supabase as any)
+          .from('companies')
+          .select(
+            'current_idea_round_id, idea_round_status, ' +
+            'idea_round_starts_at, idea_round_ends_at, idea_round_manual_override',
+          )
+          .eq('id', profile.company_id)
+          .single()
+
+        if (companyError) {
+          console.error('[api ideas] company fetch failed', companyError)
+        }
+
+        // ── 3. Read round pointer from company ───────────────────────────────
+        activeRoundId = company?.current_idea_round_id ?? null
+
+        if (!activeRoundId) {
+          return NextResponse.json(
+            { error: 'IdeaFlow is not open for submissions.' },
+            { status: 403 },
+          )
+        }
+
+        // ── 4. Fetch the round row to validate it is active ──────────────────
+        const { data: currentRound } = await (adminClient as any)
+          .from('idea_rounds')
+          .select('id, status, company_id')
+          .eq('id', activeRoundId)
+          .eq('company_id', profile.company_id)
+          .single()
+
+        if (!currentRound) {
+          return NextResponse.json(
+            { error: 'IdeaFlow is not open for submissions.' },
+            { status: 403 },
+          )
+        }
+
+        if (currentRound.status !== 'active') {
+          return NextResponse.json(
+            { error: 'IdeaFlow is not open for submissions.' },
+            { status: 403 },
+          )
+        }
+
+        // ── 5. Compute effective status from company-level fields ─────────────
+        const effectiveStatus = getEffectiveRoundStatus({
+          raw_status:      company?.idea_round_status          ?? null,
+          manual_override: company?.idea_round_manual_override ?? null,
+          opens_at:        company?.idea_round_starts_at       ?? null,
+          closes_at:       company?.idea_round_ends_at         ?? null,
+        })
+
+        if (effectiveStatus !== 'active') {
+          return NextResponse.json(
+            { error: 'IdeaFlow is not open for submissions.' },
+            { status: 403 },
+          )
+        }
       }
 
-      // ── 5. Validate round row status ──────────────────────────────────────
-      if (currentRound.status !== 'active') {
-        return NextResponse.json(
-          { error: 'IdeaFlow is not open for submissions.' },
-          { status: 403 },
-        )
-      }
-
-      // ── 6. Compute effective status from company-level fields ─────────────
-      const effectiveStatus = getEffectiveRoundStatus({
-        raw_status:      company?.idea_round_status          ?? null,
-        manual_override: company?.idea_round_manual_override ?? null,
-        opens_at:        company?.idea_round_starts_at       ?? null,
-        closes_at:       company?.idea_round_ends_at         ?? null,
-      })
-
-      if (effectiveStatus !== 'active') {
-        return NextResponse.json(
-          { error: 'IdeaFlow is not open for submissions.' },
-          { status: 403 },
-        )
-      }
-
-      // ── 7. Build insert payload ───────────────────────────────────────────
-      // idea_round_id comes from activeRoundId (company.current_idea_round_id),
-      // NOT from currentRound.id — the round query is for validation only.
+      // ── Build insert payload ────────────────────────────────────────────────
+      // activeRoundId was resolved above — either from an explicit bodyRoundId
+      // (multi-flow path) or from company.current_idea_round_id (legacy path).
       const insertPayload = {
         title:         title.trim(),
         description:   description?.trim() || null,
