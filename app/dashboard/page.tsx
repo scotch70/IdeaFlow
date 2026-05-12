@@ -120,16 +120,58 @@ export default async function DashboardPage({
     closes_at:       roundEndsAt,
   })
 
-  // ── Fetch prompt from the current idea_rounds row ─────────────────────────
+  // ── Fetch prompt + count accessible active flows ─────────────────────────
+  // The flow count drives the "Switch IdeaFlow" card: if the member can access
+  // more than one active flow, we surface a switcher so they can navigate easily.
+  const adminClient = createAdminClient()
+
   let roundPrompt: string | null = null
   if (currentRoundId) {
-    const adminClient = createAdminClient()
     const { data: roundRow } = await (adminClient as any)
       .from('idea_rounds')
       .select('prompt')
       .eq('id', currentRoundId)
       .single() as { data: { prompt: string | null } | null }
     roundPrompt = roundRow?.prompt ?? null
+  }
+
+  // Count active flows this user can see:
+  //   (a) active rounds with zero round_members rows  → open to all workspace members
+  //   (b) active rounds where a round_members row exists for this user
+  let accessibleActiveFlowCount = 0
+  {
+    const { data: activeRoundRows } = await (adminClient as any)
+      .from('idea_rounds')
+      .select('id, manual_override, starts_at, ends_at')
+      .eq('company_id', profile.company_id)
+      .eq('status', 'active')
+
+    const activeIds: string[] = (activeRoundRows ?? []).map((r: any) => r.id)
+    if (activeIds.length > 0) {
+      const { data: memberRows } = await (adminClient as any)
+        .from('round_members')
+        .select('round_id, user_id')
+        .in('round_id', activeIds)
+
+      const memberSetMap: Record<string, string[]> = {}
+      for (const row of memberRows ?? []) {
+        if (!memberSetMap[row.round_id]) memberSetMap[row.round_id] = []
+        memberSetMap[row.round_id].push(row.user_id)
+      }
+
+      accessibleActiveFlowCount = (activeRoundRows ?? []).filter((r: any) => {
+        // Respect manual_override / schedule to get the effective status
+        const eff = getEffectiveRoundStatus({
+          raw_status:      'active',
+          manual_override: r.manual_override ?? null,
+          opens_at:        r.starts_at ?? null,
+          closes_at:       r.ends_at   ?? null,
+        })
+        if (eff !== 'active') return false
+        const assigned = memberSetMap[r.id] ?? []
+        return assigned.length === 0 || assigned.includes(user.id)
+      }).length
+    }
   }
 
 
@@ -370,6 +412,48 @@ export default async function DashboardPage({
                 )}
               </div>
               <UpgradeButton />
+            </div>
+          )}
+
+          {/* ── Multi-flow switcher ── */}
+          {/* Show when the user has access to more than one active IdeaFlow so
+              they can navigate to the selector without hunting for it. */}
+          {accessibleActiveFlowCount > 1 && (
+            <div style={{
+              marginBottom: '1.5rem',
+              borderRadius: '1rem',
+              padding: '0.875rem 1.125rem',
+              background: 'rgba(26,107,191,0.04)',
+              border: '1px solid rgba(26,107,191,0.14)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '1rem',
+              flexWrap: 'wrap',
+            }}>
+              <div>
+                <p style={{ fontSize: '0.775rem', fontWeight: 700, color: '#0d1f35', marginBottom: '0.15rem' }}>
+                  You have access to {accessibleActiveFlowCount} active IdeaFlows
+                </p>
+                <p style={{ fontSize: '0.72rem', color: '#64748b' }}>
+                  This page shows one flow. Switch to see all of them.
+                </p>
+              </div>
+              <a
+                href="/dashboard/flows"
+                style={{
+                  flexShrink: 0,
+                  display: 'inline-flex', alignItems: 'center',
+                  height: '2rem', padding: '0 0.875rem',
+                  borderRadius: '0.45rem',
+                  border: '1px solid rgba(26,107,191,0.22)',
+                  background: '#fff',
+                  fontSize: '0.775rem', fontWeight: 600, color: '#1a6bbf',
+                  textDecoration: 'none',
+                }}
+              >
+                Switch IdeaFlow →
+              </a>
             </div>
           )}
 

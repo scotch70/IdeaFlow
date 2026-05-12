@@ -93,13 +93,6 @@ export default async function FlowsPage() {
   const draftFlows  = flows.filter(f => f.effectiveStatus === 'draft')
   const closedFlows = flows.filter(f => f.effectiveStatus === 'closed')
 
-  // ── Smart redirect for members ──────────────────────────────────────────────
-  // Non-admin members with exactly one visible active IdeaFlow skip the selector
-  // and land directly in it — no unnecessary screen.
-  if (!isAdmin && activeFlows.length === 1) {
-    redirect(`/dashboard/flows/${activeFlows[0].id}`)
-  }
-
   return (
     <div>
       {/* ── Sticky header ── */}
@@ -182,8 +175,8 @@ export default async function FlowsPage() {
                 <FlowSection title="Draft" flows={draftFlows} isAdmin={isAdmin} />
               )}
 
-              {/* Closed */}
-              {closedFlows.length > 0 && (
+              {/* Closed — admin only; members only see active flows */}
+              {isAdmin && closedFlows.length > 0 && (
                 <FlowSection title="Closed" flows={closedFlows} isAdmin={isAdmin} />
               )}
             </div>
