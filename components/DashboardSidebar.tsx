@@ -41,7 +41,6 @@ function Ico({ d, d2 }: { d: string; d2?: string }) {
 
 const ICONS = {
   dashboard:  <Ico d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z" />,
-  flows:      <Ico d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" d2="M13 2v7h7" />,
   ideas:      <Ico d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z" d2="M9 21h6" />,
   review:     <Ico d="M9 11l3 3L22 4" d2="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />,
   members:    <Ico d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" d2="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm8 0c1.66 0 3-1.34 3-3s-1.34-3-3-3m3 13v-2a4 4 0 0 0-3-3.87" />,
@@ -205,12 +204,6 @@ export default function DashboardSidebar({
             icon={ICONS.dashboard}
             label="Dashboard"
             active={exact('/dashboard')}
-          />
-          <NavLink
-            href="/dashboard/flows"
-            icon={ICONS.flows}
-            label="IdeaFlows"
-            active={exact('/dashboard/flows') || under('/dashboard/flows')}
           />
           <NavLink
             href="/dashboard/ideas"

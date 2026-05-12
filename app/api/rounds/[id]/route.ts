@@ -156,15 +156,6 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     if (parsedStarts !== undefined) patch.starts_at = parsedStarts
     if (parsedEnds   !== undefined) patch.ends_at   = parsedEnds
 
-    // icon + color
-    if ('icon' in body) {
-      patch.icon = (typeof body.icon === 'string' && body.icon.trim()) ? body.icon.trim() : null
-    }
-    if ('color' in body) {
-      const c = typeof body.color === 'string' ? body.color.trim() : ''
-      patch.color = /^#[0-9a-f]{6}$/i.test(c) ? c : null
-    }
-
     if (Object.keys(patch).length === 0) {
       return NextResponse.json({ error: 'No fields to update' }, { status: 400 })
     }

@@ -14,23 +14,6 @@ interface CreateFlowButtonProps {
   companyId: string
 }
 
-// ── Palettes ──────────────────────────────────────────────────────────────────
-
-const ICONS = ['💡', '🚀', '🎯', '🌱', '⚡', '🏆', '💬', '🔥', '🔮', '🛠️', '📣', '🎉']
-
-const COLORS = [
-  { hex: '#f97316', name: 'Orange'  },
-  { hex: '#3b82f6', name: 'Blue'    },
-  { hex: '#10b981', name: 'Green'   },
-  { hex: '#8b5cf6', name: 'Purple'  },
-  { hex: '#ec4899', name: 'Pink'    },
-  { hex: '#f59e0b', name: 'Amber'   },
-  { hex: '#14b8a6', name: 'Teal'    },
-  { hex: '#ef4444', name: 'Red'     },
-]
-
-// ── Component ─────────────────────────────────────────────────────────────────
-
 export default function CreateFlowButton({ companyId: _companyId }: CreateFlowButtonProps) {
   const [open,     setOpen]     = useState(false)
   const [name,     setName]     = useState('')
@@ -38,8 +21,6 @@ export default function CreateFlowButton({ companyId: _companyId }: CreateFlowBu
   const [status,   setStatus]   = useState<'draft' | 'active'>('active')
   const [startsAt, setStartsAt] = useState('')
   const [endsAt,   setEndsAt]   = useState('')
-  const [icon,     setIcon]     = useState('💡')
-  const [color,    setColor]    = useState('#f97316')
   const [saving,   setSaving]   = useState(false)
   const [error,    setError]    = useState('')
   const router = useRouter()
@@ -47,7 +28,6 @@ export default function CreateFlowButton({ companyId: _companyId }: CreateFlowBu
   function reset() {
     setName(''); setPrompt(''); setStatus('active')
     setStartsAt(''); setEndsAt(''); setError('')
-    setIcon('💡'); setColor('#f97316')
   }
 
   function close() { reset(); setOpen(false) }
@@ -65,8 +45,6 @@ export default function CreateFlowButton({ companyId: _companyId }: CreateFlowBu
           status,
           starts_at: startsAt ? new Date(startsAt).toISOString() : null,
           ends_at:   endsAt   ? new Date(endsAt).toISOString()   : null,
-          icon,
-          color,
         }),
       })
       if (!res.ok) {
@@ -128,7 +106,7 @@ export default function CreateFlowButton({ companyId: _companyId }: CreateFlowBu
               position: 'fixed', zIndex: 901,
               top: '50%', left: '50%',
               transform: 'translate(-50%, -50%)',
-              width: 'min(30rem, calc(100vw - 2rem))',
+              width: 'min(28rem, calc(100vw - 2rem))',
               background: '#ffffff',
               borderRadius: '1.125rem',
               border: '1px solid rgba(26,107,191,0.12)',
@@ -142,20 +120,9 @@ export default function CreateFlowButton({ companyId: _companyId }: CreateFlowBu
               padding: '1rem 1.25rem',
               borderBottom: '1px solid rgba(26,107,191,0.08)',
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-                {/* Live icon preview */}
-                <div style={{
-                  width: '2rem', height: '2rem', borderRadius: '0.5rem',
-                  background: `${color}14`, border: `1px solid ${color}38`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: '1.1rem', lineHeight: 1, transition: 'background 0.15s',
-                }}>
-                  {icon}
-                </div>
-                <p style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--ink)', letterSpacing: '-0.01em' }}>
-                  Create IdeaFlow
-                </p>
-              </div>
+              <p style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--ink)', letterSpacing: '-0.01em' }}>
+                Create IdeaFlow
+              </p>
               <button
                 type="button"
                 onClick={close}
@@ -174,13 +141,8 @@ export default function CreateFlowButton({ companyId: _companyId }: CreateFlowBu
             </div>
 
             {/* Body */}
-            <div style={{
-              padding: '1.25rem',
-              display: 'flex', flexDirection: 'column', gap: '0.875rem',
-              maxHeight: 'calc(100vh - 12rem)', overflowY: 'auto',
-            }}>
+            <div style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
 
-              {/* Name */}
               <div>
                 <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 600, color: 'var(--ink-light)', marginBottom: '0.3rem' }}>
                   Name
@@ -196,7 +158,6 @@ export default function CreateFlowButton({ companyId: _companyId }: CreateFlowBu
                 />
               </div>
 
-              {/* Question */}
               <div>
                 <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 600, color: 'var(--ink-light)', marginBottom: '0.3rem' }}>
                   Question (optional)
@@ -211,65 +172,6 @@ export default function CreateFlowButton({ companyId: _companyId }: CreateFlowBu
                 />
               </div>
 
-              {/* Icon picker */}
-              <div>
-                <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 600, color: 'var(--ink-light)', marginBottom: '0.4rem' }}>
-                  Icon
-                </label>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.375rem' }}>
-                  {ICONS.map(e => (
-                    <button
-                      key={e}
-                      type="button"
-                      onClick={() => setIcon(e)}
-                      disabled={saving}
-                      title={e}
-                      style={{
-                        width: '2.25rem', height: '2.25rem',
-                        borderRadius: '0.45rem',
-                        fontSize: '1.1rem',
-                        cursor: 'pointer',
-                        background: icon === e ? `${color}14` : 'transparent',
-                        border: icon === e ? `2px solid ${color}` : '1px solid var(--tint-border)',
-                        transition: 'border 0.1s, background 0.1s',
-                      }}
-                    >
-                      {e}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Color picker */}
-              <div>
-                <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 600, color: 'var(--ink-light)', marginBottom: '0.4rem' }}>
-                  Color
-                </label>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
-                  {COLORS.map(c => (
-                    <button
-                      key={c.hex}
-                      type="button"
-                      onClick={() => setColor(c.hex)}
-                      disabled={saving}
-                      title={c.name}
-                      style={{
-                        width: '1.625rem', height: '1.625rem',
-                        borderRadius: '50%',
-                        cursor: 'pointer',
-                        background: c.hex,
-                        border: 'none',
-                        boxShadow: color === c.hex
-                          ? `0 0 0 2px #fff, 0 0 0 4px ${c.hex}`
-                          : '0 1px 3px rgba(0,0,0,0.18)',
-                        transition: 'box-shadow 0.12s',
-                      }}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              {/* Dates */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.625rem' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 600, color: 'var(--ink-light)', marginBottom: '0.3rem' }}>
@@ -299,7 +201,6 @@ export default function CreateFlowButton({ companyId: _companyId }: CreateFlowBu
                 </div>
               </div>
 
-              {/* Start as */}
               <div>
                 <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 600, color: 'var(--ink-light)', marginBottom: '0.3rem' }}>
                   Start as
@@ -323,7 +224,7 @@ export default function CreateFlowButton({ companyId: _companyId }: CreateFlowBu
                         color: status === s ? (s === 'active' ? '#065f46' : '#475569') : '#94a3b8',
                       }}
                     >
-                      {s === 'active' ? '🟢 Active' : '⏳ Draft'}
+                      {s === 'active' ? 'Active' : 'Draft'}
                     </button>
                   ))}
                 </div>
@@ -333,8 +234,7 @@ export default function CreateFlowButton({ companyId: _companyId }: CreateFlowBu
                 <p style={{ fontSize: '0.775rem', color: '#dc2626' }}>{error}</p>
               )}
 
-              {/* Actions */}
-              <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', paddingTop: '0.25rem' }}>
+              <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '0.25rem' }}>
                 <button
                   type="button"
                   onClick={close}
@@ -355,10 +255,9 @@ export default function CreateFlowButton({ companyId: _companyId }: CreateFlowBu
                   style={{
                     height: '2.125rem', padding: '0 1.125rem', borderRadius: '0.45rem',
                     fontSize: '0.8rem', fontWeight: 600,
-                    background: color, color: '#fff',
+                    background: 'var(--orange)', color: '#fff',
                     border: 'none', cursor: saving ? 'not-allowed' : 'pointer',
                     opacity: saving ? 0.7 : 1,
-                    transition: 'opacity 0.1s',
                   }}
                 >
                   {saving ? 'Creating…' : 'Create IdeaFlow'}

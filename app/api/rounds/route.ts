@@ -129,8 +129,6 @@ export async function POST(request: NextRequest) {
       status?: unknown
       starts_at?: unknown
       ends_at?: unknown
-      icon?: unknown
-      color?: unknown
     }
 
     const name = (typeof body.name === 'string' && body.name.trim()) ? body.name.trim() : 'New IdeaFlow'
@@ -150,10 +148,6 @@ export async function POST(request: NextRequest) {
       return isNaN(d.getTime()) ? null : d.toISOString()
     }
 
-    // icon: single emoji; color: hex string e.g. '#f97316'
-    const icon  = (typeof body.icon  === 'string' && body.icon.trim())  ? body.icon.trim()  : null
-    const color = (typeof body.color === 'string' && /^#[0-9a-f]{6}$/i.test(body.color.trim())) ? body.color.trim() : null
-
     const admin = createAdminClient()
 
     const { data: round, error: insertError } = await (admin as any)
@@ -166,8 +160,6 @@ export async function POST(request: NextRequest) {
         created_by:  user.id,
         starts_at:   toDate(body.starts_at),
         ends_at:     toDate(body.ends_at),
-        icon,
-        color,
       })
       .select('*')
       .single()

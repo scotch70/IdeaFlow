@@ -1,9 +1,12 @@
 /**
  * /dashboard/flows/[id]
  *
- * Per-flow detail page. Shows the flow icon + name, status badge, the
- * idea submission form (for active flows), the scoped idea list, and —
- * for admins — the FlowAdminPanel for editing / managing the flow.
+ * Per-flow detail page. Shows name + status, the idea submission form
+ * (for active flows), the scoped idea list, and — for admins — the
+ * FlowAdminPanel for editing / managing the flow.
+ *
+ * Admins arrive here via /dashboard/idea-flow → FlowCard → this page.
+ * Members arrive here via smart-redirect from /dashboard/flows.
  */
 
 import { redirect }      from 'next/navigation'
@@ -109,7 +112,7 @@ export default async function FlowDetailPage({
     liked_by_user: likedIds.has(idea.id),
   }))
 
-  // ── Admin data (company members + assigned member IDs) ──────────────────────
+  // ── Admin data ───────────────────────────────────────────────────────────────
   let companyMembers: SlimProfile[] = []
   let assignedUserIds: string[]     = []
 
@@ -129,12 +132,7 @@ export default async function FlowDetailPage({
     assignedUserIds = (assignedResult.data ?? []).map((r: { user_id: string }) => r.user_id)
   }
 
-  // ── Visual tokens ────────────────────────────────────────────────────────────
-  const flowIcon  = round.icon  ?? '💡'
-  const flowColor = round.color ?? '#f97316'
-  const accentBg     = `${flowColor}14`   // ~8% tint
-  const accentBorder = `${flowColor}38`   // ~22% tint
-
+  // ── Status badge ─────────────────────────────────────────────────────────────
   const STATUS_META: Record<string, { label: string; bg: string; color: string; border: string; dot: string }> = {
     active: { label: 'Active',  bg: 'rgba(16,185,129,0.07)',   color: '#065f46', border: 'rgba(16,185,129,0.22)', dot: '#10b981' },
     draft:  { label: 'Draft',   bg: 'rgba(249,115,22,0.06)',   color: '#92400e', border: 'rgba(249,115,22,0.18)', dot: '#f97316' },
@@ -150,46 +148,31 @@ export default async function FlowDetailPage({
         borderBottom: '1px solid rgba(26,107,191,0.09)',
         position: 'sticky', top: 0, zIndex: 9,
       }}>
-        <PageContainer style={{ paddingTop: '1rem', paddingBottom: '1rem' }}>
+        <PageContainer style={{ paddingTop: '1.125rem', paddingBottom: '1.125rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              {/* Flow icon */}
-              <div style={{
-                width: '2.5rem', height: '2.5rem', flexShrink: 0,
-                borderRadius: '0.65rem',
-                background: accentBg,
-                border: `1px solid ${accentBorder}`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '1.2rem', lineHeight: 1,
-              }}>
-                {flowIcon}
-              </div>
-
-              <div>
-                <p style={{ fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#9ab0c8', marginBottom: '0.15rem' }}>
-                  IdeaFlows
-                </p>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <h1 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0d1f35', letterSpacing: '-0.02em' }}>
-                    {round.name || 'Unnamed IdeaFlow'}
-                  </h1>
-                  <span style={{
-                    display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
-                    fontSize: '0.65rem', fontWeight: 700,
-                    background: sm.bg, color: sm.color,
-                    border: `1px solid ${sm.border}`,
-                    borderRadius: '999px',
-                    padding: '0.18rem 0.55rem',
-                    flexShrink: 0,
-                  }}>
-                    <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: sm.dot }} />
-                    {sm.label}
-                  </span>
-                </div>
+            <div>
+              <p style={{ fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#9ab0c8', marginBottom: '0.2rem' }}>
+                {isAdmin ? 'Management' : 'Workspace'}
+              </p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <h1 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0d1f35', letterSpacing: '-0.02em' }}>
+                  {round.name || 'Unnamed IdeaFlow'}
+                </h1>
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
+                  fontSize: '0.65rem', fontWeight: 700,
+                  background: sm.bg, color: sm.color,
+                  border: `1px solid ${sm.border}`,
+                  borderRadius: '999px',
+                  padding: '0.2rem 0.55rem',
+                  flexShrink: 0,
+                }}>
+                  <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: sm.dot }} />
+                  {sm.label}
+                </span>
               </div>
             </div>
-
-            <p style={{ fontSize: '0.8rem', color: '#9ab0c8', fontWeight: 500 }}>
+            <p style={{ fontSize: '0.825rem', color: '#9ab0c8', fontWeight: 500 }}>
               {ideasWithLikeStatus.length} idea{ideasWithLikeStatus.length !== 1 ? 's' : ''}
             </p>
           </div>
@@ -203,12 +186,12 @@ export default async function FlowDetailPage({
           {round.prompt && (
             <div style={{
               borderRadius: '0.875rem',
-              border: `1px solid ${accentBorder}`,
-              background: accentBg,
+              border: '1px solid rgba(26,107,191,0.12)',
+              background: 'rgba(240,245,255,0.6)',
               padding: '0.875rem 1.125rem',
               marginBottom: '1.5rem',
             }}>
-              <p style={{ fontSize: '0.7rem', fontWeight: 700, color: flowColor, marginBottom: '0.2rem', letterSpacing: '0.08em', textTransform: 'uppercase', opacity: 0.8 }}>
+              <p style={{ fontSize: '0.7rem', fontWeight: 700, color: '#9ab0c8', marginBottom: '0.2rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
                 Question
               </p>
               <p style={{ fontSize: '0.925rem', fontWeight: 600, color: '#0d1f35', lineHeight: 1.5 }}>
@@ -217,7 +200,7 @@ export default async function FlowDetailPage({
             </div>
           )}
 
-          {/* ── Idea submission / browse area ── */}
+          {/* ── Active: form + ideas ── */}
           {effectiveStatus === 'active' ? (
             <>
               {ideasWithLikeStatus.length === 0 && (
@@ -230,14 +213,6 @@ export default async function FlowDetailPage({
                   boxShadow: '0 2px 12px rgba(6,14,38,0.05)',
                   marginBottom: '1.5rem',
                 }}>
-                  <div style={{
-                    width: '3rem', height: '3rem', borderRadius: '0.875rem',
-                    background: accentBg, border: `1px solid ${accentBorder}`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    margin: '0 auto 1.25rem', fontSize: '1.35rem',
-                  }}>
-                    {flowIcon}
-                  </div>
                   <h2 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0d1f35', letterSpacing: '-0.02em', marginBottom: '0.4rem' }}>
                     No ideas yet
                   </h2>
@@ -250,7 +225,7 @@ export default async function FlowDetailPage({
               <div style={{
                 borderRadius: '1.25rem',
                 border: '1px solid rgba(26,107,191,0.11)',
-                background: 'linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(248,250,255,1) 100%)',
+                background: 'linear-gradient(180deg, #ffffff 0%, rgba(248,250,255,1) 100%)',
                 boxShadow: '0 6px 24px rgba(6,14,38,0.04)',
                 padding: '1.25rem',
                 marginBottom: '1.5rem',
@@ -276,7 +251,7 @@ export default async function FlowDetailPage({
               />
             </>
           ) : (
-            /* ── Gate state ── */
+            /* ── Gate: draft or closed ── */
             <div style={{
               background: '#ffffff',
               border: '1px solid rgba(26,107,191,0.10)',
@@ -287,14 +262,6 @@ export default async function FlowDetailPage({
               maxWidth: '32rem',
               margin: '0 auto',
             }}>
-              <div style={{
-                width: '3rem', height: '3rem', borderRadius: '0.875rem',
-                background: accentBg, border: `1px solid ${accentBorder}`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                margin: '0 auto 1.25rem', fontSize: '1.35rem',
-              }}>
-                {flowIcon}
-              </div>
               <h2 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0d1f35', letterSpacing: '-0.02em', marginBottom: '0.4rem' }}>
                 {effectiveStatus === 'draft' ? 'Coming soon' : 'IdeaFlow closed'}
               </h2>
@@ -320,8 +287,6 @@ export default async function FlowDetailPage({
                 effectiveStatus={effectiveStatus}
                 companyMembers={companyMembers}
                 assignedUserIds={assignedUserIds}
-                initialIcon={round.icon ?? null}
-                initialColor={round.color ?? null}
               />
             </div>
           )}
