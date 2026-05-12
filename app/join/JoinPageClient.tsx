@@ -134,7 +134,7 @@ export default function JoinPageClient() {
           throw new Error(data.error || 'Failed to join')
         }
         window.localStorage.removeItem('ideaflow_invite_code')
-        router.push('/dashboard')
+        router.push(data.redirectTo ?? '/dashboard')
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : 'Something went wrong')
       } finally {
@@ -161,7 +161,7 @@ export default function JoinPageClient() {
         throw new Error(data.error || 'Failed to join')
       }
       window.localStorage.removeItem(INVITE_CODE_STORAGE_KEY)
-      router.push('/dashboard')
+      router.push(data.redirectTo ?? '/dashboard')
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Something went wrong')
     } finally {

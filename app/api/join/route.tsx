@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { canAddMembers } from '@/lib/billing'
 import { checkRateLimit, getClientIp } from '@/lib/ratelimit'
 
@@ -218,6 +219,30 @@ export async function POST(request: NextRequest) {
         { error: upsertProfileError?.message ?? 'Failed to update profile' },
         { status: 500 }
       )
+    }
+
+    // ── Flow-scoped invite: add user to round_members ──────────────────────
+    // If this invite is tied to a specific IdeaFlow, also assign the user to
+    // that flow's audience. Idempotent — existing membership is silently ignored.
+    if (invite.idea_round_id) {
+      const admin = createAdminClient()
+      const { error: roundMemberError } = await (admin as any)
+        .from('round_members')
+        .upsert(
+          {
+            round_id:   invite.idea_round_id,
+            user_id:    user.id,
+            company_id: invite.company_id,
+            // added_by left null — joined via invite link
+          },
+          { onConflict: 'round_id,user_id', ignoreDuplicates: true },
+        )
+      if (roundMemberError) {
+        // Non-fatal — workspace join already succeeded. Log but don't fail the request.
+        console.error('[api/join] round_members upsert failed:', roundMemberError.message)
+      } else {
+        return NextResponse.json({ success: true, redirectTo: `/dashboard/flows/${invite.idea_round_id}` })
+      }
     }
 
     return NextResponse.json({ success: true })

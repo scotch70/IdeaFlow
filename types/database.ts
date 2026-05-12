@@ -288,6 +288,8 @@ export interface Database {
           created_at: string
           name: string | null
           joined_user_id: string | null
+          /** When set, this is a flow-scoped invite — redeeming it adds the user to round_members. */
+          idea_round_id: string | null
         }
         Insert: {
           id?: string
@@ -301,6 +303,7 @@ export interface Database {
           created_at?: string
           name?: string | null
           joined_user_id?: string | null
+          idea_round_id?: string | null
         }
         Update: {
           id?: string
@@ -314,6 +317,7 @@ export interface Database {
           created_at?: string
           name?: string | null
           joined_user_id?: string | null
+          idea_round_id?: string | null
         }
       }
     }

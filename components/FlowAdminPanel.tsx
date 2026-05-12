@@ -128,6 +128,12 @@ export default function FlowAdminPanel({
   const [deleteError,    setDeleteError]    = useState('')
   const [overrideSaving, setOverrideSaving] = useState(false)
 
+  // Invite link state
+  const [inviteCode,    setInviteCode]    = useState<string | null>(null)
+  const [inviteLoading, setInviteLoading] = useState(false)
+  const [inviteError,   setInviteError]   = useState('')
+  const [copied,        setCopied]        = useState(false)
+
   async function patch(body: Record<string, unknown>) {
     setSaving(true)
     setSaveError('')
@@ -181,6 +187,31 @@ export default function FlowAdminPanel({
     } finally {
       setOverrideSaving(false)
     }
+  }
+
+  async function handleGenerateInvite() {
+    setInviteLoading(true)
+    setInviteError('')
+    try {
+      const res = await fetch(`/api/rounds/${roundId}/invite`, { method: 'POST' })
+      const d = await res.json()
+      if (!res.ok) throw new Error(d.error ?? 'Failed to generate link')
+      setInviteCode(d.code)
+      setCopied(false)
+    } catch (err: unknown) {
+      setInviteError(err instanceof Error ? err.message : 'Something went wrong')
+    } finally {
+      setInviteLoading(false)
+    }
+  }
+
+  function handleCopy() {
+    if (!inviteCode) return
+    const url = `${window.location.origin}/flow-invite/${inviteCode}`
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
   }
 
   async function handleDelete() {
@@ -330,6 +361,65 @@ export default function FlowAdminPanel({
           companyMembers={companyMembers}
           assignedUserIds={assignedUserIds}
         />
+      </Section>
+
+      {/* ── Invite link ── */}
+      <Section title="Invite link">
+        <p style={{ fontSize: '0.78rem', color: 'var(--ink-light)', lineHeight: 1.55, marginBottom: '0.75rem' }}>
+          Generate a reusable link. Anyone with it who is already in this workspace will be added to this IdeaFlow. New users will be asked to join the workspace first.
+        </p>
+
+        {!inviteCode ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <ActionBtn onClick={handleGenerateInvite} disabled={inviteLoading} variant="secondary">
+              {inviteLoading ? 'Generating…' : 'Generate invite link'}
+            </ActionBtn>
+            {inviteError && (
+              <p style={{ fontSize: '0.775rem', color: '#dc2626' }}>{inviteError}</p>
+            )}
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: '0.5rem',
+              borderRadius: '0.5rem',
+              border: '1px solid var(--border-mid)',
+              background: '#fff',
+              padding: '0.375rem 0.5rem 0.375rem 0.75rem',
+            }}>
+              <span style={{
+                flex: 1, minWidth: 0,
+                fontSize: '0.775rem', color: 'var(--ink)', fontFamily: 'monospace',
+                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+              }}>
+                {typeof window !== 'undefined' ? `${window.location.origin}/flow-invite/${inviteCode}` : `/flow-invite/${inviteCode}`}
+              </span>
+              <button
+                type="button"
+                onClick={handleCopy}
+                style={{
+                  flexShrink: 0,
+                  height: '1.75rem', padding: '0 0.625rem',
+                  borderRadius: '0.375rem',
+                  border: copied ? '1px solid rgba(16,185,129,0.4)' : '1px solid var(--border-mid)',
+                  background: copied ? 'rgba(16,185,129,0.08)' : 'var(--tint)',
+                  fontSize: '0.72rem', fontWeight: 600,
+                  color: copied ? '#065f46' : 'var(--ink-light)',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s',
+                }}
+              >
+                {copied ? '✓ Copied' : 'Copy'}
+              </button>
+            </div>
+            <ActionBtn onClick={handleGenerateInvite} disabled={inviteLoading} variant="ghost">
+              {inviteLoading ? 'Generating…' : '↻ New link'}
+            </ActionBtn>
+            {inviteError && (
+              <p style={{ fontSize: '0.775rem', color: '#dc2626' }}>{inviteError}</p>
+            )}
+          </div>
+        )}
       </Section>
 
       {/* ── Delete ── */}
