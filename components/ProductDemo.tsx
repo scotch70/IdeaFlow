@@ -32,11 +32,12 @@ const NAV = [
     ),
   },
   {
-    label: 'Roadmap',
+    label: 'IdeaFlows',
     active: false,
     icon: (
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M3 5h4l3 14h8"/><path d="M7 5l3 14"/>
+        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+        <path d="M2 12l10 5 10-5M2 17l10 5 10-5"/>
       </svg>
     ),
   },

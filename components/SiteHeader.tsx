@@ -45,8 +45,8 @@ export default async function SiteHeader() {
 
         {/* Desktop navigation — hidden on mobile */}
         <nav className="hidden lg:flex items-center gap-0.5 text-sm font-medium">
-          <Link href="/" className="nav-link">Home</Link>
           <Link href="/features" className="nav-link">Features</Link>
+          <a href="/#pricing" className="nav-link">Pricing</a>
           <Link href="/contact" className="nav-link">Contact</Link>
 
           {user ? (
@@ -63,14 +63,22 @@ export default async function SiteHeader() {
             </>
           ) : (
             <>
-              <Link href="/join" className="nav-link">Join</Link>
-              <Link href="/auth" className="nav-link">Login</Link>
               <Link
                 href="/auth"
-                className="ml-1.5"
+                style={{
+                  fontSize: '0.8rem', fontWeight: 500, color: '#5a7fa8',
+                  textDecoration: 'none', padding: '0.375rem 0.75rem',
+                  borderRadius: '0.45rem', transition: 'color 0.15s',
+                }}
+              >
+                Log in
+              </Link>
+              <Link
+                href="/auth"
+                className="ml-1"
                 style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', borderRadius: '0.5rem', padding: '0.375rem 1.05rem', fontSize: '0.8rem', fontWeight: 700, background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)', color: '#fff', letterSpacing: '0.01em', boxShadow: '0 2px 10px rgba(240,104,0,0.25)', textDecoration: 'none' }}
               >
-                Register
+                Start free →
               </Link>
             </>
           )}

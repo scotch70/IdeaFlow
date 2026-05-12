@@ -70,8 +70,8 @@ export default function MobileNav({ isLoggedIn, email }: MobileNavProps) {
           }}
         >
           <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.125rem' }}>
-            <Link href="/" onClick={() => setOpen(false)} style={linkStyle}>Home</Link>
             <Link href="/features" onClick={() => setOpen(false)} style={linkStyle}>Features</Link>
+            <a href="/#pricing" onClick={() => setOpen(false)} style={linkStyle}>Pricing</a>
             <Link href="/contact" onClick={() => setOpen(false)} style={linkStyle}>Contact</Link>
 
             {isLoggedIn ? (
@@ -92,8 +92,7 @@ export default function MobileNav({ isLoggedIn, email }: MobileNavProps) {
               </>
             ) : (
               <>
-                <Link href="/join" onClick={() => setOpen(false)} style={linkStyle}>Join</Link>
-                <Link href="/auth" onClick={() => setOpen(false)} style={linkStyle}>Login</Link>
+                <Link href="/auth" onClick={() => setOpen(false)} style={{ ...linkStyle, color: '#5a7fa8' }}>Log in</Link>
                 <div style={{ borderTop: '1px solid rgba(26,107,191,0.09)', marginTop: '0.5rem', paddingTop: '0.5rem' }}>
                   <Link
                     href="/auth"
@@ -110,7 +109,7 @@ export default function MobileNav({ isLoggedIn, email }: MobileNavProps) {
                       textDecoration: 'none',
                     }}
                   >
-                    Register
+                    Start free →
                   </Link>
                 </div>
               </>
