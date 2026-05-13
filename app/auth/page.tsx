@@ -60,10 +60,19 @@ function AuthPageInner() {
       if (mode === 'signup') {
         if (!fullName.trim()) throw new Error('Full name is required')
         if (!comingFromInvite && !companyName.trim()) throw new Error('Company name is required')
+        // emailRedirectTo routes the confirmation email through our auth callback
+        // so it (a) exchanges the PKCE code server-side and (b) preserves the
+        // `next` URL — keeping the invite destination across the email confirmation hop.
+        // Without this, Supabase falls back to the project's Site URL, which may not
+        // include the correct destination and can accidentally land users on /reset-password.
+        const emailRedirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextUrl)}`
         const { data: signUpData, error } = await supabase.auth.signUp({
           email,
           password,
-          options: { data: { full_name: fullName, company_name: companyName } },
+          options: {
+            data: { full_name: fullName, company_name: companyName },
+            emailRedirectTo,
+          },
         })
         if (error) throw error
         // When email confirmation is enabled Supabase returns session: null.

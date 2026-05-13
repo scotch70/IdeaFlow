@@ -23,6 +23,9 @@ export default function ResetPasswordPage() {
     //
     //   PKCE (modern default):  /reset-password?code=XXXX
     //     → session doesn't exist yet; must call exchangeCodeForSession(code)
+    //     → IMPORTANT: register onAuthStateChange BEFORE the exchange so we
+    //       can distinguish PASSWORD_RECOVERY (real reset) from SIGNED_IN
+    //       (signup confirmation that accidentally landed here).
     //
     //   Implicit (legacy):      /reset-password#access_token=...&type=recovery
     //     → Supabase JS processes the hash automatically; listen for PASSWORD_RECOVERY
@@ -41,13 +44,37 @@ export default function ResetPasswordPage() {
       window.location.hash.replace(/^#/, '')
     ).get('type')
 
-    // ── PKCE: exchange the code for a session ─────────────────────────────
+    // ── PKCE: set up the listener first, then exchange the code ───────────
+    // This order matters: exchangeCodeForSession fires an auth event
+    // (PASSWORD_RECOVERY for reset codes, SIGNED_IN for signup/magic-link
+    // codes). The listener must already exist when the event fires.
     if (searchCode) {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+        if (event === 'PASSWORD_RECOVERY') {
+          // Correct — this is a genuine password reset code
+          resolve('ready')
+        } else if (event === 'SIGNED_IN') {
+          // A non-recovery PKCE code (signup confirmation or magic link)
+          // landed here by mistake — most likely because Supabase's Site URL
+          // in the dashboard was pointing to /reset-password.
+          // The user is now signed in; send them to the dashboard instead
+          // of showing the reset form.
+          if (!resolved) {
+            resolved = true
+            router.replace('/dashboard')
+          }
+        }
+      })
+
       supabase.auth
         .exchangeCodeForSession(searchCode)
-        .then(({ error }) => resolve(error ? 'invalid' : 'ready'))
+        .then(({ error }) => {
+          if (error) resolve('invalid')
+          // On success the onAuthStateChange handler above fires and resolves.
+        })
         .catch(() => resolve('invalid'))
-      return
+
+      return () => subscription.unsubscribe()
     }
 
     // ── Legacy implicit: wait for the PASSWORD_RECOVERY event ─────────────
@@ -64,7 +91,7 @@ export default function ResetPasswordPage() {
     })
 
     return () => subscription.unsubscribe()
-  }, [supabase])
+  }, [supabase, router])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()

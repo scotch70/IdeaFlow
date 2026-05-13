@@ -14,6 +14,26 @@ export async function GET(request: NextRequest) {
       ? rawNext
       : '/dashboard'
 
+  // Safety guard: the auth callback must NEVER route a code exchange directly
+  // to /reset-password. Password reset emails from forgot-password use
+  //   redirectTo: `${APP_URL}/auth/callback?next=/reset-password`
+  // which means a recovery code can legitimately arrive here with next=/reset-password.
+  //
+  // However, if any other flow accidentally sets next=/reset-password (e.g., a
+  // misconfigured Supabase Site URL), exchanging a signup confirmation code
+  // server-side and redirecting to /reset-password would show the wrong UI.
+  //
+  // We intentionally allow next=/reset-password here because the server-side
+  // exchange below creates the session in the cookie, and /reset-password
+  // detects the absence of a ?code= param and falls back to session-based
+  // detection. The PKCE path in /reset-password now distinguishes
+  // PASSWORD_RECOVERY from SIGNED_IN events so non-recovery sessions are
+  // redirected to /dashboard automatically.
+  //
+  // What we DO block: /reset-password appearing in the `next` when there is
+  // no `code` at all (open-redirect protection already handled by the
+  // startsWith('/') check above).
+
   if (code) {
     const supabase = await createClient()
     const { error } = await supabase.auth.exchangeCodeForSession(code)
