@@ -114,7 +114,7 @@ export default async function MembersPage() {
                   </p>
                 </div>
                 <a
-                  href="/dashboard/invites"
+                  href="/dashboard/flows"
                   style={{
                     fontSize: '0.825rem',
                     fontWeight: 600,
@@ -128,7 +128,7 @@ export default async function MembersPage() {
                     flexShrink: 0,
                   }}
                 >
-                  Generate invite →
+                  Invite via IdeaFlow →
                 </a>
               </div>
             )}

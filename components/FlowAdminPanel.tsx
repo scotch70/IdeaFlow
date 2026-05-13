@@ -18,6 +18,17 @@ import type { SlimProfile } from '@/types/database'
 
 type RoundStatus = 'draft' | 'active' | 'closed'
 
+export type FlowInvite = {
+  id:           string
+  name:         string | null
+  email:        string | null
+  invite_code:  string
+  used_at:      string | null
+  expires_at:   string | null
+  created_at:   string
+  profiles?:    { full_name: string | null } | null
+}
+
 interface FlowAdminPanelProps {
   roundId:               string
   initialName:           string
@@ -29,6 +40,7 @@ interface FlowAdminPanelProps {
   effectiveStatus:       'active' | 'closed' | 'draft'
   companyMembers:        SlimProfile[]
   assignedUserIds:       string[]
+  flowInvites:           FlowInvite[]
 }
 
 // ── Helper ────────────────────────────────────────────────────────────────────
@@ -113,6 +125,7 @@ export default function FlowAdminPanel({
   initialManualOverride,
   companyMembers,
   assignedUserIds,
+  flowInvites: initialFlowInvites,
 }: FlowAdminPanelProps) {
   const router = useRouter()
 
@@ -128,11 +141,24 @@ export default function FlowAdminPanel({
   const [deleteError,    setDeleteError]    = useState('')
   const [overrideSaving, setOverrideSaving] = useState(false)
 
-  // Invite link state
+  // Reusable share-link state
   const [inviteCode,    setInviteCode]    = useState<string | null>(null)
   const [inviteLoading, setInviteLoading] = useState(false)
   const [inviteError,   setInviteError]   = useState('')
   const [copied,        setCopied]        = useState(false)
+
+  // Email invite state
+  const [inviteName,       setInviteName]       = useState('')
+  const [inviteEmail,      setInviteEmail]       = useState('')
+  const [emailInviteLoading, setEmailInviteLoading] = useState(false)
+  const [emailInviteError,   setEmailInviteError]   = useState('')
+  const [emailInviteSuccess, setEmailInviteSuccess] = useState('')
+
+  // Pending invites list
+  const [flowInvites,   setFlowInvites]   = useState<FlowInvite[]>(initialFlowInvites)
+  const [revokingId,    setRevokingId]    = useState<string | null>(null)
+  const [revokeError,   setRevokeError]   = useState('')
+  const [copiedInvId,   setCopiedInvId]   = useState<string | null>(null)
 
   async function patch(body: Record<string, unknown>) {
     setSaving(true)
@@ -187,6 +213,68 @@ export default function FlowAdminPanel({
     } finally {
       setOverrideSaving(false)
     }
+  }
+
+  async function handleEmailInvite() {
+    if (!inviteName.trim()) { setEmailInviteError('Name is required'); return }
+    if (!inviteEmail.trim()) { setEmailInviteError('Email is required'); return }
+    setEmailInviteLoading(true)
+    setEmailInviteError('')
+    setEmailInviteSuccess('')
+    try {
+      const res = await fetch('/api/invites', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({
+          name:          inviteName.trim(),
+          email:         inviteEmail.trim(),
+          idea_round_id: roundId,
+        }),
+      })
+      const d = await res.json()
+      if (!res.ok) throw new Error(d.error ?? 'Failed to send invite')
+      setEmailInviteSuccess(`Invite sent to ${inviteEmail.trim()}`)
+      setInviteName('')
+      setInviteEmail('')
+      // Refresh invite list
+      router.refresh()
+      // Optimistically add to list
+      if (d.invite) setFlowInvites(prev => [d.invite, ...prev])
+    } catch (err: unknown) {
+      setEmailInviteError(err instanceof Error ? err.message : 'Something went wrong')
+    } finally {
+      setEmailInviteLoading(false)
+    }
+  }
+
+  async function handleRevokeInvite(invId: string) {
+    setRevokingId(invId)
+    setRevokeError('')
+    try {
+      const res = await fetch(`/api/invites/${invId}`, { method: 'DELETE' })
+      if (!res.ok) {
+        const d = await res.json()
+        throw new Error(d.error ?? 'Failed to revoke')
+      }
+      setFlowInvites(prev => prev.filter(inv => inv.id !== invId))
+      router.refresh()
+    } catch (err: unknown) {
+      setRevokeError(err instanceof Error ? err.message : 'Something went wrong')
+    } finally {
+      setRevokingId(null)
+    }
+  }
+
+  function handleCopyInvite(code: string, id: string) {
+    const url = `${window.location.origin}/join?code=${code}`
+    navigator.clipboard.writeText(url).then(() => {
+      setCopiedInvId(id)
+      setTimeout(() => setCopiedInvId(null), 2000)
+    })
+  }
+
+  function formatDate(iso: string) {
+    return new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(iso))
   }
 
   async function handleGenerateInvite() {
@@ -354,72 +442,193 @@ export default function FlowAdminPanel({
         </div>
       </Section>
 
-      {/* ── Member assignment ── */}
-      <Section title="Audience">
+      {/* ── Members & Invites ── */}
+      <Section title="Members & invites">
+
+        {/* — Assign existing workspace members — */}
+        <p style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#9ab0c8', marginBottom: '0.5rem' }}>
+          Assign from workspace
+        </p>
         <FlowMemberPicker
           roundId={roundId}
           companyMembers={companyMembers}
           assignedUserIds={assignedUserIds}
         />
-      </Section>
 
-      {/* ── Invite link ── */}
-      <Section title="Invite link">
-        <p style={{ fontSize: '0.78rem', color: 'var(--ink-light)', lineHeight: 1.55, marginBottom: '0.75rem' }}>
-          Generate a reusable link. Anyone with it who is already in this workspace will be added to this IdeaFlow. New users will be asked to join the workspace first.
-        </p>
-
-        {!inviteCode ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <ActionBtn onClick={handleGenerateInvite} disabled={inviteLoading} variant="secondary">
-              {inviteLoading ? 'Generating…' : 'Generate invite link'}
-            </ActionBtn>
-            {inviteError && (
-              <p style={{ fontSize: '0.775rem', color: '#dc2626' }}>{inviteError}</p>
-            )}
+        {/* — Invite someone new by email — */}
+        <div style={{ borderTop: '1px solid rgba(0,0,0,0.06)', marginTop: '1.125rem', paddingTop: '1.125rem' }}>
+          <p style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#9ab0c8', marginBottom: '0.5rem' }}>
+            Invite new member by email
+          </p>
+          <p style={{ fontSize: '0.775rem', color: 'var(--ink-light)', lineHeight: 1.5, marginBottom: '0.75rem' }}>
+            Creates a workspace invite linked to this IdeaFlow. They'll be added directly to this flow when they join.
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '0.625rem' }}>
+            <input
+              className="input"
+              placeholder="Name"
+              value={inviteName}
+              onChange={e => setInviteName(e.target.value)}
+              disabled={emailInviteLoading}
+              onKeyDown={e => e.key === 'Enter' && handleEmailInvite()}
+            />
+            <input
+              className="input"
+              type="email"
+              placeholder="Email address"
+              value={inviteEmail}
+              onChange={e => setInviteEmail(e.target.value)}
+              disabled={emailInviteLoading}
+              onKeyDown={e => e.key === 'Enter' && handleEmailInvite()}
+            />
           </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: '0.5rem',
-              borderRadius: '0.5rem',
-              border: '1px solid var(--border-mid)',
-              background: '#fff',
-              padding: '0.375rem 0.5rem 0.375rem 0.75rem',
-            }}>
-              <span style={{
-                flex: 1, minWidth: 0,
-                fontSize: '0.775rem', color: 'var(--ink)', fontFamily: 'monospace',
-                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-              }}>
-                {typeof window !== 'undefined' ? `${window.location.origin}/flow-invite/${inviteCode}` : `/flow-invite/${inviteCode}`}
-              </span>
-              <button
-                type="button"
-                onClick={handleCopy}
-                style={{
-                  flexShrink: 0,
-                  height: '1.75rem', padding: '0 0.625rem',
-                  borderRadius: '0.375rem',
-                  border: copied ? '1px solid rgba(16,185,129,0.4)' : '1px solid var(--border-mid)',
-                  background: copied ? 'rgba(16,185,129,0.08)' : 'var(--tint)',
-                  fontSize: '0.72rem', fontWeight: 600,
-                  color: copied ? '#065f46' : 'var(--ink-light)',
-                  cursor: 'pointer',
-                  transition: 'all 0.15s',
-                }}
-              >
-                {copied ? '✓ Copied' : 'Copy'}
-              </button>
-            </div>
-            <ActionBtn onClick={handleGenerateInvite} disabled={inviteLoading} variant="ghost">
-              {inviteLoading ? 'Generating…' : '↻ New link'}
-            </ActionBtn>
-            {inviteError && (
-              <p style={{ fontSize: '0.775rem', color: '#dc2626' }}>{inviteError}</p>
+          <ActionBtn onClick={handleEmailInvite} disabled={emailInviteLoading} variant="secondary">
+            {emailInviteLoading ? 'Sending…' : 'Send invite'}
+          </ActionBtn>
+          {emailInviteError && (
+            <p style={{ fontSize: '0.775rem', color: '#dc2626', marginTop: '0.5rem' }}>{emailInviteError}</p>
+          )}
+          {emailInviteSuccess && (
+            <p style={{ fontSize: '0.775rem', color: '#059669', marginTop: '0.5rem' }}>✓ {emailInviteSuccess}</p>
+          )}
+        </div>
+
+        {/* — Pending invites for this flow — */}
+        {flowInvites.length > 0 && (
+          <div style={{ borderTop: '1px solid rgba(0,0,0,0.06)', marginTop: '1.125rem', paddingTop: '1.125rem' }}>
+            <p style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#9ab0c8', marginBottom: '0.625rem' }}>
+              Sent invites
+            </p>
+            {revokeError && (
+              <p style={{ fontSize: '0.775rem', color: '#dc2626', marginBottom: '0.5rem' }}>{revokeError}</p>
             )}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+              {flowInvites.map(inv => {
+                const isUsed    = !!inv.used_at
+                const isExpired = !isUsed && !!inv.expires_at && new Date(inv.expires_at) < new Date()
+                const statusLabel = isUsed ? 'Joined' : isExpired ? 'Expired' : 'Pending'
+                const statusColor = isUsed ? '#0e52a8' : isExpired ? '#dc2626' : '#059669'
+                const statusBg    = isUsed ? 'rgba(26,107,191,0.07)' : isExpired ? 'rgba(220,38,38,0.07)' : 'rgba(16,185,129,0.07)'
+                return (
+                  <div key={inv.id} style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem',
+                    padding: '0.5rem 0.625rem',
+                    borderRadius: '0.5rem',
+                    border: '1px solid var(--border)',
+                    background: isUsed ? 'transparent' : 'rgba(249,115,22,0.02)',
+                    opacity: isExpired ? 0.65 : 1,
+                  }}>
+                    <div style={{ minWidth: 0 }}>
+                      <p style={{ fontSize: '0.8rem', fontWeight: 600, color: '#0d1f35', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {inv.name || 'Unnamed'}
+                      </p>
+                      {inv.email && (
+                        <p style={{ fontSize: '0.7rem', color: '#9ab0c8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {inv.email}
+                        </p>
+                      )}
+                      {isUsed && inv.profiles?.full_name && (
+                        <p style={{ fontSize: '0.68rem', color: '#9ab0c8' }}>
+                          Joined as {inv.profiles.full_name}
+                        </p>
+                      )}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+                      <span style={{
+                        fontSize: '0.65rem', fontWeight: 700,
+                        padding: '0.18rem 0.5rem', borderRadius: '999px',
+                        background: statusBg, color: statusColor,
+                      }}>
+                        {statusLabel}
+                      </span>
+                      {!isUsed && !isExpired && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => handleCopyInvite(inv.invite_code, inv.id)}
+                            style={{ fontSize: '0.7rem', fontWeight: 500, color: copiedInvId === inv.id ? '#059669' : '#9ab0c8', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                          >
+                            {copiedInvId === inv.id ? '✓ Copied' : 'Copy'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleRevokeInvite(inv.id)}
+                            disabled={revokingId === inv.id}
+                            style={{ fontSize: '0.7rem', fontWeight: 500, color: '#dc2626', background: 'none', border: 'none', cursor: revokingId === inv.id ? 'default' : 'pointer', padding: 0, opacity: revokingId === inv.id ? 0.5 : 1 }}
+                          >
+                            {revokingId === inv.id ? '…' : 'Revoke'}
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
           </div>
         )}
+
+        {/* — Reusable share link (for existing workspace members) — */}
+        <div style={{ borderTop: '1px solid rgba(0,0,0,0.06)', marginTop: '1.125rem', paddingTop: '1.125rem' }}>
+          <p style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#9ab0c8', marginBottom: '0.5rem' }}>
+            Reusable join link
+          </p>
+          <p style={{ fontSize: '0.775rem', color: 'var(--ink-light)', lineHeight: 1.5, marginBottom: '0.75rem' }}>
+            Share this link with anyone already in the workspace to add them to this IdeaFlow instantly.
+          </p>
+          {!inviteCode ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <ActionBtn onClick={handleGenerateInvite} disabled={inviteLoading} variant="secondary">
+                {inviteLoading ? 'Generating…' : 'Generate link'}
+              </ActionBtn>
+              {inviteError && (
+                <p style={{ fontSize: '0.775rem', color: '#dc2626' }}>{inviteError}</p>
+              )}
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: '0.5rem',
+                borderRadius: '0.5rem',
+                border: '1px solid var(--border-mid)',
+                background: '#fff',
+                padding: '0.375rem 0.5rem 0.375rem 0.75rem',
+              }}>
+                <span style={{
+                  flex: 1, minWidth: 0,
+                  fontSize: '0.775rem', color: 'var(--ink)', fontFamily: 'monospace',
+                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                }}>
+                  {typeof window !== 'undefined' ? `${window.location.origin}/flow-invite/${inviteCode}` : `/flow-invite/${inviteCode}`}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleCopy}
+                  style={{
+                    flexShrink: 0,
+                    height: '1.75rem', padding: '0 0.625rem',
+                    borderRadius: '0.375rem',
+                    border: copied ? '1px solid rgba(16,185,129,0.4)' : '1px solid var(--border-mid)',
+                    background: copied ? 'rgba(16,185,129,0.08)' : 'var(--tint)',
+                    fontSize: '0.72rem', fontWeight: 600,
+                    color: copied ? '#065f46' : 'var(--ink-light)',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  {copied ? '✓ Copied' : 'Copy'}
+                </button>
+              </div>
+              <ActionBtn onClick={handleGenerateInvite} disabled={inviteLoading} variant="ghost">
+                {inviteLoading ? 'Generating…' : '↻ New link'}
+              </ActionBtn>
+              {inviteError && (
+                <p style={{ fontSize: '0.775rem', color: '#dc2626' }}>{inviteError}</p>
+              )}
+            </div>
+          )}
+        </div>
+
       </Section>
 
       {/* ── Delete ── */}

@@ -16,6 +16,7 @@ import PageContainer     from '@/components/PageContainer'
 import NewIdeaForm       from '@/components/NewIdeaForm'
 import IdeaList          from '@/components/IdeaList'
 import FlowAdminPanel    from '@/components/FlowAdminPanel'
+import type { FlowInvite } from '@/components/FlowAdminPanel'
 import { getEffectiveRoundStatus } from '@/lib/rounds/getEffectiveRoundStatus'
 import type { Database, Idea } from '@/types/database'
 import type { SlimProfile } from '@/types/database'
@@ -115,9 +116,10 @@ export default async function FlowDetailPage({
   // ── Admin data ───────────────────────────────────────────────────────────────
   let companyMembers: SlimProfile[] = []
   let assignedUserIds: string[]     = []
+  let flowInvites: FlowInvite[]     = []
 
   if (isAdmin) {
-    const [membersResult, assignedResult] = await Promise.all([
+    const [membersResult, assignedResult, invitesResult] = await Promise.all([
       (admin as any)
         .from('profiles')
         .select('id, full_name, role')
@@ -127,9 +129,16 @@ export default async function FlowDetailPage({
         .from('round_members')
         .select('user_id')
         .eq('round_id', roundId),
+      (admin as any)
+        .from('invites')
+        .select('id, name, email, invite_code, used_at, expires_at, created_at, profiles!invites_joined_user_id_fkey(full_name)')
+        .eq('company_id', profile.company_id)
+        .eq('idea_round_id', roundId)
+        .order('created_at', { ascending: false }),
     ])
     companyMembers  = membersResult.data  ?? []
     assignedUserIds = (assignedResult.data ?? []).map((r: { user_id: string }) => r.user_id)
+    flowInvites     = invitesResult.data  ?? []
   }
 
   // ── Status badge ─────────────────────────────────────────────────────────────
@@ -287,6 +296,7 @@ export default async function FlowDetailPage({
                 effectiveStatus={effectiveStatus}
                 companyMembers={companyMembers}
                 assignedUserIds={assignedUserIds}
+                flowInvites={flowInvites}
               />
             </div>
           )}

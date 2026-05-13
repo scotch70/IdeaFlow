@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { name, email } = await request.json()
+    const { name, email, idea_round_id } = await request.json()
 
     if (!name?.trim()) {
       return NextResponse.json({ error: 'Name is required' }, { status: 400 })
@@ -108,6 +108,23 @@ if (!canAddMembers({ plan: company.plan, memberCount: memberCount || 0 })) {
       return NextResponse.json({ error: 'Company not found' }, { status: 404 })
     }
 
+    // Validate idea_round_id belongs to this company (if provided)
+    let validatedRoundId: string | null = null
+    if (idea_round_id) {
+      const { createAdminClient } = await import('@/lib/supabase/admin')
+      const admin = createAdminClient()
+      const { data: round } = await (admin as any)
+        .from('idea_rounds')
+        .select('id, name')
+        .eq('id', idea_round_id)
+        .eq('company_id', profile.company_id)
+        .single()
+      if (!round) {
+        return NextResponse.json({ error: 'IdeaFlow not found' }, { status: 404 })
+      }
+      validatedRoundId = idea_round_id
+    }
+
     const inviteCode = generateInviteCode(company.name || 'COMPANY')
 
     const expiresAt = new Date(
@@ -117,13 +134,14 @@ if (!canAddMembers({ plan: company.plan, memberCount: memberCount || 0 })) {
     const { data: invite, error: inviteError } = await (supabase as any)
       .from('invites')
       .insert({
-        company_id: profile.company_id,
-        created_by: user.id,
-        invite_code: inviteCode,
-        role: 'member',
-        name: name.trim(),
-        email: email?.trim() || null,
-        expires_at: expiresAt,
+        company_id:    profile.company_id,
+        created_by:    user.id,
+        invite_code:   inviteCode,
+        role:          'member',
+        name:          name.trim(),
+        email:         email?.trim() || null,
+        expires_at:    expiresAt,
+        idea_round_id: validatedRoundId,
       })
       .select()
       .single()
@@ -145,23 +163,32 @@ if (!canAddMembers({ plan: company.plan, memberCount: memberCount || 0 })) {
     let emailWarning: string | null = null
 
     if (email?.trim()) {
+      const isFlowInvite = !!validatedRoundId
+      const emailSubject = isFlowInvite
+        ? `You've been invited to an IdeaFlow at ${company.name}`
+        : `You are invited to join ${company.name} on IdeaFlow`
+      const btnLabel = isFlowInvite ? 'Join IdeaFlow' : 'Join workspace'
+      const bodyLine = isFlowInvite
+        ? `You've been invited to share your ideas in an IdeaFlow at <strong>${company.name}</strong>.`
+        : `You have been invited to join your company workspace on IdeaFlow.`
+
       const { error: emailError } = await resend.emails.send({
         from: process.env.RESEND_FROM_EMAIL!,
         to: [email.trim()],
-        subject: `You are invited to join ${company.name} on IdeaFlow`,
+        subject: emailSubject,
         html: `
           <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-            <h2>You have been invited to join ${company.name}</h2>
+            <h2>${emailSubject}</h2>
             <p>Hello ${name.trim()},</p>
-            <p>You have been invited to join your company workspace on IdeaFlow.</p>
+            <p>${bodyLine}</p>
             <p>
-              <a href="${joinUrl}" style="display:inline-block;padding:10px 16px;background:#111827;color:#ffffff;text-decoration:none;border-radius:8px;">
-                Join workspace
+              <a href="${joinUrl}" style="display:inline-block;padding:10px 16px;background:#f97316;color:#ffffff;text-decoration:none;border-radius:8px;">
+                ${btnLabel}
               </a>
             </p>
             <p>If the button does not work, use this link:</p>
             <p>${joinUrl}</p>
-            <p>Your invite code expires on <strong>${new Intl.DateTimeFormat('en-GB', {
+            <p>Your invite link expires on <strong>${new Intl.DateTimeFormat('en-GB', {
               day: '2-digit',
               month: 'short',
               year: 'numeric',

@@ -234,12 +234,6 @@ export default function DashboardSidebar({
                 badge={pendingReviewCount}
               />
               <NavLink
-                href="/dashboard/invites"
-                icon={ICONS.invite}
-                label="Generate invite"
-                active={exact('/dashboard/invites') || under('/dashboard/invites')}
-              />
-              <NavLink
                 href="/dashboard/idea-flow"
                 icon={ICONS.setup}
                 label="Set up IdeaFlow"

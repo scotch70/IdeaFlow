@@ -391,10 +391,10 @@ export default async function DashboardPage({
                 </p>
                 {memberCount <= 1 && (
                   <a
-                    href="/dashboard/invites"
+                    href="/dashboard/flows"
                     style={{ fontSize: '0.8rem', color: 'var(--orange)', fontWeight: 600, textDecoration: 'none' }}
                   >
-                    Invite your team to start collecting ideas →
+                    Open an IdeaFlow to invite your team →
                   </a>
                 )}
               </div>
