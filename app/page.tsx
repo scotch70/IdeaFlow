@@ -221,14 +221,14 @@ export default async function HomePage() {
                   style={{
                     fontFamily: "'Instrument Serif', serif",
                     fontStyle: 'italic',
-                    fontSize: 'clamp(2.75rem, 5vw, 4rem)',
+                    fontSize: 'clamp(2.25rem, 4.5vw, 3.5rem)',
                     lineHeight: 1.05,
                     letterSpacing: '-0.025em',
                     color: P.ink,
                     marginBottom: '1.25rem',
                   }}
                 >
-                  Better ideas,<br />together.
+                  Stop sending surveys.<br />Start collecting ideas with IdeaFlow.
                 </h1>
 
                 <p
@@ -241,7 +241,7 @@ export default async function HomePage() {
                     maxWidth: '26rem',
                   }}
                 >
-                  Collect ideas, let the team vote, and see what matters most.
+                  Collect ideas, let your team vote, and see what matters most.
                 </p>
 
                 <div
