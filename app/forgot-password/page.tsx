@@ -5,8 +5,6 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import LogoMark from '@/components/LogoMark'
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://useideaflow.com'
-
 export default function ForgotPasswordPage() {
   const supabase = createClient()
 
@@ -20,8 +18,19 @@ export default function ForgotPasswordPage() {
     setError('')
     setLoading(true)
     try {
+      // Route through /auth/callback so the PKCE code is exchanged
+      // server-side (via the Route Handler) before the browser lands on
+      // /reset-password.  This ensures:
+      //   1. The recovery session is stored in cookies server-side — no
+      //      race between client-side cookie-setting and the middleware.
+      //   2. /reset-password receives a clean URL (no ?code=) and simply
+      //      reads the already-established session to show the reset form.
+      //   3. Logged-in users can still reset their password because
+      //      /auth/callback is now excluded from the middleware's
+      //      "authenticated → redirect to /dashboard" rule.
+      const redirectTo = `${window.location.origin}/auth/callback?next=/reset-password`
       const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: `${APP_URL}/reset-password`,
+        redirectTo,
       })
       if (error) throw error
       setSent(true)

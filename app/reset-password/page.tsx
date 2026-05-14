@@ -19,18 +19,23 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    // Supabase sends reset links in two formats:
+    // Three paths depending on how the user arrived here:
     //
-    //   PKCE (modern default):  /reset-password?code=XXXX
-    //     → session doesn't exist yet; must call exchangeCodeForSession(code)
-    //     → IMPORTANT: register onAuthStateChange BEFORE the exchange so we
-    //       can distinguish PASSWORD_RECOVERY (real reset) from SIGNED_IN
-    //       (signup confirmation that accidentally landed here).
+    //   PATH A — via /auth/callback (normal flow after forgot-password):
+    //     URL has no ?code= and no hash.
+    //     The Route Handler already exchanged the PKCE code server-side and
+    //     stored the recovery session in cookies.  Just read the session.
     //
-    //   Implicit (legacy):      /reset-password#access_token=...&type=recovery
-    //     → Supabase JS processes the hash automatically; listen for PASSWORD_RECOVERY
+    //   PATH B — direct PKCE link (legacy / Supabase dashboard fallback):
+    //     URL has ?code=XXXX.
+    //     Must exchange the code client-side.  Show the form on any
+    //     successful exchange — PASSWORD_RECOVERY vs SIGNED_IN distinction
+    //     is unreliable across Supabase versions; don't act on SIGNED_IN.
     //
-    // getSession() alone fails for PKCE links — no session exists before the exchange.
+    //   PATH C — legacy implicit flow:
+    //     URL hash contains #access_token=...&type=recovery.
+    //     Supabase JS processes the hash automatically; listen for the
+    //     PASSWORD_RECOVERY auth event.
 
     let resolved = false
     function resolve(next: 'ready' | 'invalid') {
@@ -40,58 +45,40 @@ export default function ResetPasswordPage() {
     }
 
     const searchCode = new URLSearchParams(window.location.search).get('code')
-    const hashType = new URLSearchParams(
-      window.location.hash.replace(/^#/, '')
-    ).get('type')
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''))
+    const hashType   = hashParams.get('type')
 
-    // ── PKCE: set up the listener first, then exchange the code ───────────
-    // This order matters: exchangeCodeForSession fires an auth event
-    // (PASSWORD_RECOVERY for reset codes, SIGNED_IN for signup/magic-link
-    // codes). The listener must already exist when the event fires.
-    if (searchCode) {
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-        if (event === 'PASSWORD_RECOVERY') {
-          // Correct — this is a genuine password reset code
-          resolve('ready')
-        } else if (event === 'SIGNED_IN') {
-          // A non-recovery PKCE code (signup confirmation or magic link)
-          // landed here by mistake — most likely because Supabase's Site URL
-          // in the dashboard was pointing to /reset-password.
-          // The user is now signed in; send them to the dashboard instead
-          // of showing the reset form.
-          if (!resolved) {
-            resolved = true
-            router.replace('/dashboard')
-          }
-        }
-      })
-
+    // ── PATH A: no code, no hash — session already in cookies ─────────────
+    if (!searchCode && hashType !== 'recovery') {
       supabase.auth
-        .exchangeCodeForSession(searchCode)
-        .then(({ error }) => {
-          if (error) resolve('invalid')
-          // On success the onAuthStateChange handler above fires and resolves.
-        })
+        .getSession()
+        .then(({ data: { session } }) => resolve(session ? 'ready' : 'invalid'))
         .catch(() => resolve('invalid'))
-
-      return () => subscription.unsubscribe()
+      return
     }
 
-    // ── Legacy implicit: wait for the PASSWORD_RECOVERY event ─────────────
+    // ── PATH B: PKCE code in URL ───────────────────────────────────────────
+    if (searchCode) {
+      supabase.auth
+        .exchangeCodeForSession(searchCode)
+        .then(({ error }) => resolve(error ? 'invalid' : 'ready'))
+        .catch(() => resolve('invalid'))
+      return
+    }
+
+    // ── PATH C: legacy implicit hash flow ─────────────────────────────────
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') {
         resolve('ready')
       } else if (event === 'INITIAL_SESSION') {
-        // PASSWORD_RECOVERY fires immediately after INITIAL_SESSION when the
-        // hash contains a valid token. Only give up if the hash has no token.
-        if (hashType !== 'recovery') {
-          resolve('invalid')
-        }
+        // PASSWORD_RECOVERY fires right after INITIAL_SESSION when the hash
+        // holds a valid recovery token.  Only give up if no token is present.
+        if (hashType !== 'recovery') resolve('invalid')
       }
     })
 
     return () => subscription.unsubscribe()
-  }, [supabase, router])
+  }, [supabase])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
