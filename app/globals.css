@@ -9,26 +9,33 @@
   --font-body:    'DM Sans', sans-serif;
 
   /* ── Ink scale — warm charcoal/slate, not sterile pure-black ─────────── */
-  --ink:          #1c1f2e;   /* dark warm navy-charcoal — has personality    */
-  --ink-mid:      #424868;   /* medium warm slate                            */
-  --ink-light:    #6b7799;   /* muted slate-grey                             */
-  --ink-faint:    #a0a9c0;   /* light slate                                  */
+  --ink:          #1f2330;   /* warm charcoal                                */
+  --ink-mid:      #5d667a;   /* muted warm slate                             */
+  --ink-light:    #8b96a8;   /* soft warm slate                              */
+  --ink-faint:    #b8c0ce;   /* light warm slate                             */
 
   /* ── Page surfaces ────────────────────────────────────────────────────── */
-  --page-bg:      #f8f7f5;   /* warm off-white                               */
+  --page-bg:      #fbfaf7;   /* warm ivory                                   */
   --surface:      #ffffff;
-  --bg-raised:    #f0efed;   /* warm light grey                              */
-  --surface-tint: #edf0f8;   /* subtle blue-slate wash (auth, accents)       */
+  --bg-raised:    #f0ede8;   /* warm raised surface                          */
+  --surface-tint: #f3f0ea;   /* warm ivory tint (auth, accents)              */
 
   /* ── Borders ──────────────────────────────────────────────────────────── */
   --border:       rgba(0, 0, 0, 0.07);
   --border-mid:   rgba(0, 0, 0, 0.12);
+  --border-warm:  #e7e2d8;   /* soft warm border                             */
 
   /* ── Orange — dashboard engagement only (likes, votes) ───────────────── */
   --orange:       #f97316;
   --orange-hover: #ea6b0a;
   --orange-glow:  rgba(249, 115, 22, 0.28);
   --accent:       #f97316;
+
+  /* ── Warm accent — terracotta/amber, used very sparingly ─────────────── */
+  --warm-accent:       #c98b5f;
+  --warm-accent-hover: #b57a4e;
+  --warm-accent-pale:  rgba(201, 139, 95, 0.07);
+  --warm-accent-tint:  rgba(201, 139, 95, 0.12);
 
   /* ── Marketing accent — muted steel blue, used sparingly ─────────────── */
   --mkt-accent:       #3d5fa6;
@@ -290,4 +297,13 @@ textarea.input:focus-visible { outline: none; }
 /* ── Feature grid cell hover ─────────────────────────────────────────────── */
 .feature-cell:hover {
   background: #f7f6f8 !important;
+}
+
+/* ── Vote float animation — hero illustration ───────────────────────────── */
+@keyframes floatUpVote {
+  0%   { opacity: 1; transform: translateX(-50%) translateY(0); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-18px); }
+}
+.float-up-vote {
+  animation: floatUpVote 0.9s ease forwards;
 }

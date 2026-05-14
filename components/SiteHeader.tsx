@@ -22,8 +22,8 @@ export default async function SiteHeader() {
     <header
       className="sticky top-0 z-50"
       style={{
-        background: 'rgba(255,255,255,0.95)',
-        borderBottom: '1px solid rgba(0,0,0,0.07)',
+        background: 'rgba(251,250,247,0.95)',
+        borderBottom: '1px solid #e7e2d8',
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)',
       }}
@@ -60,7 +60,7 @@ export default async function SiteHeader() {
                 style={{
                   fontSize: '0.875rem',
                   fontWeight: 500,
-                  color: '#6b7799',
+                  color: '#8b96a8',
                   textDecoration: 'none',
                   padding: '0.375rem 0.75rem',
                   borderRadius: '0.4rem',
@@ -82,7 +82,7 @@ export default async function SiteHeader() {
                   borderRadius: '0.4rem',
                   fontSize: '0.8rem',
                   fontWeight: 600,
-                  background: '#1c1f2e',
+                  background: '#1f2330',
                   color: '#ffffff',
                   textDecoration: 'none',
                   letterSpacing: '-0.01em',

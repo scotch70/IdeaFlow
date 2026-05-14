@@ -24,7 +24,7 @@ export default function MobileNav({ isLoggedIn, email }: MobileNavProps) {
     borderRadius: '0.625rem',
     fontSize: '0.9rem',
     fontWeight: 500,
-    color: '#424868',
+    color: '#5d667a',
     textDecoration: 'none',
     transition: 'background 0.15s',
   }
@@ -62,9 +62,9 @@ export default function MobileNav({ isLoggedIn, email }: MobileNavProps) {
             top: '100%',
             left: 0,
             right: 0,
-            background: 'rgba(255,255,255,0.98)',
+            background: 'rgba(251,250,247,0.98)',
             backdropFilter: 'blur(20px)',
-            borderBottom: '1px solid rgba(0,0,0,0.07)',
+            borderBottom: '1px solid #e7e2d8',
             padding: '0.75rem 1.25rem 1.25rem',
             zIndex: 50,
           }}

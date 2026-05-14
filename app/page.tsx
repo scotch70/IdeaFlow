@@ -4,39 +4,51 @@ import PageContainer from '@/components/PageContainer'
 import SiteHeader from '@/components/SiteHeader'
 import UpgradeButton from '@/components/UpgradeButton'
 import { IdeaFlowMark } from '@/components/Logo'
+import HeroAnimation from '@/components/HeroAnimation'
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Product mockups — neutral palette, no orange
+// Palette constants (warm ivory system)
 // ─────────────────────────────────────────────────────────────────────────────
+const P = {
+  bg:      '#fbfaf7',
+  raised:  '#f0ede8',
+  surface: '#ffffff',
+  ink:     '#1f2330',
+  slate:   '#5d667a',
+  faint:   '#b8c0ce',
+  border:  '#e7e2d8',
+  accent:  '#c98b5f',
+  dark:    '#13162a',
+}
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Shared mockup chrome wrapper
+// ─────────────────────────────────────────────────────────────────────────────
 function MockupShell({ children, url = 'app.useideaflow.com' }: { children: React.ReactNode; url?: string }) {
   return (
     <div style={{
       borderRadius: '10px',
       overflow: 'hidden',
-      background: '#ffffff',
-      boxShadow: '0 0 0 1px rgba(0,0,0,0.08), 0 8px 32px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.04)',
+      background: P.surface,
+      boxShadow: `0 0 0 1px rgba(0,0,0,0.07), 0 8px 32px rgba(31,35,48,0.09), 0 2px 6px rgba(31,35,48,0.04)`,
     }}>
-      {/* Browser chrome */}
       <div style={{
-        background: '#f4f4f2',
-        borderBottom: '1px solid rgba(0,0,0,0.07)',
+        background: P.raised,
+        borderBottom: `1px solid ${P.border}`,
         padding: '0.5rem 0.75rem',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.5rem',
+        display: 'flex', alignItems: 'center', gap: '0.5rem',
       }}>
         <div style={{ display: 'flex', gap: '0.3rem', flexShrink: 0 }}>
-          {(['#e0e0e0','#d4d4d4','#c8c8c8'] as const).map((c, i) => (
+          {['#dbd7d2', '#d0ccc7', '#c5c1bc'].map((c, i) => (
             <div key={i} style={{ width: '0.4rem', height: '0.4rem', borderRadius: '50%', background: c }} />
           ))}
         </div>
         <div style={{
           flex: 1, height: '1.1rem', borderRadius: '4px',
-          background: '#fff', border: '1px solid rgba(0,0,0,0.08)',
+          background: P.surface, border: `1px solid ${P.border}`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
-          <span style={{ fontSize: '0.52rem', color: '#9a9a9a', letterSpacing: '0.01em' }}>{url}</span>
+          <span style={{ fontSize: '0.52rem', color: P.faint, letterSpacing: '0.01em' }}>{url}</span>
         </div>
         <div style={{ width: '2rem' }} />
       </div>
@@ -45,26 +57,29 @@ function MockupShell({ children, url = 'app.useideaflow.com' }: { children: Reac
   )
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Idea feed mockup — used in product showcase
+// ─────────────────────────────────────────────────────────────────────────────
 function IdeaFeedMockup() {
   const ideas = [
-    { title: 'Replace weekly all-hands with async video updates', likes: 23, status: 'Planned', statusColor: '#16a34a', statusBg: 'rgba(22,163,74,0.07)' },
-    { title: 'Flexible start times — 8 to 10am window', likes: 17, status: 'Open', statusColor: '#6b6b6b', statusBg: 'rgba(0,0,0,0.05)' },
-    { title: 'Dedicated learning time — 2 hours per week', likes: 11, status: 'Open', statusColor: '#6b6b6b', statusBg: 'rgba(0,0,0,0.05)' },
-    { title: 'Better onboarding docs for new hires', likes: 8, status: 'Open', statusColor: '#6b6b6b', statusBg: 'rgba(0,0,0,0.05)' },
+    { title: 'Replace weekly all-hands with async updates', likes: 23, status: 'Planned', sColor: '#16a34a', sBg: 'rgba(22,163,74,0.07)' },
+    { title: 'Flexible start times — 8 to 10 am window',   likes: 17, status: 'Open',    sColor: P.faint,   sBg: 'transparent' },
+    { title: 'Dedicated learning time — 2 hrs per week',   likes: 11, status: 'Open',    sColor: P.faint,   sBg: 'transparent' },
+    { title: 'Better onboarding docs for new hires',       likes:  8, status: 'Open',    sColor: P.faint,   sBg: 'transparent' },
   ]
   return (
     <MockupShell url="app.useideaflow.com/flows/q1-retro">
-      <div style={{ background: '#f9f9f8', padding: '0.875rem 1rem' }}>
+      <div style={{ background: P.bg, padding: '0.875rem 1rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
           <div>
-            <p style={{ fontSize: '0.75rem', fontWeight: 700, color: '#111' }}>Q1 Retrospective</p>
-            <p style={{ fontSize: '0.6rem', color: '#9a9a9a' }}>Sorted by team votes</p>
+            <p style={{ fontSize: '0.75rem', fontWeight: 700, color: P.ink }}>Q1 Retrospective</p>
+            <p style={{ fontSize: '0.6rem', color: P.faint }}>Sorted by team votes</p>
           </div>
           <span style={{
             display: 'inline-flex', alignItems: 'center', gap: '0.22rem',
-            fontSize: '0.58rem', fontWeight: 700,
-            color: '#15803d', background: 'rgba(22,163,74,0.08)',
-            border: '1px solid rgba(22,163,74,0.16)', borderRadius: '999px', padding: '0.18rem 0.5rem',
+            fontSize: '0.58rem', fontWeight: 700, color: '#16a34a',
+            background: 'rgba(22,163,74,0.08)', border: '1px solid rgba(22,163,74,0.16)',
+            borderRadius: '999px', padding: '0.18rem 0.5rem',
           }}>
             <span style={{ width: '4px', height: '4px', borderRadius: '50%', background: '#16a34a', display: 'inline-block' }} />
             Active
@@ -75,32 +90,30 @@ function IdeaFeedMockup() {
             <div key={i} style={{
               display: 'flex', alignItems: 'flex-start', gap: '0.625rem',
               padding: '0.625rem 0.75rem', borderRadius: '7px',
-              background: i === 0 ? '#ffffff' : '#ffffff',
-              border: `1px solid ${i === 0 ? 'rgba(0,0,0,0.10)' : 'rgba(0,0,0,0.06)'}`,
-              boxShadow: i === 0 ? '0 1px 4px rgba(0,0,0,0.05)' : 'none',
+              background: i === 0 ? 'rgba(201,139,95,0.05)' : P.surface,
+              border: `1px solid ${i === 0 ? 'rgba(201,139,95,0.20)' : P.border}`,
             }}>
-              {/* Vote button */}
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.1rem', minWidth: '1.5rem', paddingTop: '0.05rem' }}>
                 <div style={{
                   width: '1.4rem', height: '1.4rem', borderRadius: '5px',
-                  background: i === 0 ? '#111' : '#f4f4f2',
-                  border: `1px solid ${i === 0 ? 'transparent' : 'rgba(0,0,0,0.08)'}`,
+                  background: i === 0 ? P.ink : P.raised,
+                  border: `1px solid ${i === 0 ? 'transparent' : P.border}`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>
-                  <svg width="9" height="9" viewBox="0 0 24 24" fill={i === 0 ? '#fff' : 'none'} stroke={i === 0 ? '#fff' : '#9a9a9a'} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                  <svg width="8" height="6" viewBox="0 0 8 6" fill="none">
+                    <path d="M4 0.5L7.5 5.5H0.5L4 0.5Z" fill={i === 0 ? '#fff' : P.faint} />
                   </svg>
                 </div>
-                <span style={{ fontSize: '0.57rem', fontWeight: 700, color: i === 0 ? '#111' : '#9a9a9a', fontVariantNumeric: 'tabular-nums' }}>{idea.likes}</span>
+                <span style={{ fontSize: '0.57rem', fontWeight: 700, color: i === 0 ? P.ink : P.faint }}>{idea.likes}</span>
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ fontSize: '0.7rem', fontWeight: 600, color: '#111', lineHeight: 1.4, marginBottom: '0.2rem' }}>{idea.title}</p>
-                <span style={{ fontSize: '0.56rem', fontWeight: 600, color: idea.statusColor, background: idea.statusBg, borderRadius: '999px', padding: '0.1rem 0.45rem' }}>{idea.status}</span>
+                <p style={{ fontSize: '0.7rem', fontWeight: 600, color: P.ink, lineHeight: 1.4, marginBottom: '0.2rem' }}>{idea.title}</p>
+                <span style={{ fontSize: '0.56rem', fontWeight: 600, color: idea.sColor, background: idea.sBg, borderRadius: '999px', padding: idea.sBg !== 'transparent' ? '0.1rem 0.4rem' : '0' }}>{idea.status}</span>
               </div>
             </div>
           ))}
         </div>
-        <p style={{ fontSize: '0.58rem', color: '#b0b0b0', marginTop: '0.625rem', paddingTop: '0.5rem', borderTop: '1px solid rgba(0,0,0,0.06)' }}>
+        <p style={{ fontSize: '0.58rem', color: P.faint, marginTop: '0.625rem', paddingTop: '0.5rem', borderTop: `1px solid ${P.border}` }}>
           4 ideas · 18 team members voted
         </p>
       </div>
@@ -108,91 +121,45 @@ function IdeaFeedMockup() {
   )
 }
 
-function ReviewQueueMockup() {
-  const items = [
-    { title: 'Monthly team lunch budget — self-organised by team', author: 'Priya N.', likes: 14, days: '3 days ago' },
-    { title: 'Remote work policy update — flexibility for travel weeks', author: 'James R.', likes: 9, days: '5 days ago' },
-    { title: 'Quarterly skip-level 1:1s with senior leadership', author: 'Alex T.', likes: 7, days: '6 days ago' },
-  ]
-  return (
-    <MockupShell url="app.useideaflow.com/dashboard/review">
-      <div style={{ background: '#f9f9f8', padding: '0.875rem 1rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-          <div>
-            <p style={{ fontSize: '0.75rem', fontWeight: 700, color: '#111' }}>Needs attention</p>
-            <p style={{ fontSize: '0.6rem', color: '#9a9a9a' }}>Ideas waiting on a manager response</p>
-          </div>
-          <span style={{
-            fontSize: '0.6rem', fontWeight: 700, color: '#3d3d3d',
-            background: 'rgba(0,0,0,0.06)', border: '1px solid rgba(0,0,0,0.09)',
-            borderRadius: '999px', padding: '0.2rem 0.5rem',
-          }}>
-            {items.length} pending
-          </span>
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-          {items.map((item, i) => (
-            <div key={i} style={{ background: '#fff', border: '1px solid rgba(0,0,0,0.07)', borderRadius: '7px', padding: '0.625rem 0.75rem' }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.5rem' }}>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontSize: '0.7rem', fontWeight: 600, color: '#111', lineHeight: 1.4, marginBottom: '0.2rem' }}>{item.title}</p>
-                  <p style={{ fontSize: '0.58rem', color: '#9a9a9a' }}>{item.author} · {item.likes} likes · {item.days}</p>
-                </div>
-                <div style={{ display: 'flex', gap: '0.3rem', flexShrink: 0, marginTop: '0.1rem' }}>
-                  <span style={{ fontSize: '0.56rem', fontWeight: 600, color: '#15803d', background: 'rgba(22,163,74,0.08)', border: '1px solid rgba(22,163,74,0.18)', borderRadius: '4px', padding: '0.15rem 0.4rem', cursor: 'default' }}>Plan it</span>
-                  <span style={{ fontSize: '0.56rem', fontWeight: 600, color: '#9a9a9a', background: '#f4f4f2', border: '1px solid rgba(0,0,0,0.07)', borderRadius: '4px', padding: '0.15rem 0.4rem', cursor: 'default' }}>Dismiss</span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-        <p style={{ fontSize: '0.58rem', color: '#b0b0b0', marginTop: '0.625rem', paddingTop: '0.5rem', borderTop: '1px solid rgba(0,0,0,0.06)' }}>
-          Ideas marked &lsquo;Planned&rsquo; notify the author automatically.
-        </p>
-      </div>
-    </MockupShell>
-  )
-}
-
+// ─────────────────────────────────────────────────────────────────────────────
+// Flow selector mockup — used in product showcase
+// ─────────────────────────────────────────────────────────────────────────────
 function FlowSelectorMockup() {
   const flows = [
-    { name: 'Q1 Retrospective', status: 'Active', ideas: 12, members: 'All members' },
-    { name: 'Engineering Process', status: 'Active', ideas: 5, members: '4 members' },
-    { name: 'Team Culture', status: 'Draft', ideas: 0, members: 'All members' },
+    { name: 'Q1 Retrospective',   status: 'Active', ideas: 12, scope: 'All members' },
+    { name: 'Engineering Process', status: 'Active', ideas:  5, scope: '4 members'   },
+    { name: 'Team Culture',        status: 'Draft',  ideas:  0, scope: 'All members' },
   ]
   return (
     <MockupShell url="app.useideaflow.com/dashboard/flows">
-      <div style={{ background: '#f9f9f8', padding: '0.875rem 1rem' }}>
+      <div style={{ background: P.bg, padding: '0.875rem 1rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.875rem' }}>
           <div>
-            <p style={{ fontSize: '0.75rem', fontWeight: 700, color: '#111' }}>IdeaFlows</p>
-            <p style={{ fontSize: '0.6rem', color: '#9a9a9a' }}>Your active collection rounds</p>
+            <p style={{ fontSize: '0.75rem', fontWeight: 700, color: P.ink }}>IdeaFlows</p>
+            <p style={{ fontSize: '0.6rem', color: P.faint }}>Your active collection rounds</p>
           </div>
-          <span style={{ fontSize: '0.58rem', fontWeight: 600, color: '#3d3d3d', background: '#fff', border: '1px solid rgba(0,0,0,0.10)', borderRadius: '5px', padding: '0.2rem 0.5rem', cursor: 'default' }}>+ New flow</span>
+          <span style={{ fontSize: '0.58rem', fontWeight: 600, color: P.ink, background: P.surface, border: `1px solid ${P.border}`, borderRadius: '5px', padding: '0.2rem 0.5rem', cursor: 'default' }}>+ New flow</span>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
           {flows.map((flow, i) => {
             const isActive = flow.status === 'Active'
             return (
               <div key={i} style={{
-                background: '#fff', border: '1px solid rgba(0,0,0,0.07)', borderRadius: '7px',
-                padding: '0.625rem 0.75rem', display: 'flex', alignItems: 'center',
-                justifyContent: 'space-between', gap: '0.75rem',
+                background: P.surface, border: `1px solid ${P.border}`, borderRadius: '7px',
+                padding: '0.625rem 0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem',
               }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontSize: '0.72rem', fontWeight: 700, color: '#111', marginBottom: '0.15rem' }}>{flow.name}</p>
-                  <p style={{ fontSize: '0.58rem', color: '#9a9a9a' }}>{flow.ideas} ideas · {flow.members}</p>
+                  <p style={{ fontSize: '0.72rem', fontWeight: 700, color: P.ink, marginBottom: '0.15rem' }}>{flow.name}</p>
+                  <p style={{ fontSize: '0.58rem', color: P.faint }}>{flow.ideas} ideas · {flow.scope}</p>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
                   <span style={{
                     fontSize: '0.56rem', fontWeight: 600,
-                    color: isActive ? '#15803d' : '#9a9a9a',
+                    color: isActive ? '#15803d' : P.faint,
                     background: isActive ? 'rgba(22,163,74,0.07)' : 'rgba(0,0,0,0.05)',
                     borderRadius: '999px', padding: '0.15rem 0.45rem',
                   }}>{flow.status}</span>
-                  {isActive && (
-                    <span style={{ fontSize: '0.58rem', fontWeight: 600, color: '#3d3d3d', cursor: 'default' }}>Open →</span>
-                  )}
+                  {isActive && <span style={{ fontSize: '0.58rem', fontWeight: 600, color: P.ink, cursor: 'default' }}>Open →</span>}
                 </div>
               </div>
             )
@@ -229,15 +196,15 @@ export default async function HomePage() {
   return (
     <>
       <SiteHeader />
-      <main style={{ fontFamily: "'DM Sans', sans-serif", background: '#ffffff' }}>
+      <main style={{ fontFamily: "'DM Sans', sans-serif", background: P.bg }}>
 
         {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-            HERO — clean, light, confident
+            HERO
         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
         <section style={{
-          background: '#ffffff',
-          padding: 'clamp(5rem, 10vw, 8rem) 0 clamp(4rem, 8vw, 6rem)',
-          borderBottom: '1px solid rgba(0,0,0,0.06)',
+          background: P.bg,
+          padding: 'clamp(4.5rem, 9vw, 7.5rem) 0 clamp(4rem, 8vw, 6rem)',
+          borderBottom: `1px solid ${P.border}`,
         }}>
           <div className="mx-auto max-w-7xl px-6 lg:px-10">
             <div style={{
@@ -248,20 +215,20 @@ export default async function HomePage() {
             }}>
 
               {/* Copy */}
-              <div style={{ maxWidth: '36rem' }}>
+              <div style={{ maxWidth: '34rem' }}>
                 <h1
                   className="fade-up"
                   style={{
                     fontFamily: "'Instrument Serif', serif",
                     fontStyle: 'italic',
-                    fontSize: 'clamp(2.75rem, 5vw, 4.25rem)',
-                    lineHeight: 1.06,
+                    fontSize: 'clamp(2.75rem, 5vw, 4rem)',
+                    lineHeight: 1.05,
                     letterSpacing: '-0.025em',
-                    color: '#1c1f2e',
-                    marginBottom: '1.5rem',
+                    color: P.ink,
+                    marginBottom: '1.25rem',
                   }}
                 >
-                  Your team has better ideas than you&apos;re currently hearing.
+                  Better ideas,<br />together.
                 </h1>
 
                 <p
@@ -269,12 +236,12 @@ export default async function HomePage() {
                   style={{
                     fontSize: '1.0625rem',
                     lineHeight: 1.75,
-                    color: '#6b7799',
-                    marginBottom: '2.5rem',
-                    maxWidth: '28rem',
+                    color: P.slate,
+                    marginBottom: '2.25rem',
+                    maxWidth: '26rem',
                   }}
                 >
-                  IdeaFlow gives every team member a structured place to share ideas and vote on priorities — so the best thinking rises to the top.
+                  Collect ideas, let the team vote, and see what matters most.
                 </p>
 
                 <div
@@ -290,7 +257,7 @@ export default async function HomePage() {
                           height: '2.625rem', padding: '0 1.375rem',
                           borderRadius: '0.5rem',
                           fontSize: '0.9rem', fontWeight: 600,
-                          background: '#1c1f2e', color: '#ffffff',
+                          background: P.ink, color: '#ffffff',
                           textDecoration: 'none',
                           letterSpacing: '-0.01em',
                           transition: 'background 0.15s',
@@ -301,10 +268,8 @@ export default async function HomePage() {
                       <Link
                         href="/auth?mode=login"
                         style={{
-                          fontSize: '0.875rem',
-                          fontWeight: 500,
-                          color: '#6b7799',
-                          textDecoration: 'none',
+                          fontSize: '0.875rem', fontWeight: 500,
+                          color: P.slate, textDecoration: 'none',
                           padding: '0 0.25rem',
                         }}
                       >
@@ -319,7 +284,7 @@ export default async function HomePage() {
                         height: '2.625rem', padding: '0 1.375rem',
                         borderRadius: '0.5rem',
                         fontSize: '0.9rem', fontWeight: 600,
-                        background: '#1c1f2e', color: '#ffffff',
+                        background: P.ink, color: '#ffffff',
                         textDecoration: 'none',
                         letterSpacing: '-0.01em',
                       }}
@@ -328,24 +293,11 @@ export default async function HomePage() {
                     </Link>
                   )}
                 </div>
-
-                {/* Micro-trust */}
-                <p
-                  className="fade-up fade-up-3"
-                  style={{
-                    marginTop: '1.75rem',
-                    fontSize: '0.8rem',
-                    color: '#b0b0b0',
-                    letterSpacing: '0.01em',
-                  }}
-                >
-                  Free to start · No credit card · 10 min setup
-                </p>
               </div>
 
-              {/* Product visual */}
+              {/* Animated product visual */}
               <div className="fade-up fade-up-2">
-                <IdeaFeedMockup />
+                <HeroAnimation />
               </div>
 
             </div>
@@ -354,24 +306,55 @@ export default async function HomePage() {
 
 
         {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-            PRODUCT SHOWCASE — feature 1: idea feed
+            TRUST ROW
         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-        <section style={{ background: '#f9f9f8', padding: 'clamp(5rem,9vw,7rem) 0', borderTop: '1px solid rgba(0,0,0,0.06)' }}>
+        <section style={{
+          background: P.raised,
+          borderBottom: `1px solid ${P.border}`,
+          padding: '1.25rem 0',
+        }}>
+          <div className="mx-auto max-w-7xl px-6 lg:px-10">
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexWrap: 'wrap', gap: '0.5rem 2.5rem',
+            }}>
+              {[
+                { icon: '🔒', label: 'Private workspace' },
+                { icon: '🗳️', label: 'Team voting'       },
+                { icon: '⚡', label: 'Set up in minutes' },
+              ].map(({ icon, label }) => (
+                <div key={label} style={{
+                  display: 'flex', alignItems: 'center', gap: '0.5rem',
+                  fontSize: '0.8125rem', fontWeight: 500, color: P.slate,
+                }}>
+                  <span style={{ fontSize: '0.875rem' }}>{icon}</span>
+                  {label}
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+
+        {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            PRODUCT SHOWCASE — feature 1
+        ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+        <section style={{ background: P.bg, padding: 'clamp(4.5rem,9vw,7rem) 0', borderTop: `1px solid ${P.border}` }}>
           <PageContainer>
 
-            <div style={{ maxWidth: '28rem', marginBottom: '3.5rem' }}>
-              <p style={{ fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#9a9a9a', marginBottom: '0.75rem' }}>
-                The product
+            <div style={{ maxWidth: '24rem', marginBottom: '3rem' }}>
+              <p style={{ fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: P.faint, marginBottom: '0.75rem' }}>
+                How it works
               </p>
               <h2 style={{
                 fontFamily: "'Instrument Serif', serif",
                 fontStyle: 'italic',
-                fontSize: 'clamp(1.75rem, 3vw, 2.5rem)',
+                fontSize: 'clamp(1.75rem, 3vw, 2.375rem)',
                 letterSpacing: '-0.02em',
-                color: '#1c1f2e',
+                color: P.ink,
                 lineHeight: 1.15,
               }}>
-                Structured input. Clear priorities. Less noise.
+                The best ideas rise — no politics, just votes.
               </h2>
             </div>
 
@@ -379,35 +362,30 @@ export default async function HomePage() {
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-              gap: '4rem',
-              alignItems: 'center',
-              marginBottom: '5rem',
+              gap: '4rem', alignItems: 'center', marginBottom: '5rem',
             }}>
-              <div style={{ maxWidth: '26rem' }}>
-                <p style={{ fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.10em', textTransform: 'uppercase', color: '#b0b0b0', marginBottom: '0.75rem' }}>
+              <div style={{ maxWidth: '24rem' }}>
+                <p style={{ fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.10em', textTransform: 'uppercase', color: P.faint, marginBottom: '0.75rem' }}>
                   Idea feed
                 </p>
                 <h3 style={{
-                  fontSize: 'clamp(1.25rem, 2.5vw, 1.625rem)',
-                  fontWeight: 700,
-                  color: '#1c1f2e',
-                  letterSpacing: '-0.02em',
-                  lineHeight: 1.25,
-                  marginBottom: '0.875rem',
+                  fontSize: 'clamp(1.2rem, 2.5vw, 1.5rem)',
+                  fontWeight: 700, color: P.ink,
+                  letterSpacing: '-0.02em', lineHeight: 1.25, marginBottom: '0.75rem',
                 }}>
-                  The most-supported ideas rise to the top — automatically
+                  Ranked by real votes, in real time
                 </h3>
-                <p style={{ fontSize: '0.9375rem', lineHeight: 1.8, color: '#6b7799', marginBottom: '1.5rem' }}>
-                  Team members post ideas and vote on each other&apos;s. No committees. No interpretation. The ranking is just the data.
+                <p style={{ fontSize: '0.9375rem', lineHeight: 1.75, color: P.slate, marginBottom: '1.25rem' }}>
+                  Team members post ideas and vote on each other&apos;s. The ranking is just the data — no filtering, no hierarchy.
                 </p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
                   {[
-                    'Ranked by real team votes in real time',
-                    'Status badges track what\'s moved forward',
-                    'Open to the full workspace or specific teams',
+                    'Votes update live as the team weighs in',
+                    'Status badges track what\'s been acted on',
+                    'Open to everyone, or specific groups',
                   ].map((item) => (
-                    <div key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.625rem', fontSize: '0.875rem', color: '#424868' }}>
-                      <span style={{ marginTop: '0.15rem', flexShrink: 0, color: '#a0a9c0', fontSize: '0.75rem' }}>—</span>
+                    <div key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', fontSize: '0.875rem', color: P.slate }}>
+                      <span style={{ marginTop: '0.18rem', flexShrink: 0, color: P.accent, fontWeight: 700, fontSize: '0.7rem' }}>—</span>
                       {item}
                     </div>
                   ))}
@@ -416,86 +394,35 @@ export default async function HomePage() {
               <IdeaFeedMockup />
             </div>
 
-            {/* Feature 2: Review queue */}
+            {/* Feature 2: IdeaFlows */}
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-              gap: '4rem',
-              alignItems: 'center',
+              gap: '4rem', alignItems: 'center',
             }}>
-              <ReviewQueueMockup />
-              <div style={{ maxWidth: '26rem' }}>
-                <p style={{ fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.10em', textTransform: 'uppercase', color: '#b0b0b0', marginBottom: '0.75rem' }}>
-                  Manager review
-                </p>
-                <h3 style={{
-                  fontSize: 'clamp(1.25rem, 2.5vw, 1.625rem)',
-                  fontWeight: 700,
-                  color: '#1c1f2e',
-                  letterSpacing: '-0.02em',
-                  lineHeight: 1.25,
-                  marginBottom: '0.875rem',
-                }}>
-                  Nothing gets quietly ignored
-                </h3>
-                <p style={{ fontSize: '0.9375rem', lineHeight: 1.8, color: '#6b7799', marginBottom: '1.5rem' }}>
-                  A dedicated review inbox flags ideas waiting on a response. Your team can see progress. Ideas don&apos;t disappear.
-                </p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  {[
-                    'Review inbox surfaces what needs your attention',
-                    'Authors notified automatically when status changes',
-                    'No idea is ever silently dropped',
-                  ].map((item) => (
-                    <div key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.625rem', fontSize: '0.875rem', color: '#424868' }}>
-                      <span style={{ marginTop: '0.15rem', flexShrink: 0, color: '#a0a9c0', fontSize: '0.75rem' }}>—</span>
-                      {item}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-          </PageContainer>
-        </section>
-
-
-        {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-            FEATURE 3 — IdeaFlows (rounds)
-        ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-        <section style={{ background: '#ffffff', padding: 'clamp(5rem,9vw,7rem) 0', borderTop: '1px solid rgba(0,0,0,0.06)' }}>
-          <PageContainer>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-              gap: '4rem',
-              alignItems: 'center',
-            }}>
-              <div style={{ maxWidth: '26rem' }}>
-                <p style={{ fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.10em', textTransform: 'uppercase', color: '#b0b0b0', marginBottom: '0.75rem' }}>
+              <FlowSelectorMockup />
+              <div style={{ maxWidth: '24rem' }}>
+                <p style={{ fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.10em', textTransform: 'uppercase', color: P.faint, marginBottom: '0.75rem' }}>
                   IdeaFlows
                 </p>
                 <h3 style={{
-                  fontSize: 'clamp(1.25rem, 2.5vw, 1.625rem)',
-                  fontWeight: 700,
-                  color: '#1c1f2e',
-                  letterSpacing: '-0.02em',
-                  lineHeight: 1.25,
-                  marginBottom: '0.875rem',
+                  fontSize: 'clamp(1.2rem, 2.5vw, 1.5rem)',
+                  fontWeight: 700, color: P.ink,
+                  letterSpacing: '-0.02em', lineHeight: 1.25, marginBottom: '0.75rem',
                 }}>
-                  Focused rounds for different questions
+                  Separate rounds for different questions
                 </h3>
-                <p style={{ fontSize: '0.9375rem', lineHeight: 1.8, color: '#6b7799', marginBottom: '1.5rem' }}>
-                  Run separate IdeaFlows for different teams, departments, or topics. Time-bound rounds keep input fresh and focused.
+                <p style={{ fontSize: '0.9375rem', lineHeight: 1.75, color: P.slate, marginBottom: '1.25rem' }}>
+                  Run focused collection rounds for retros, planning, or culture — each with their own team and timeline.
                 </p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
                   {[
-                    'Keep engineering feedback separate from culture input',
-                    'Open and close rounds on a schedule',
+                    'Keep engineering feedback separate from HR topics',
+                    'Open and close rounds on your schedule',
                     'Invite specific people to specific flows',
                   ].map((item) => (
-                    <div key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.625rem', fontSize: '0.875rem', color: '#424868' }}>
-                      <span style={{ marginTop: '0.15rem', flexShrink: 0, color: '#a0a9c0', fontSize: '0.75rem' }}>—</span>
+                    <div key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', fontSize: '0.875rem', color: P.slate }}>
+                      <span style={{ marginTop: '0.18rem', flexShrink: 0, color: P.accent, fontWeight: 700, fontSize: '0.7rem' }}>—</span>
                       {item}
                     </div>
                   ))}
@@ -504,14 +431,14 @@ export default async function HomePage() {
                   <Link href="/features" style={{
                     display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
                     marginTop: '1.5rem', fontSize: '0.875rem', fontWeight: 600,
-                    color: '#1c1f2e', textDecoration: 'none',
+                    color: P.ink, textDecoration: 'none',
                   }}>
                     See all features →
                   </Link>
                 )}
               </div>
-              <FlowSelectorMockup />
             </div>
+
           </PageContainer>
         </section>
 
@@ -519,26 +446,26 @@ export default async function HomePage() {
         {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
             PRICING
         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-        <section id="pricing" style={{ background: '#f9f9f8', borderTop: '1px solid rgba(0,0,0,0.06)', padding: 'clamp(5rem,9vw,7rem) 0' }}>
+        <section id="pricing" style={{ background: P.raised, borderTop: `1px solid ${P.border}`, padding: 'clamp(4.5rem,9vw,7rem) 0' }}>
           <PageContainer>
 
-            <div style={{ maxWidth: '28rem', marginBottom: '3.5rem' }}>
-              <p style={{ fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#9a9a9a', marginBottom: '0.75rem' }}>
+            <div style={{ maxWidth: '26rem', marginBottom: '3rem' }}>
+              <p style={{ fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: P.faint, marginBottom: '0.75rem' }}>
                 Pricing
               </p>
               <h2 style={{
                 fontFamily: "'Instrument Serif', serif",
                 fontStyle: 'italic',
-                fontSize: 'clamp(1.75rem, 3vw, 2.5rem)',
+                fontSize: 'clamp(1.75rem, 3vw, 2.375rem)',
                 letterSpacing: '-0.02em',
-                color: '#1c1f2e',
+                color: P.ink,
                 lineHeight: 1.15,
-                marginBottom: '0.75rem',
+                marginBottom: '0.625rem',
               }}>
-                Simple, honest pricing.
+                Simple yearly pricing for small teams.
               </h2>
-              <p style={{ fontSize: '0.9375rem', lineHeight: 1.7, color: '#6b7799' }}>
-                Start free, no credit card required. Upgrade when you&apos;re ready.
+              <p style={{ fontSize: '0.9375rem', lineHeight: 1.7, color: P.slate }}>
+                Start free, upgrade when you&apos;re ready.
               </p>
             </div>
 
@@ -546,19 +473,19 @@ export default async function HomePage() {
 
               {/* Free */}
               <div style={{
-                background: '#ffffff',
-                border: '1px solid rgba(0,0,0,0.09)',
+                background: P.surface,
+                border: `1px solid ${P.border}`,
                 borderRadius: '1rem',
                 padding: '2rem',
                 display: 'flex', flexDirection: 'column',
               }}>
-                <p style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.10em', textTransform: 'uppercase', color: '#9a9a9a', marginBottom: '1rem' }}>
+                <p style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.10em', textTransform: 'uppercase', color: P.faint, marginBottom: '1rem' }}>
                   Free
                 </p>
-                <p style={{ fontSize: '2.5rem', fontWeight: 700, color: '#1c1f2e', letterSpacing: '-0.04em', lineHeight: 1, marginBottom: '0.375rem' }}>€0</p>
-                <p style={{ fontSize: '0.825rem', color: '#a0a9c0', marginBottom: '1.75rem' }}>No credit card required</p>
+                <p style={{ fontSize: '2.5rem', fontWeight: 700, color: P.ink, letterSpacing: '-0.04em', lineHeight: 1, marginBottom: '0.375rem' }}>€0</p>
+                <p style={{ fontSize: '0.825rem', color: P.faint, marginBottom: '1.75rem' }}>No credit card required</p>
 
-                <div style={{ borderTop: '1px solid rgba(0,0,0,0.06)', paddingTop: '1.5rem', marginBottom: '1.75rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', flex: 1 }}>
+                <div style={{ borderTop: `1px solid ${P.border}`, paddingTop: '1.5rem', marginBottom: '1.75rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', flex: 1 }}>
                   {[
                     'Up to 10 workspace members',
                     'Up to 2 active IdeaFlows',
@@ -566,8 +493,8 @@ export default async function HomePage() {
                     'Comments on ideas',
                     'Basic analytics',
                   ].map((item) => (
-                    <div key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.625rem', fontSize: '0.875rem', color: '#424868' }}>
-                      <svg width="13" height="13" viewBox="0 0 15 15" fill="none" style={{ flexShrink: 0, marginTop: '0.15rem', color: '#a0a9c0' }}>
+                    <div key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.625rem', fontSize: '0.875rem', color: P.slate }}>
+                      <svg width="13" height="13" viewBox="0 0 15 15" fill="none" style={{ flexShrink: 0, marginTop: '0.15rem', color: P.faint }}>
                         <path d="M12.5 3.5L6 10 3 7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                       {item}
@@ -578,8 +505,8 @@ export default async function HomePage() {
                 {!user ? (
                   <Link href="/auth?mode=signup" style={{
                     display: 'block', textAlign: 'center', padding: '0.7rem 1rem',
-                    borderRadius: '0.5rem', border: '1px solid rgba(0,0,0,0.12)',
-                    fontSize: '0.875rem', fontWeight: 600, color: '#3d3d3d',
+                    borderRadius: '0.5rem', border: `1px solid ${P.border}`,
+                    fontSize: '0.875rem', fontWeight: 600, color: P.ink,
                     textDecoration: 'none', transition: 'background 0.12s',
                   }}>
                     Start free →
@@ -587,8 +514,8 @@ export default async function HomePage() {
                 ) : (
                   <Link href="/dashboard" style={{
                     display: 'block', textAlign: 'center', padding: '0.7rem 1rem',
-                    borderRadius: '0.5rem', border: '1px solid rgba(0,0,0,0.12)',
-                    fontSize: '0.875rem', fontWeight: 600, color: '#3d3d3d',
+                    borderRadius: '0.5rem', border: `1px solid ${P.border}`,
+                    fontSize: '0.875rem', fontWeight: 600, color: P.ink,
                     textDecoration: 'none',
                   }}>
                     Open dashboard →
@@ -598,36 +525,38 @@ export default async function HomePage() {
 
               {/* Pro */}
               <div style={{
-                background: '#13162a',
+                background: P.dark,
                 borderRadius: '1rem',
                 padding: '2rem',
                 display: 'flex', flexDirection: 'column',
                 position: 'relative', overflow: 'hidden',
-                boxShadow: '0 4px 32px rgba(19,22,42,0.18)',
+                boxShadow: '0 4px 32px rgba(19,22,42,0.16)',
               }}>
-                {/* Subtle accent glow — top right */}
+                {/* Warm glow top-right */}
                 <div style={{
                   position: 'absolute', top: 0, right: 0, width: '60%', height: '50%',
-                  background: 'radial-gradient(ellipse at top right, rgba(61,95,166,0.18) 0%, transparent 70%)',
+                  background: 'radial-gradient(ellipse at top right, rgba(201,139,95,0.12) 0%, transparent 70%)',
                   pointerEvents: 'none',
                 }} />
+
                 <div style={{ marginBottom: '1rem', position: 'relative' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '1rem' }}>
-                    <p style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)' }}>Pro</p>
+                    <p style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.40)' }}>Pro</p>
                     <span style={{
                       fontSize: '0.58rem', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase',
-                      color: 'rgba(255,255,255,0.80)', background: 'rgba(61,95,166,0.30)',
+                      color: 'rgba(255,255,255,0.80)',
+                      background: 'rgba(201,139,95,0.22)',
                       borderRadius: '999px', padding: '0.15rem 0.5rem',
-                      border: '1px solid rgba(61,95,166,0.40)',
+                      border: '1px solid rgba(201,139,95,0.32)',
                     }}>
                       Most popular
                     </span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.375rem', marginBottom: '0.25rem' }}>
                     <p style={{ fontSize: '2.5rem', fontWeight: 700, color: 'rgba(255,255,255,0.96)', letterSpacing: '-0.04em', lineHeight: 1 }}>€49</p>
-                    <p style={{ fontSize: '0.875rem', fontWeight: 500, color: 'rgba(255,255,255,0.38)' }}>/year</p>
+                    <p style={{ fontSize: '0.875rem', fontWeight: 500, color: 'rgba(255,255,255,0.35)' }}>/year</p>
                   </div>
-                  <p style={{ fontSize: '0.825rem', color: 'rgba(255,255,255,0.38)' }}>Under €5/month · For your whole team</p>
+                  <p style={{ fontSize: '0.825rem', color: 'rgba(255,255,255,0.35)' }}>Under €5/month · For your whole team</p>
                 </div>
 
                 <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: '1.5rem', marginBottom: '1.75rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', flex: 1, position: 'relative' }}>
@@ -640,8 +569,8 @@ export default async function HomePage() {
                     'Admin controls and roles',
                     'Priority support',
                   ].map((item, i) => (
-                    <div key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.625rem', fontSize: '0.875rem', color: i === 0 ? 'rgba(255,255,255,0.36)' : 'rgba(255,255,255,0.80)', fontStyle: i === 0 ? 'italic' : 'normal' }}>
-                      <svg width="13" height="13" viewBox="0 0 15 15" fill="none" style={{ flexShrink: 0, marginTop: '0.15rem', color: i === 0 ? 'rgba(255,255,255,0.28)' : 'rgba(61,95,166,0.80)' }}>
+                    <div key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.625rem', fontSize: '0.875rem', color: i === 0 ? 'rgba(255,255,255,0.32)' : 'rgba(255,255,255,0.78)', fontStyle: i === 0 ? 'italic' : 'normal' }}>
+                      <svg width="13" height="13" viewBox="0 0 15 15" fill="none" style={{ flexShrink: 0, marginTop: '0.15rem', color: i === 0 ? 'rgba(255,255,255,0.22)' : 'rgba(201,139,95,0.80)' }}>
                         <path d="M12.5 3.5L6 10 3 7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                       {item}
@@ -653,7 +582,7 @@ export default async function HomePage() {
                   <Link href="/auth?mode=signup" style={{
                     display: 'block', textAlign: 'center', padding: '0.7rem 1rem',
                     borderRadius: '0.5rem',
-                    background: '#ffffff', color: '#1c1f2e',
+                    background: '#ffffff', color: P.ink,
                     fontSize: '0.875rem', fontWeight: 600,
                     textDecoration: 'none',
                     transition: 'opacity 0.12s',
@@ -664,17 +593,17 @@ export default async function HomePage() {
                   <div style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
                     padding: '0.7rem 1rem', borderRadius: '0.5rem',
-                    background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.15)',
+                    background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.13)',
                   }}>
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.70)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
-                    <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'rgba(255,255,255,0.70)' }}>You&apos;re on Pro</span>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.65)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+                    <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'rgba(255,255,255,0.65)' }}>You&apos;re on Pro</span>
                   </div>
                 ) : (
                   <UpgradeButton
                     style={{
                       display: 'block', width: '100%', textAlign: 'center',
                       padding: '0.7rem 1rem', fontSize: '0.875rem', borderRadius: '0.5rem',
-                      background: '#ffffff', color: '#1c1f2e', fontWeight: 600,
+                      background: '#ffffff', color: P.ink, fontWeight: 600,
                     }}
                     label="Upgrade to Pro →"
                   />
@@ -683,9 +612,9 @@ export default async function HomePage() {
 
             </div>
 
-            <p style={{ marginTop: '1.5rem', fontSize: '0.8rem', color: '#a0a9c0' }}>
+            <p style={{ marginTop: '1.5rem', fontSize: '0.8rem', color: P.faint }}>
               Questions?{' '}
-              <Link href="/contact" style={{ color: '#6b7799', textDecoration: 'none', fontWeight: 500 }}>
+              <Link href="/contact" style={{ color: P.slate, textDecoration: 'none', fontWeight: 500 }}>
                 Get in touch →
               </Link>
             </p>
@@ -699,19 +628,18 @@ export default async function HomePage() {
         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
         <section className="cta-dark" style={{ padding: 'clamp(5rem,10vw,8rem) 0' }}>
           <PageContainer style={{ position: 'relative', zIndex: 1 }}>
-            <div style={{ maxWidth: '36rem' }}>
+            <div style={{ maxWidth: '34rem' }}>
               <h2 style={{
                 fontFamily: "'Instrument Serif', serif",
                 fontStyle: 'italic',
-                fontSize: 'clamp(2rem, 4vw, 3rem)',
-                lineHeight: 1.1,
-                letterSpacing: '-0.025em',
+                fontSize: 'clamp(2rem, 4vw, 2.875rem)',
+                lineHeight: 1.1, letterSpacing: '-0.025em',
                 color: 'rgba(255,255,255,0.95)',
-                marginBottom: '1.25rem',
+                marginBottom: '1rem',
               }}>
                 The best idea in your company is waiting to be heard.
               </h2>
-              <p style={{ fontSize: '1rem', lineHeight: 1.75, color: 'rgba(255,255,255,0.42)', marginBottom: '2.5rem' }}>
+              <p style={{ fontSize: '1rem', lineHeight: 1.75, color: 'rgba(255,255,255,0.38)', marginBottom: '2.25rem' }}>
                 Set up in under 10 minutes. Invite your team. See what they&apos;re actually thinking.
               </p>
               <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
@@ -721,7 +649,7 @@ export default async function HomePage() {
                       display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                       height: '2.75rem', padding: '0 1.5rem',
                       borderRadius: '0.5rem', fontSize: '0.9rem', fontWeight: 600,
-                      background: '#ffffff', color: '#1c1f2e', textDecoration: 'none',
+                      background: '#ffffff', color: P.ink, textDecoration: 'none',
                     }}>
                       Get started free →
                     </Link>
@@ -729,7 +657,7 @@ export default async function HomePage() {
                       display: 'inline-flex', alignItems: 'center',
                       height: '2.75rem', padding: '0 1.5rem',
                       fontSize: '0.9rem', fontWeight: 500,
-                      color: 'rgba(255,255,255,0.45)', textDecoration: 'none',
+                      color: 'rgba(255,255,255,0.38)', textDecoration: 'none',
                     }}>
                       Sign in
                     </Link>
@@ -739,7 +667,7 @@ export default async function HomePage() {
                     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                     height: '2.75rem', padding: '0 1.5rem',
                     borderRadius: '0.5rem', fontSize: '0.9rem', fontWeight: 600,
-                    background: '#ffffff', color: '#1c1f2e', textDecoration: 'none',
+                    background: '#ffffff', color: P.ink, textDecoration: 'none',
                   }}>
                     Open dashboard →
                   </Link>
@@ -753,23 +681,23 @@ export default async function HomePage() {
         {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
             FOOTER
         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-        <footer style={{ background: '#13162a', borderTop: '1px solid rgba(255,255,255,0.07)', padding: '2rem 0' }}>
+        <footer style={{ background: P.dark, borderTop: '1px solid rgba(255,255,255,0.06)', padding: '2rem 0' }}>
           <PageContainer style={{
             display: 'flex', alignItems: 'center',
             justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-              <IdeaFlowMark width={16} color="rgba(255,255,255,0.35)" />
-              <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'rgba(255,255,255,0.35)', letterSpacing: '-0.02em', fontFamily: "'DM Sans', sans-serif" }}>
+              <IdeaFlowMark width={16} color="rgba(255,255,255,0.32)" />
+              <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'rgba(255,255,255,0.32)', letterSpacing: '-0.02em', fontFamily: "'DM Sans', sans-serif" }}>
                 IdeaFlow
               </span>
             </div>
-            <p style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.18)' }}>
+            <p style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.16)' }}>
               © {new Date().getFullYear()} IdeaFlow. All rights reserved.
             </p>
             <div style={{ display: 'flex', gap: '1.75rem' }}>
               {([['Features', '/features'], ['Pricing', '/#pricing'], ['Contact', '/contact']] as [string, string][]).map(([label, href]) => (
-                <a key={label} href={href} style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.30)', textDecoration: 'none', fontWeight: 500 }}>
+                <a key={label} href={href} style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.28)', textDecoration: 'none', fontWeight: 500 }}>
                   {label}
                 </a>
               ))}
