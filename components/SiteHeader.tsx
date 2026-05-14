@@ -39,6 +39,7 @@ export default async function SiteHeader() {
         <nav className="hidden lg:flex items-center gap-0.5 text-sm font-medium">
           <Link href="/features" className="nav-link">Features</Link>
           <a href="/#pricing" className="nav-link">Pricing</a>
+          <Link href="/demo" className="nav-link">Demo</Link>
           <Link href="/auth?mode=signup" className="nav-link">Join</Link>
 
           {user ? (
