@@ -1,7 +1,6 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import MobileNav from './MobileNav'
-import LogoMark from './LogoMark'
 import HeaderUserMenu from './HeaderUserMenu'
 
 export default async function SiteHeader() {
@@ -22,37 +21,44 @@ export default async function SiteHeader() {
     <header
       className="sticky top-0 z-50"
       style={{
-        background: 'rgba(255,255,255,0.92)',
-        borderBottom: '1px solid rgba(26,107,191,0.10)',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-        position: 'relative',
+        background: 'rgba(255,255,255,0.95)',
+        borderBottom: '1px solid rgba(0,0,0,0.07)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
       }}
     >
       <div
         className="mx-auto flex max-w-7xl items-center justify-between px-6 lg:px-10"
-        style={{ height: '3.625rem' }}
+        style={{ height: '3.5rem' }}
       >
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 no-underline" style={{ flexShrink: 0 }}>
-          <div style={{ flexShrink: 0 }}>
-            <LogoMark size={36} />
-          </div>
-          <span style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0d1f35', letterSpacing: '-0.03em', fontFamily: "'DM Sans', sans-serif" }}>
-            Idea<span style={{ color: '#f97316' }}>Flow</span>
+        <Link
+          href="/"
+          style={{
+            display: 'flex', alignItems: 'center', gap: '0.5rem',
+            textDecoration: 'none', flexShrink: 0,
+          }}
+        >
+          <span style={{
+            fontSize: '1rem',
+            fontWeight: 700,
+            color: '#111111',
+            letterSpacing: '-0.03em',
+            fontFamily: "'DM Sans', sans-serif",
+          }}>
+            IdeaFlow
           </span>
         </Link>
 
-        {/* Desktop navigation — hidden on mobile */}
+        {/* Desktop navigation */}
         <nav className="hidden lg:flex items-center gap-0.5 text-sm font-medium">
           <Link href="/features" className="nav-link">Features</Link>
           <a href="/#pricing" className="nav-link">Pricing</a>
-          <Link href="/contact" className="nav-link">Contact</Link>
 
           {user ? (
             <>
-              <Link href="/dashboard" className="nav-link">Dashboard</Link>
-              <div style={{ marginLeft: '0.5rem' }}>
+              <Link href="/dashboard" className="nav-link" style={{ marginLeft: '0.25rem' }}>Dashboard</Link>
+              <div style={{ marginLeft: '0.625rem' }}>
                 <HeaderUserMenu
                   firstName={profile?.full_name ?? ''}
                   lastName={profile?.last_name ?? ''}
@@ -62,29 +68,49 @@ export default async function SiteHeader() {
               </div>
             </>
           ) : (
-            <>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', marginLeft: '0.5rem' }}>
+              {/* Sign in — text only, subdued */}
               <Link
-                href="/auth"
+                href="/auth?mode=login"
                 style={{
-                  fontSize: '0.8rem', fontWeight: 500, color: '#5a7fa8',
-                  textDecoration: 'none', padding: '0.375rem 0.75rem',
-                  borderRadius: '0.45rem', transition: 'color 0.15s',
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  color: '#6b6b6b',
+                  textDecoration: 'none',
+                  padding: '0.375rem 0.75rem',
+                  borderRadius: '0.4rem',
+                  transition: 'color 0.12s',
                 }}
               >
-                Log in
+                Sign in
               </Link>
+
+              {/* Get started — filled black button */}
               <Link
-                href="/auth"
-                className="ml-1"
-                style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', borderRadius: '0.5rem', padding: '0.375rem 1.05rem', fontSize: '0.8rem', fontWeight: 700, background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)', color: '#fff', letterSpacing: '0.01em', boxShadow: '0 2px 10px rgba(240,104,0,0.25)', textDecoration: 'none' }}
+                href="/auth?mode=signup"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  height: '2rem',
+                  padding: '0 0.875rem',
+                  borderRadius: '0.4rem',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  background: '#111111',
+                  color: '#ffffff',
+                  textDecoration: 'none',
+                  letterSpacing: '-0.005em',
+                  transition: 'background 0.12s',
+                }}
               >
-                Start free →
+                Get started →
               </Link>
-            </>
+            </div>
           )}
         </nav>
 
-        {/* Mobile navigation — hidden on desktop */}
+        {/* Mobile nav */}
         <MobileNav isLoggedIn={!!user} email={user?.email ?? null} />
       </div>
     </header>
