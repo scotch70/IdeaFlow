@@ -15,7 +15,7 @@ function Overline({ children }: { children: React.ReactNode }) {
   return (
     <p style={{
       fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.14em',
-      textTransform: 'uppercase', color: '#9a9a9a', marginBottom: '0.625rem',
+      textTransform: 'uppercase', color: '#6b7799', opacity: 0.75, marginBottom: '0.625rem',
     }}>
       {children}
     </p>
@@ -46,18 +46,18 @@ export default async function FeaturesPage() {
               <h1 style={{
                 fontFamily: "'Instrument Serif', serif", fontStyle: 'italic',
                 fontSize: 'clamp(1.875rem, 3.2vw, 2.625rem)',
-                letterSpacing: '-0.02em', color: '#111111',
+                letterSpacing: '-0.02em', color: '#1c1f2e',
                 lineHeight: 1.15, maxWidth: '28rem',
               }}>
                 Everything your team needs to make ideas count
               </h1>
             </div>
             {user ? (
-              <Link href="/dashboard" style={{ fontSize: '0.825rem', fontWeight: 600, color: '#111111', textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}>
+              <Link href="/dashboard" style={{ fontSize: '0.825rem', fontWeight: 600, color: '#1c1f2e', textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}>
                 Open dashboard →
               </Link>
             ) : (
-              <Link href="/auth?mode=signup" style={{ fontSize: '0.825rem', fontWeight: 600, color: '#111111', textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}>
+              <Link href="/auth?mode=signup" style={{ fontSize: '0.825rem', fontWeight: 600, color: '#1c1f2e', textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}>
                 Start free →
               </Link>
             )}
@@ -128,8 +128,8 @@ export default async function FeaturesPage() {
                 }}>
                   {f.icon}
                 </div>
-                <p style={{ fontSize: '0.9375rem', fontWeight: 700, color: '#111111', letterSpacing: '-0.01em' }}>{f.title}</p>
-                <p style={{ fontSize: '0.855rem', lineHeight: 1.7, color: '#6b6b6b' }}>{f.body}</p>
+                <p style={{ fontSize: '0.9375rem', fontWeight: 700, color: '#1c1f2e', letterSpacing: '-0.01em' }}>{f.title}</p>
+                <p style={{ fontSize: '0.855rem', lineHeight: 1.7, color: '#6b7799' }}>{f.body}</p>
               </div>
             ))}
           </div>
@@ -148,12 +148,12 @@ export default async function FeaturesPage() {
             <h2 style={{
               fontFamily: "'Instrument Serif', serif", fontStyle: 'italic',
               fontSize: 'clamp(1.625rem, 3vw, 2.25rem)',
-              letterSpacing: '-0.02em', color: '#111111', lineHeight: 1.2,
+              letterSpacing: '-0.02em', color: '#1c1f2e', lineHeight: 1.2,
               marginBottom: '0.75rem',
             }}>
               See what your team cares about
             </h2>
-            <p style={{ fontSize: '0.9375rem', lineHeight: 1.75, color: '#6b6b6b' }}>
+            <p style={{ fontSize: '0.9375rem', lineHeight: 1.75, color: '#6b7799' }}>
               Track idea volume, top contributors, most-supported ideas, and weekly activity — without any extra reporting work.
             </p>
           </div>
@@ -208,7 +208,7 @@ export default async function FeaturesPage() {
                     {card.icon}
                   </div>
                   <div>
-                    <p style={{ fontSize: '1.375rem', fontWeight: 800, color: '#111111', lineHeight: 1, letterSpacing: '-0.03em', fontVariantNumeric: 'tabular-nums' }}>
+                    <p style={{ fontSize: '1.375rem', fontWeight: 800, color: '#1c1f2e', lineHeight: 1, letterSpacing: '-0.03em', fontVariantNumeric: 'tabular-nums' }}>
                       {card.value}
                     </p>
                     <p style={{ fontSize: '0.725rem', fontWeight: 500, color: '#6b6b6b', marginTop: '0.2rem' }}>
@@ -236,7 +236,7 @@ export default async function FeaturesPage() {
                 borderRadius: '0.875rem',
                 padding: '1.125rem 1.25rem',
               }}>
-                <p style={{ fontSize: '0.8rem', fontWeight: 700, color: '#111111', marginBottom: '0.15rem' }}>
+                <p style={{ fontSize: '0.8rem', fontWeight: 700, color: '#1c1f2e', marginBottom: '0.15rem' }}>
                   Weekly activity
                 </p>
                 <p style={{ fontSize: '0.7rem', color: '#a8a8a8', marginBottom: '1.25rem' }}>
@@ -256,10 +256,10 @@ export default async function FeaturesPage() {
                       <div style={{
                         width: '100%',
                         height: bar.h === 0 ? '3px' : `${bar.h}%`,
-                        background: bar.today ? '#111111' : 'rgba(0,0,0,0.15)',
+                        background: bar.today ? '#1c1f2e' : 'rgba(0,0,0,0.12)',
                         borderRadius: '3px 3px 0 0',
                       }} />
-                      <span style={{ fontSize: '0.58rem', fontWeight: bar.today ? 700 : 400, color: bar.today ? '#111111' : '#a8a8a8', lineHeight: 1 }}>
+                      <span style={{ fontSize: '0.58rem', fontWeight: bar.today ? 700 : 400, color: bar.today ? '#1c1f2e' : '#a0a9c0', lineHeight: 1 }}>
                         {bar.label}
                       </span>
                     </div>
@@ -274,7 +274,7 @@ export default async function FeaturesPage() {
                 borderRadius: '0.875rem',
                 padding: '1.125rem 1.25rem',
               }}>
-                <p style={{ fontSize: '0.8rem', fontWeight: 700, color: '#111111', marginBottom: '0.15rem' }}>
+                <p style={{ fontSize: '0.8rem', fontWeight: 700, color: '#1c1f2e', marginBottom: '0.15rem' }}>
                   Most active members
                 </p>
                 <p style={{ fontSize: '0.7rem', color: '#a8a8a8', marginBottom: '1.25rem' }}>
@@ -290,10 +290,10 @@ export default async function FeaturesPage() {
                     <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: '0.275rem' }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.78rem' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-                          <span style={{ fontSize: '0.6rem', fontWeight: 800, color: i === 0 ? '#111111' : '#d0d0d0', fontVariantNumeric: 'tabular-nums', minWidth: '1rem' }}>
+                          <span style={{ fontSize: '0.6rem', fontWeight: 800, color: i === 0 ? '#1c1f2e' : '#c0c6d8', fontVariantNumeric: 'tabular-nums', minWidth: '1rem' }}>
                             {String(i + 1).padStart(2, '0')}
                           </span>
-                          <span style={{ fontWeight: 600, color: '#111111' }}>{c.name}</span>
+                          <span style={{ fontWeight: 600, color: '#1c1f2e' }}>{c.name}</span>
                         </div>
                         <span style={{ fontSize: '0.7rem', fontWeight: 500, color: '#6b6b6b', fontVariantNumeric: 'tabular-nums' }}>
                           {c.count} ideas
@@ -302,7 +302,7 @@ export default async function FeaturesPage() {
                       <div style={{ height: '3px', background: 'rgba(0,0,0,0.06)', borderRadius: '999px', overflow: 'hidden' }}>
                         <div style={{
                           height: '100%', width: `${c.pct}%`,
-                          background: i === 0 ? '#111111' : i === 1 ? 'rgba(0,0,0,0.40)' : 'rgba(0,0,0,0.20)',
+                          background: i === 0 ? '#1c1f2e' : i === 1 ? 'rgba(28,31,46,0.45)' : 'rgba(28,31,46,0.22)',
                           borderRadius: '999px',
                         }} />
                       </div>
@@ -318,13 +318,13 @@ export default async function FeaturesPage() {
                 borderRadius: '0.875rem',
                 padding: '1.125rem 1.25rem',
               }}>
-                <p style={{ fontSize: '0.8rem', fontWeight: 700, color: '#111111', marginBottom: '0.15rem' }}>
+                <p style={{ fontSize: '0.8rem', fontWeight: 700, color: '#1c1f2e', marginBottom: '0.15rem' }}>
                   Top liked idea
                 </p>
                 <p style={{ fontSize: '0.7rem', color: '#a8a8a8', marginBottom: '1.25rem' }}>
                   Most supported by the team
                 </p>
-                <p style={{ fontSize: '0.875rem', fontWeight: 600, color: '#111111', lineHeight: 1.5, marginBottom: '0.875rem' }}>
+                <p style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1c1f2e', lineHeight: 1.5, marginBottom: '0.875rem' }}>
                   Switch our standups to async — post a Loom before 9am
                 </p>
                 <div style={{
@@ -332,10 +332,10 @@ export default async function FeaturesPage() {
                   borderRadius: '999px', padding: '0.25rem 0.625rem',
                   background: 'rgba(0,0,0,0.05)',
                 }}>
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="#111111" stroke="none">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="#1c1f2e" stroke="none">
                     <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                   </svg>
-                  <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#111111', fontVariantNumeric: 'tabular-nums' }}>
+                  <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#1c1f2e', fontVariantNumeric: 'tabular-nums' }}>
                     14 likes
                   </span>
                 </div>
@@ -354,11 +354,11 @@ export default async function FeaturesPage() {
               Built-in analytics — no setup, no integrations, always up to date.
             </p>
             {user ? (
-              <Link href="/dashboard" style={{ fontSize: '0.825rem', fontWeight: 600, color: '#111111', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+              <Link href="/dashboard" style={{ fontSize: '0.825rem', fontWeight: 600, color: '#1c1f2e', textDecoration: 'none', whiteSpace: 'nowrap' }}>
                 Open dashboard →
               </Link>
             ) : (
-              <Link href="/auth?mode=signup" style={{ fontSize: '0.825rem', fontWeight: 600, color: '#111111', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+              <Link href="/auth?mode=signup" style={{ fontSize: '0.825rem', fontWeight: 600, color: '#1c1f2e', textDecoration: 'none', whiteSpace: 'nowrap' }}>
                 Try it free →
               </Link>
             )}
@@ -402,7 +402,7 @@ export default async function FeaturesPage() {
                     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                     padding: '0.65rem 1.5rem', borderRadius: '0.5rem',
                     fontSize: '0.9rem', fontWeight: 600,
-                    background: '#ffffff', color: '#111111',
+                    background: '#ffffff', color: '#1c1f2e',
                     textDecoration: 'none', letterSpacing: '-0.005em',
                     transition: 'opacity 0.12s',
                   }}>
@@ -414,7 +414,7 @@ export default async function FeaturesPage() {
                     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                     padding: '0.65rem 1.5rem', borderRadius: '0.5rem',
                     fontSize: '0.9rem', fontWeight: 600,
-                    background: '#ffffff', color: '#111111',
+                    background: '#ffffff', color: '#1c1f2e',
                     textDecoration: 'none', letterSpacing: '-0.005em',
                     transition: 'opacity 0.12s',
                   }}>

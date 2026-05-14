@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useState, Suspense } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useSearchParams, useRouter } from 'next/navigation'
+import { IdeaFlowWordmark } from '@/components/Logo'
 
 // 'choose'  — first-time visitor selects their path
 // 'signup'  — creating a new workspace
@@ -101,14 +102,7 @@ function AuthPageInner() {
   // ── Shared layout ──────────────────────────────────────────────────────────
   const LOGO = (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '2rem' }}>
-      <Link href="/" style={{ textDecoration: 'none' }}>
-        <span style={{
-          fontSize: '1.1rem', fontWeight: 700, color: '#111111',
-          letterSpacing: '-0.03em', fontFamily: "'DM Sans', sans-serif",
-        }}>
-          IdeaFlow
-        </span>
-      </Link>
+      <IdeaFlowWordmark href="/" markWidth={20} fontSize="1rem" color="#1c1f2e" />
     </div>
   )
 
@@ -116,8 +110,8 @@ function AuthPageInner() {
     borderRadius: '1rem',
     padding: '2rem',
     background: '#ffffff',
-    border: '1px solid rgba(0,0,0,0.08)',
-    boxShadow: '0 4px 24px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04)',
+    border: '1px solid rgba(61,95,166,0.10)',
+    boxShadow: '0 8px 40px rgba(28,31,46,0.10), 0 1px 4px rgba(28,31,46,0.06)',
   }
 
   const ERROR_STYLE: React.CSSProperties = {
@@ -131,15 +125,13 @@ function AuthPageInner() {
 
   const FOOTER_LINK: React.CSSProperties = {
     fontWeight: 600,
-    color: '#111111',
+    color: '#3d5fa6',
     background: 'none',
     border: 'none',
     cursor: 'pointer',
     padding: 0,
     fontSize: 'inherit',
-    textDecoration: 'underline',
-    textDecorationColor: 'rgba(0,0,0,0.2)',
-    textUnderlineOffset: '2px',
+    textDecoration: 'none',
   }
 
   // ── Confirm email ──────────────────────────────────────────────────────────
@@ -147,7 +139,7 @@ function AuthPageInner() {
     return (
       <main style={{
         minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: '2rem 1rem', background: '#f9f9f8',
+        padding: '2rem 1rem', background: '#edf0f8',
       }}>
         <div style={{ width: '100%', maxWidth: '22rem' }}>
           {LOGO}
@@ -166,23 +158,23 @@ function AuthPageInner() {
                 </svg>
               </div>
 
-              <p style={{ fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#a8a8a8', marginBottom: '0.4rem' }}>
+              <p style={{ fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#a0a9c0', marginBottom: '0.4rem' }}>
                 One more step
               </p>
-              <h1 style={{ fontSize: '1.375rem', fontWeight: 800, color: '#111111', letterSpacing: '-0.02em', lineHeight: 1.2, marginBottom: '0.75rem' }}>
+              <h1 style={{ fontSize: '1.375rem', fontWeight: 800, color: '#1c1f2e', letterSpacing: '-0.02em', lineHeight: 1.2, marginBottom: '0.75rem' }}>
                 Check your inbox
               </h1>
-              <p style={{ fontSize: '0.875rem', color: '#6b6b6b', lineHeight: 1.6, marginBottom: '0.5rem' }}>
+              <p style={{ fontSize: '0.875rem', color: '#6b7799', lineHeight: 1.6, marginBottom: '0.5rem' }}>
                 We&apos;ve sent a confirmation link to
               </p>
-              <p style={{ fontSize: '0.9rem', fontWeight: 700, color: '#111111', marginBottom: '1.25rem', wordBreak: 'break-all' }}>
+              <p style={{ fontSize: '0.9rem', fontWeight: 700, color: '#1c1f2e', marginBottom: '1.25rem', wordBreak: 'break-all' }}>
                 {email}
               </p>
-              <p style={{ fontSize: '0.825rem', color: '#6b6b6b', lineHeight: 1.6 }}>
+              <p style={{ fontSize: '0.825rem', color: '#6b7799', lineHeight: 1.6 }}>
                 Click the link in the email to activate your account and log in.
               </p>
 
-              <div style={{ marginTop: '1.5rem', paddingTop: '1.25rem', borderTop: '1px solid rgba(0,0,0,0.07)', fontSize: '0.8rem', color: '#6b6b6b' }}>
+              <div style={{ marginTop: '1.5rem', paddingTop: '1.25rem', borderTop: '1px solid rgba(61,95,166,0.10)', fontSize: '0.8rem', color: '#6b7799' }}>
                 Wrong email?{' '}
                 <button
                   type="button"
@@ -204,16 +196,16 @@ function AuthPageInner() {
     return (
       <main style={{
         minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: '2rem 1rem', background: '#f9f9f8',
+        padding: '2rem 1rem', background: '#edf0f8',
       }}>
         <div style={{ width: '100%', maxWidth: '22rem' }}>
           {LOGO}
           <div style={CARD_SHELL}>
             <div style={{ marginBottom: '1.75rem' }}>
-              <h1 style={{ fontSize: '1.375rem', fontWeight: 800, color: '#111111', letterSpacing: '-0.02em', lineHeight: 1.2, marginBottom: '0.4rem' }}>
+              <h1 style={{ fontSize: '1.375rem', fontWeight: 800, color: '#1c1f2e', letterSpacing: '-0.02em', lineHeight: 1.2, marginBottom: '0.4rem' }}>
                 Get started with IdeaFlow
               </h1>
-              <p style={{ fontSize: '0.875rem', color: '#6b6b6b', lineHeight: 1.6 }}>
+              <p style={{ fontSize: '0.875rem', color: '#6b7799', lineHeight: 1.6 }}>
                 Create a workspace for your team, or join one you've been invited to.
               </p>
             </div>
@@ -227,7 +219,7 @@ function AuthPageInner() {
                   textAlign: 'left', width: '100%', cursor: 'pointer',
                   padding: '0.875rem 1rem',
                   borderRadius: '0.75rem',
-                  border: '1px solid rgba(0,0,0,0.10)',
+                  border: '1px solid rgba(61,95,166,0.12)',
                   background: '#ffffff',
                   transition: 'border-color 0.12s, background 0.12s',
                 }}
@@ -244,7 +236,7 @@ function AuthPageInner() {
                   </svg>
                 </div>
                 <div>
-                  <p style={{ fontSize: '0.9rem', fontWeight: 700, color: '#111111', lineHeight: 1.3 }}>
+                  <p style={{ fontSize: '0.9rem', fontWeight: 700, color: '#1c1f2e', lineHeight: 1.3 }}>
                     Create workspace
                   </p>
                   <p style={{ fontSize: '0.8rem', color: '#6b6b6b', marginTop: '0.2rem', lineHeight: 1.5 }}>
@@ -261,7 +253,7 @@ function AuthPageInner() {
                   textAlign: 'left', width: '100%', cursor: 'pointer',
                   padding: '0.875rem 1rem',
                   borderRadius: '0.75rem',
-                  border: '1px solid rgba(0,0,0,0.10)',
+                  border: '1px solid rgba(61,95,166,0.12)',
                   background: '#ffffff',
                   transition: 'border-color 0.12s, background 0.12s',
                 }}
@@ -279,7 +271,7 @@ function AuthPageInner() {
                   </svg>
                 </div>
                 <div>
-                  <p style={{ fontSize: '0.9rem', fontWeight: 700, color: '#111111', lineHeight: 1.3 }}>
+                  <p style={{ fontSize: '0.9rem', fontWeight: 700, color: '#1c1f2e', lineHeight: 1.3 }}>
                     Join with invite
                   </p>
                   <p style={{ fontSize: '0.8rem', color: '#6b6b6b', marginTop: '0.2rem', lineHeight: 1.5 }}>
@@ -289,7 +281,7 @@ function AuthPageInner() {
               </button>
             </div>
 
-            <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.825rem', color: '#6b6b6b' }}>
+            <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.825rem', color: '#6b7799' }}>
               Already have an account?{' '}
               <button type="button" onClick={() => switchMode('signin')} style={FOOTER_LINK}>
                 Sign in
@@ -327,10 +319,10 @@ function AuthPageInner() {
         {LOGO}
         <div style={CARD_SHELL}>
           <div style={{ marginBottom: '1.5rem' }}>
-            <p style={{ fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#a8a8a8', marginBottom: '0.35rem' }}>
+            <p style={{ fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#a0a9c0', marginBottom: '0.35rem' }}>
               {mode === 'signin' ? 'Welcome back' : comingFromInvite ? 'Join workspace' : 'New workspace'}
             </p>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#111111', letterSpacing: '-0.025em', lineHeight: 1.2 }}>
+            <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#1c1f2e', letterSpacing: '-0.025em', lineHeight: 1.2 }}>
               {mode === 'signin' ? 'Sign in' : comingFromInvite ? 'Create your account' : 'Create your workspace'}
             </h1>
           </div>
@@ -393,7 +385,7 @@ function AuthPageInner() {
               required
             />
             {mode === 'signup' && (
-              <p style={{ fontSize: '0.75rem', color: '#a8a8a8', marginTop: '-0.25rem' }}>
+              <p style={{ fontSize: '0.75rem', color: '#a0a9c0', marginTop: '-0.25rem' }}>
                 At least 8 characters
               </p>
             )}
@@ -402,7 +394,7 @@ function AuthPageInner() {
               <div style={{ textAlign: 'right', marginTop: '-0.125rem' }}>
                 <Link
                   href="/forgot-password"
-                  style={{ fontSize: '0.8rem', color: '#6b6b6b', fontWeight: 500, textDecoration: 'none' }}
+                  style={{ fontSize: '0.8rem', color: '#6b7799', fontWeight: 500, textDecoration: 'none' }}
                 >
                   Forgot password?
                 </Link>
@@ -423,7 +415,7 @@ function AuthPageInner() {
             </button>
           </form>
 
-          <div style={{ marginTop: '1.25rem', textAlign: 'center', fontSize: '0.825rem', color: '#6b6b6b' }}>
+          <div style={{ marginTop: '1.25rem', textAlign: 'center', fontSize: '0.825rem', color: '#6b7799' }}>
             {mode === 'signin' ? (
               <>
                 New to IdeaFlow?{' '}

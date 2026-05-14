@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import PageContainer from '@/components/PageContainer'
 import SiteHeader from '@/components/SiteHeader'
 import UpgradeButton from '@/components/UpgradeButton'
+import { IdeaFlowMark } from '@/components/Logo'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Product mockups — neutral palette, no orange
@@ -256,7 +257,7 @@ export default async function HomePage() {
                     fontSize: 'clamp(2.75rem, 5vw, 4.25rem)',
                     lineHeight: 1.06,
                     letterSpacing: '-0.025em',
-                    color: '#111111',
+                    color: '#1c1f2e',
                     marginBottom: '1.5rem',
                   }}
                 >
@@ -268,7 +269,7 @@ export default async function HomePage() {
                   style={{
                     fontSize: '1.0625rem',
                     lineHeight: 1.75,
-                    color: '#6b6b6b',
+                    color: '#6b7799',
                     marginBottom: '2.5rem',
                     maxWidth: '28rem',
                   }}
@@ -289,9 +290,10 @@ export default async function HomePage() {
                           height: '2.625rem', padding: '0 1.375rem',
                           borderRadius: '0.5rem',
                           fontSize: '0.9rem', fontWeight: 600,
-                          background: '#111111', color: '#ffffff',
+                          background: '#1c1f2e', color: '#ffffff',
                           textDecoration: 'none',
-                          transition: 'background 0.12s',
+                          letterSpacing: '-0.01em',
+                          transition: 'background 0.15s',
                         }}
                       >
                         Get started free →
@@ -301,7 +303,7 @@ export default async function HomePage() {
                         style={{
                           fontSize: '0.875rem',
                           fontWeight: 500,
-                          color: '#6b6b6b',
+                          color: '#6b7799',
                           textDecoration: 'none',
                           padding: '0 0.25rem',
                         }}
@@ -317,8 +319,9 @@ export default async function HomePage() {
                         height: '2.625rem', padding: '0 1.375rem',
                         borderRadius: '0.5rem',
                         fontSize: '0.9rem', fontWeight: 600,
-                        background: '#111111', color: '#ffffff',
+                        background: '#1c1f2e', color: '#ffffff',
                         textDecoration: 'none',
+                        letterSpacing: '-0.01em',
                       }}
                     >
                       Open dashboard →
@@ -365,7 +368,7 @@ export default async function HomePage() {
                 fontStyle: 'italic',
                 fontSize: 'clamp(1.75rem, 3vw, 2.5rem)',
                 letterSpacing: '-0.02em',
-                color: '#111111',
+                color: '#1c1f2e',
                 lineHeight: 1.15,
               }}>
                 Structured input. Clear priorities. Less noise.
@@ -387,14 +390,14 @@ export default async function HomePage() {
                 <h3 style={{
                   fontSize: 'clamp(1.25rem, 2.5vw, 1.625rem)',
                   fontWeight: 700,
-                  color: '#111111',
+                  color: '#1c1f2e',
                   letterSpacing: '-0.02em',
                   lineHeight: 1.25,
                   marginBottom: '0.875rem',
                 }}>
                   The most-supported ideas rise to the top — automatically
                 </h3>
-                <p style={{ fontSize: '0.9375rem', lineHeight: 1.8, color: '#6b6b6b', marginBottom: '1.5rem' }}>
+                <p style={{ fontSize: '0.9375rem', lineHeight: 1.8, color: '#6b7799', marginBottom: '1.5rem' }}>
                   Team members post ideas and vote on each other&apos;s. No committees. No interpretation. The ranking is just the data.
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -403,8 +406,8 @@ export default async function HomePage() {
                     'Status badges track what\'s moved forward',
                     'Open to the full workspace or specific teams',
                   ].map((item) => (
-                    <div key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.625rem', fontSize: '0.875rem', color: '#4a4a4a' }}>
-                      <span style={{ marginTop: '0.15rem', flexShrink: 0, color: '#b0b0b0', fontSize: '0.75rem' }}>—</span>
+                    <div key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.625rem', fontSize: '0.875rem', color: '#424868' }}>
+                      <span style={{ marginTop: '0.15rem', flexShrink: 0, color: '#a0a9c0', fontSize: '0.75rem' }}>—</span>
                       {item}
                     </div>
                   ))}
@@ -428,14 +431,14 @@ export default async function HomePage() {
                 <h3 style={{
                   fontSize: 'clamp(1.25rem, 2.5vw, 1.625rem)',
                   fontWeight: 700,
-                  color: '#111111',
+                  color: '#1c1f2e',
                   letterSpacing: '-0.02em',
                   lineHeight: 1.25,
                   marginBottom: '0.875rem',
                 }}>
                   Nothing gets quietly ignored
                 </h3>
-                <p style={{ fontSize: '0.9375rem', lineHeight: 1.8, color: '#6b6b6b', marginBottom: '1.5rem' }}>
+                <p style={{ fontSize: '0.9375rem', lineHeight: 1.8, color: '#6b7799', marginBottom: '1.5rem' }}>
                   A dedicated review inbox flags ideas waiting on a response. Your team can see progress. Ideas don&apos;t disappear.
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -444,8 +447,8 @@ export default async function HomePage() {
                     'Authors notified automatically when status changes',
                     'No idea is ever silently dropped',
                   ].map((item) => (
-                    <div key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.625rem', fontSize: '0.875rem', color: '#4a4a4a' }}>
-                      <span style={{ marginTop: '0.15rem', flexShrink: 0, color: '#b0b0b0', fontSize: '0.75rem' }}>—</span>
+                    <div key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.625rem', fontSize: '0.875rem', color: '#424868' }}>
+                      <span style={{ marginTop: '0.15rem', flexShrink: 0, color: '#a0a9c0', fontSize: '0.75rem' }}>—</span>
                       {item}
                     </div>
                   ))}
@@ -475,14 +478,14 @@ export default async function HomePage() {
                 <h3 style={{
                   fontSize: 'clamp(1.25rem, 2.5vw, 1.625rem)',
                   fontWeight: 700,
-                  color: '#111111',
+                  color: '#1c1f2e',
                   letterSpacing: '-0.02em',
                   lineHeight: 1.25,
                   marginBottom: '0.875rem',
                 }}>
                   Focused rounds for different questions
                 </h3>
-                <p style={{ fontSize: '0.9375rem', lineHeight: 1.8, color: '#6b6b6b', marginBottom: '1.5rem' }}>
+                <p style={{ fontSize: '0.9375rem', lineHeight: 1.8, color: '#6b7799', marginBottom: '1.5rem' }}>
                   Run separate IdeaFlows for different teams, departments, or topics. Time-bound rounds keep input fresh and focused.
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -491,8 +494,8 @@ export default async function HomePage() {
                     'Open and close rounds on a schedule',
                     'Invite specific people to specific flows',
                   ].map((item) => (
-                    <div key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.625rem', fontSize: '0.875rem', color: '#4a4a4a' }}>
-                      <span style={{ marginTop: '0.15rem', flexShrink: 0, color: '#b0b0b0', fontSize: '0.75rem' }}>—</span>
+                    <div key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.625rem', fontSize: '0.875rem', color: '#424868' }}>
+                      <span style={{ marginTop: '0.15rem', flexShrink: 0, color: '#a0a9c0', fontSize: '0.75rem' }}>—</span>
                       {item}
                     </div>
                   ))}
@@ -501,7 +504,7 @@ export default async function HomePage() {
                   <Link href="/features" style={{
                     display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
                     marginTop: '1.5rem', fontSize: '0.875rem', fontWeight: 600,
-                    color: '#111111', textDecoration: 'none',
+                    color: '#1c1f2e', textDecoration: 'none',
                   }}>
                     See all features →
                   </Link>
@@ -528,13 +531,13 @@ export default async function HomePage() {
                 fontStyle: 'italic',
                 fontSize: 'clamp(1.75rem, 3vw, 2.5rem)',
                 letterSpacing: '-0.02em',
-                color: '#111111',
+                color: '#1c1f2e',
                 lineHeight: 1.15,
                 marginBottom: '0.75rem',
               }}>
                 Simple, honest pricing.
               </h2>
-              <p style={{ fontSize: '0.9375rem', lineHeight: 1.7, color: '#6b6b6b' }}>
+              <p style={{ fontSize: '0.9375rem', lineHeight: 1.7, color: '#6b7799' }}>
                 Start free, no credit card required. Upgrade when you&apos;re ready.
               </p>
             </div>
@@ -552,8 +555,8 @@ export default async function HomePage() {
                 <p style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.10em', textTransform: 'uppercase', color: '#9a9a9a', marginBottom: '1rem' }}>
                   Free
                 </p>
-                <p style={{ fontSize: '2.5rem', fontWeight: 700, color: '#111111', letterSpacing: '-0.04em', lineHeight: 1, marginBottom: '0.375rem' }}>€0</p>
-                <p style={{ fontSize: '0.825rem', color: '#9a9a9a', marginBottom: '1.75rem' }}>No credit card required</p>
+                <p style={{ fontSize: '2.5rem', fontWeight: 700, color: '#1c1f2e', letterSpacing: '-0.04em', lineHeight: 1, marginBottom: '0.375rem' }}>€0</p>
+                <p style={{ fontSize: '0.825rem', color: '#a0a9c0', marginBottom: '1.75rem' }}>No credit card required</p>
 
                 <div style={{ borderTop: '1px solid rgba(0,0,0,0.06)', paddingTop: '1.5rem', marginBottom: '1.75rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', flex: 1 }}>
                   {[
@@ -563,8 +566,8 @@ export default async function HomePage() {
                     'Comments on ideas',
                     'Basic analytics',
                   ].map((item) => (
-                    <div key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.625rem', fontSize: '0.875rem', color: '#3d3d3d' }}>
-                      <svg width="13" height="13" viewBox="0 0 15 15" fill="none" style={{ flexShrink: 0, marginTop: '0.15rem', color: '#b0b0b0' }}>
+                    <div key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.625rem', fontSize: '0.875rem', color: '#424868' }}>
+                      <svg width="13" height="13" viewBox="0 0 15 15" fill="none" style={{ flexShrink: 0, marginTop: '0.15rem', color: '#a0a9c0' }}>
                         <path d="M12.5 3.5L6 10 3 7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                       {item}
@@ -595,31 +598,39 @@ export default async function HomePage() {
 
               {/* Pro */}
               <div style={{
-                background: '#111111',
+                background: '#13162a',
                 borderRadius: '1rem',
                 padding: '2rem',
                 display: 'flex', flexDirection: 'column',
                 position: 'relative', overflow: 'hidden',
+                boxShadow: '0 4px 32px rgba(19,22,42,0.18)',
               }}>
-                <div style={{ marginBottom: '1rem' }}>
+                {/* Subtle accent glow — top right */}
+                <div style={{
+                  position: 'absolute', top: 0, right: 0, width: '60%', height: '50%',
+                  background: 'radial-gradient(ellipse at top right, rgba(61,95,166,0.18) 0%, transparent 70%)',
+                  pointerEvents: 'none',
+                }} />
+                <div style={{ marginBottom: '1rem', position: 'relative' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '1rem' }}>
-                    <p style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.50)' }}>Pro</p>
+                    <p style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)' }}>Pro</p>
                     <span style={{
                       fontSize: '0.58rem', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase',
-                      color: '#fff', background: 'rgba(255,255,255,0.12)',
+                      color: 'rgba(255,255,255,0.80)', background: 'rgba(61,95,166,0.30)',
                       borderRadius: '999px', padding: '0.15rem 0.5rem',
+                      border: '1px solid rgba(61,95,166,0.40)',
                     }}>
                       Most popular
                     </span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.375rem', marginBottom: '0.25rem' }}>
-                    <p style={{ fontSize: '2.5rem', fontWeight: 700, color: 'rgba(255,255,255,0.95)', letterSpacing: '-0.04em', lineHeight: 1 }}>€99</p>
-                    <p style={{ fontSize: '0.875rem', fontWeight: 500, color: 'rgba(255,255,255,0.40)' }}>/year</p>
+                    <p style={{ fontSize: '2.5rem', fontWeight: 700, color: 'rgba(255,255,255,0.96)', letterSpacing: '-0.04em', lineHeight: 1 }}>€49</p>
+                    <p style={{ fontSize: '0.875rem', fontWeight: 500, color: 'rgba(255,255,255,0.38)' }}>/year</p>
                   </div>
-                  <p style={{ fontSize: '0.825rem', color: 'rgba(255,255,255,0.35)' }}>or €12/month — cancel any time</p>
+                  <p style={{ fontSize: '0.825rem', color: 'rgba(255,255,255,0.38)' }}>Under €5/month · For your whole team</p>
                 </div>
 
-                <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '1.5rem', marginBottom: '1.75rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', flex: 1 }}>
+                <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: '1.5rem', marginBottom: '1.75rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', flex: 1, position: 'relative' }}>
                   {[
                     'Everything in Free',
                     'Up to 50 workspace members',
@@ -629,8 +640,8 @@ export default async function HomePage() {
                     'Admin controls and roles',
                     'Priority support',
                   ].map((item, i) => (
-                    <div key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.625rem', fontSize: '0.875rem', color: i === 0 ? 'rgba(255,255,255,0.38)' : 'rgba(255,255,255,0.78)', fontStyle: i === 0 ? 'italic' : 'normal' }}>
-                      <svg width="13" height="13" viewBox="0 0 15 15" fill="none" style={{ flexShrink: 0, marginTop: '0.15rem', color: 'rgba(255,255,255,0.38)' }}>
+                    <div key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.625rem', fontSize: '0.875rem', color: i === 0 ? 'rgba(255,255,255,0.36)' : 'rgba(255,255,255,0.80)', fontStyle: i === 0 ? 'italic' : 'normal' }}>
+                      <svg width="13" height="13" viewBox="0 0 15 15" fill="none" style={{ flexShrink: 0, marginTop: '0.15rem', color: i === 0 ? 'rgba(255,255,255,0.28)' : 'rgba(61,95,166,0.80)' }}>
                         <path d="M12.5 3.5L6 10 3 7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                       {item}
@@ -642,7 +653,7 @@ export default async function HomePage() {
                   <Link href="/auth?mode=signup" style={{
                     display: 'block', textAlign: 'center', padding: '0.7rem 1rem',
                     borderRadius: '0.5rem',
-                    background: '#ffffff', color: '#111111',
+                    background: '#ffffff', color: '#1c1f2e',
                     fontSize: '0.875rem', fontWeight: 600,
                     textDecoration: 'none',
                     transition: 'opacity 0.12s',
@@ -663,7 +674,7 @@ export default async function HomePage() {
                     style={{
                       display: 'block', width: '100%', textAlign: 'center',
                       padding: '0.7rem 1rem', fontSize: '0.875rem', borderRadius: '0.5rem',
-                      background: '#ffffff', color: '#111111', fontWeight: 600,
+                      background: '#ffffff', color: '#1c1f2e', fontWeight: 600,
                     }}
                     label="Upgrade to Pro →"
                   />
@@ -672,9 +683,9 @@ export default async function HomePage() {
 
             </div>
 
-            <p style={{ marginTop: '1.5rem', fontSize: '0.8rem', color: '#b0b0b0' }}>
+            <p style={{ marginTop: '1.5rem', fontSize: '0.8rem', color: '#a0a9c0' }}>
               Questions?{' '}
-              <Link href="/contact" style={{ color: '#6b6b6b', textDecoration: 'none', fontWeight: 500 }}>
+              <Link href="/contact" style={{ color: '#6b7799', textDecoration: 'none', fontWeight: 500 }}>
                 Get in touch →
               </Link>
             </p>
@@ -695,12 +706,12 @@ export default async function HomePage() {
                 fontSize: 'clamp(2rem, 4vw, 3rem)',
                 lineHeight: 1.1,
                 letterSpacing: '-0.025em',
-                color: 'rgba(255,255,255,0.94)',
+                color: 'rgba(255,255,255,0.95)',
                 marginBottom: '1.25rem',
               }}>
                 The best idea in your company is waiting to be heard.
               </h2>
-              <p style={{ fontSize: '1rem', lineHeight: 1.75, color: 'rgba(255,255,255,0.45)', marginBottom: '2.5rem' }}>
+              <p style={{ fontSize: '1rem', lineHeight: 1.75, color: 'rgba(255,255,255,0.42)', marginBottom: '2.5rem' }}>
                 Set up in under 10 minutes. Invite your team. See what they&apos;re actually thinking.
               </p>
               <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
@@ -710,7 +721,7 @@ export default async function HomePage() {
                       display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                       height: '2.75rem', padding: '0 1.5rem',
                       borderRadius: '0.5rem', fontSize: '0.9rem', fontWeight: 600,
-                      background: '#ffffff', color: '#111111', textDecoration: 'none',
+                      background: '#ffffff', color: '#1c1f2e', textDecoration: 'none',
                     }}>
                       Get started free →
                     </Link>
@@ -728,7 +739,7 @@ export default async function HomePage() {
                     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                     height: '2.75rem', padding: '0 1.5rem',
                     borderRadius: '0.5rem', fontSize: '0.9rem', fontWeight: 600,
-                    background: '#ffffff', color: '#111111', textDecoration: 'none',
+                    background: '#ffffff', color: '#1c1f2e', textDecoration: 'none',
                   }}>
                     Open dashboard →
                   </Link>
@@ -742,14 +753,17 @@ export default async function HomePage() {
         {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
             FOOTER
         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-        <footer style={{ background: '#0f0f0f', borderTop: '1px solid rgba(255,255,255,0.06)', padding: '2rem 0' }}>
+        <footer style={{ background: '#13162a', borderTop: '1px solid rgba(255,255,255,0.07)', padding: '2rem 0' }}>
           <PageContainer style={{
             display: 'flex', alignItems: 'center',
             justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem',
           }}>
-            <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'rgba(255,255,255,0.45)', letterSpacing: '-0.02em', fontFamily: "'DM Sans', sans-serif" }}>
-              IdeaFlow
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+              <IdeaFlowMark width={16} color="rgba(255,255,255,0.35)" />
+              <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'rgba(255,255,255,0.35)', letterSpacing: '-0.02em', fontFamily: "'DM Sans', sans-serif" }}>
+                IdeaFlow
+              </span>
+            </div>
             <p style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.18)' }}>
               © {new Date().getFullYear()} IdeaFlow. All rights reserved.
             </p>

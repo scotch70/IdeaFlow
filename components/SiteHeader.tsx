@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import MobileNav from './MobileNav'
 import HeaderUserMenu from './HeaderUserMenu'
+import { IdeaFlowWordmark } from './Logo'
 
 export default async function SiteHeader() {
   const supabase = await createClient()
@@ -32,23 +33,7 @@ export default async function SiteHeader() {
         style={{ height: '3.5rem' }}
       >
         {/* Logo */}
-        <Link
-          href="/"
-          style={{
-            display: 'flex', alignItems: 'center', gap: '0.5rem',
-            textDecoration: 'none', flexShrink: 0,
-          }}
-        >
-          <span style={{
-            fontSize: '1rem',
-            fontWeight: 700,
-            color: '#111111',
-            letterSpacing: '-0.03em',
-            fontFamily: "'DM Sans', sans-serif",
-          }}>
-            IdeaFlow
-          </span>
-        </Link>
+        <IdeaFlowWordmark href="/" markWidth={18} fontSize="0.9375rem" />
 
         {/* Desktop navigation */}
         <nav className="hidden lg:flex items-center gap-0.5 text-sm font-medium">
@@ -75,7 +60,7 @@ export default async function SiteHeader() {
                 style={{
                   fontSize: '0.875rem',
                   fontWeight: 500,
-                  color: '#6b6b6b',
+                  color: '#6b7799',
                   textDecoration: 'none',
                   padding: '0.375rem 0.75rem',
                   borderRadius: '0.4rem',
@@ -85,7 +70,7 @@ export default async function SiteHeader() {
                 Sign in
               </Link>
 
-              {/* Get started — filled black button */}
+              {/* Get started — filled dark button */}
               <Link
                 href="/auth?mode=signup"
                 style={{
@@ -97,11 +82,11 @@ export default async function SiteHeader() {
                   borderRadius: '0.4rem',
                   fontSize: '0.8rem',
                   fontWeight: 600,
-                  background: '#111111',
+                  background: '#1c1f2e',
                   color: '#ffffff',
                   textDecoration: 'none',
-                  letterSpacing: '-0.005em',
-                  transition: 'background 0.12s',
+                  letterSpacing: '-0.01em',
+                  transition: 'background 0.15s',
                 }}
               >
                 Get started →
