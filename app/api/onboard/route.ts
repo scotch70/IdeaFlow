@@ -65,10 +65,10 @@ export async function GET(request: NextRequest) {
   const companyName = (user.user_metadata?.company_name as string | undefined)?.trim() ?? ''
 
   if (!companyName) {
-    await supabase.auth.signOut()
-    return NextResponse.redirect(
-      new URL('/auth?error=onboarding_failed', request.url)
-    )
+    // Invited members never have company_name in metadata — they reach here only
+    // if they somehow bypassed the dashboard guard. Send them to /join-workspace
+    // which auto-attaches by pending invite or shows the code form. Do NOT sign out.
+    return NextResponse.redirect(new URL('/join-workspace', request.url))
   }
 
   // ── Create company ─────────────────────────────────────────────────────────

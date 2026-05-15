@@ -53,6 +53,14 @@ export async function POST(request: NextRequest) {
     }
 
     if (invite.used_at) {
+      // Idempotent: same user already successfully claimed this invite.
+      // Return success so a retry or duplicate request completes cleanly.
+      if (invite.joined_user_id === user.id) {
+        const redirectTo = invite.idea_round_id
+          ? `/dashboard/flows/${invite.idea_round_id}`
+          : '/dashboard'
+        return NextResponse.json({ success: true, redirectTo })
+      }
       return NextResponse.json(
         { error: 'This invite has already been used', errorCode: 'INVITE_USED' },
         { status: 400 }
@@ -101,6 +109,17 @@ export async function POST(request: NextRequest) {
         },
         { status: 403 },
       )
+    }
+
+    // ── Same-company idempotency ────────────────────────────────────────────
+    // If the user is already a member of this company, return success without
+    // consuming the invite. This handles retries and the case where a user
+    // was attached via /join-workspace auto-attach and then lands here again.
+    if (existingCompanyId && existingCompanyId === invite.company_id) {
+      const redirectTo = invite.idea_round_id
+        ? `/dashboard/flows/${invite.idea_round_id}`
+        : '/dashboard'
+      return NextResponse.json({ success: true, redirectTo })
     }
 
     // ── Resolve role ────────────────────────────────────────────────────────

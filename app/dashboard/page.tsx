@@ -67,15 +67,29 @@ export default async function DashboardPage({
     error: Error | null
   }
 
-  // Profile missing or no company_id means the onboarding trigger either hasn't
-  // fired yet or failed entirely. Redirect to the onboard endpoint which creates
-  // the company + profile idempotently as a fallback, then sends the user here.
+  // ── DEBUG (remove after confirming sylvana loop is fixed) ───────────────────
+  console.log('[dashboard auth]', {
+    userId: user?.id,
+    email: user?.email,
+    profile,
+    companyId: profile?.company_id,
+  })
+
+  // Admins who created a workspace have company_name in user_metadata.
+  // Invited members do not — sending them to /api/onboard causes a sign-out loop
+  // because /api/onboard checks for company_name and signs out anyone who lacks it.
+  const isWorkspaceCreator = !!(user.user_metadata?.company_name as string | undefined)?.trim()
+
+  // Profile missing or no company_id:
+  // • Admins  → /api/onboard creates the company + profile idempotently
+  // • Members → /join-workspace: auto-attaches by pending invite or shows the
+  //             invite-code / create-workspace form — never a loop
   if (profileError || !profile) {
-    redirect('/api/onboard')
+    redirect(isWorkspaceCreator ? '/api/onboard' : '/join-workspace')
   }
 
   if (!profile.company_id) {
-    redirect('/api/onboard')
+    redirect(isWorkspaceCreator ? '/api/onboard' : '/join-workspace')
   }
 
   const { data: members } = (await supabase
