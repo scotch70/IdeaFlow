@@ -26,13 +26,17 @@ function AuthFormInner() {
   const supabase = createClient()
 
   const ERROR_PARAM_MESSAGES: Record<string, string> = {
-    temporary_error:   'Something went wrong on our end — please try signing in again.',
-    onboarding_failed: 'We could not set up your workspace. Please contact support if this keeps happening.',
+    temporary_error:      'Something went wrong on our end — please try signing in again.',
+    onboarding_failed:    'We could not set up your workspace. Please contact support if this keeps happening.',
+    auth_callback_failed: 'That confirmation link has expired. Please sign in or request a new link.',
   }
   const pageError = (() => {
     const e = params.get('error')
     return e ? (ERROR_PARAM_MESSAGES[e] ?? 'An unexpected error occurred.') : null
   })()
+
+  // Shown after a successful password reset
+  const resetSuccess = params.get('reset') === 'success'
 
   const comingFromInvite = nextUrl.includes('/join')
   const modeParam = params.get('mode')
@@ -282,6 +286,21 @@ function AuthFormInner() {
         </div>
 
         {INVITE_BANNER}
+
+        {resetSuccess && (
+          <div style={{
+            marginBottom: '1rem',
+            borderRadius: '0.625rem',
+            border: '1px solid rgba(16,185,129,0.20)',
+            background: 'rgba(16,185,129,0.06)',
+            padding: '0.625rem 0.875rem',
+            fontSize: '0.825rem',
+            color: '#065f46',
+            lineHeight: 1.5,
+          }}>
+            Password updated — sign in with your new password.
+          </div>
+        )}
 
         {pageError && (
           <div style={{
