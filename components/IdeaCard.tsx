@@ -4,6 +4,7 @@ import { useState } from 'react'
 import type { Idea } from '@/types/database'
 import StatusBadge from './StatusBadge'
 import IdeaComments from './IdeaComments'
+import VoteButton from './VoteButton'
 
 interface IdeaCardProps {
   idea: Idea
@@ -22,22 +23,6 @@ function timeAgo(dateStr: string) {
   return `${days}d ago`
 }
 
-function HeartIcon({ filled }: { filled: boolean }) {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill={filled ? 'currentColor' : 'none'}
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-    </svg>
-  )
-}
 
 export default function IdeaCard({ idea, currentUserId, isAdmin }: IdeaCardProps) {
   const [liked, setLiked]           = useState(idea.liked_by_user ?? false)
@@ -155,38 +140,14 @@ export default function IdeaCard({ idea, currentUserId, isAdmin }: IdeaCardProps
   return (
     <div className="card" style={{ display: 'flex', gap: '0.875rem' }}>
 
-      {/* Like column */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.2rem', paddingTop: '0.125rem', minWidth: '2rem' }}>
-        <button
-          onClick={toggleLike}
-          disabled={loading || deleting || editing || saving}
-          title={liked ? 'Unlike' : 'Like this idea'}
-          style={{
-            width: '2rem',
-            height: '2rem',
-            borderRadius: '0.5rem',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            border: liked ? '1px solid rgba(249,115,22,0.30)' : '1px solid var(--tint-border)',
-            background: liked ? 'rgba(249,115,22,0.09)' : 'var(--tint-bg)',
-            color: liked ? '#f97316' : 'var(--ink-light)',
-            cursor: loading ? 'default' : 'pointer',
-            transition: 'all 0.14s ease',
-          }}
-        >
-          <HeartIcon filled={liked} />
-        </button>
-        <span
-          style={{
-            fontSize: '0.7rem',
-            fontWeight: 600,
-            fontVariantNumeric: 'tabular-nums',
-            color: liked ? '#f97316' : 'var(--ink-light)',
-          }}
-        >
-          {likesCount}
-        </span>
+      {/* Vote column */}
+      <div style={{ paddingTop: '0.125rem', flexShrink: 0 }}>
+        <VoteButton
+          count={likesCount}
+          voted={liked}
+          loading={loading || deleting || editing || saving}
+          onVote={toggleLike}
+        />
       </div>
 
       {/* Content */}

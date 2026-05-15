@@ -21,6 +21,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import IdeaComments from '@/components/IdeaComments'
 import StatusBadge from '@/components/StatusBadge'
+import VoteButton from '@/components/VoteButton'
 import type { Idea } from '@/types/database'
 
 // ── Tokens ──────────────────────────────────────────────────────────────────
@@ -239,25 +240,12 @@ function IdeaDetailPanel({ idea, userId, isAdmin, onClose, isMobileOverlay }: {
         <div style={{ padding: '1rem 1.125rem', flex: 1 }}>
           {/* Vote + author */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.875rem' }}>
-            <button
-              onClick={toggleLike}
-              disabled={likeLoading}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '0.3rem',
-                height: '2rem', padding: '0 0.65rem',
-                background: liked ? 'rgba(249,115,22,0.08)' : 'transparent',
-                border: `1.5px solid ${liked ? C.orange : 'rgba(26,107,191,0.14)'}`,
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontSize: '0.76rem', fontWeight: 700,
-                color: liked ? C.orange : C.slate,
-                transition: 'background 0.15s, border-color 0.15s, color 0.15s',
-                fontFamily: 'inherit',
-              }}
-            >
-              <span style={{ fontSize: '0.68rem' }}>▲</span>
-              {likesCount}
-            </button>
+            <VoteButton
+              count={likesCount}
+              voted={liked}
+              loading={likeLoading}
+              onVote={toggleLike}
+            />
             {liked && <span style={{ fontSize: '0.7rem', color: C.orange, fontWeight: 600 }}>You voted</span>}
           </div>
 
