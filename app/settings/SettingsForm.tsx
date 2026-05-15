@@ -117,6 +117,54 @@ export default function SettingsForm({
 
   return (
     <main style={{ minHeight: '100vh', background: 'var(--page-bg)', fontFamily: "'DM Sans', sans-serif" }}>
+      <style>{`
+        .settings-name-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 0.875rem;
+          margin-bottom: 0.875rem;
+        }
+        @media (max-width: 480px) {
+          .settings-name-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+        .settings-card {
+          background: #fff;
+          border-radius: 1.25rem;
+          border: 1px solid rgba(26,107,191,0.10);
+          padding: 2rem;
+          box-shadow: 0 2px 12px rgba(6,14,38,0.05);
+        }
+        @media (max-width: 480px) {
+          .settings-card {
+            padding: 1.25rem;
+            border-radius: 0.875rem;
+          }
+        }
+        .settings-save-row {
+          display: flex;
+          justify-content: flex-end;
+        }
+        @media (max-width: 480px) {
+          .settings-save-row {
+            justify-content: stretch;
+          }
+          .settings-save-row button {
+            width: 100%;
+          }
+        }
+        .settings-account-footer {
+          margin-top: 1.5rem;
+          padding-top: 1.5rem;
+          border-top: 1px solid rgba(26,107,191,0.08);
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          flex-wrap: wrap;
+          gap: 0.75rem;
+        }
+      `}</style>
 
       {/* Toast */}
       {toast && (
@@ -154,7 +202,7 @@ export default function SettingsForm({
         <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
 
           {/* ── Profile card ── */}
-          <div style={{ background: '#fff', borderRadius: '1.25rem', border: '1px solid rgba(26,107,191,0.10)', padding: '2rem', boxShadow: '0 2px 12px rgba(6,14,38,0.05)' }}>
+          <div className="settings-card">
             <p style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#9ab0c8', marginBottom: '1.5rem' }}>Profile</p>
 
             {/* Avatar row */}
@@ -214,7 +262,7 @@ export default function SettingsForm({
             </div>
 
             {/* Name row */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem', marginBottom: '0.875rem' }}>
+            <div className="settings-name-grid">
               <label style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
                 <span style={{ fontSize: '0.78rem', fontWeight: 600, color: '#5a7fa8' }}>First name</span>
                 <input
@@ -251,7 +299,7 @@ export default function SettingsForm({
           </div>
 
           {/* ── Account card ── */}
-          <div style={{ background: '#fff', borderRadius: '1.25rem', border: '1px solid rgba(26,107,191,0.10)', padding: '2rem', boxShadow: '0 2px 12px rgba(6,14,38,0.05)' }}>
+          <div className="settings-card">
             <p style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#9ab0c8', marginBottom: '1.5rem' }}>Account</p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -268,7 +316,7 @@ export default function SettingsForm({
               <p style={{ fontSize: '0.75rem', color: '#9ab0c8' }}>Email address cannot be changed here.</p>
             </div>
 
-            <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid rgba(26,107,191,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
+            <div className="settings-account-footer">
               <div>
                 <p style={{ fontSize: '0.875rem', fontWeight: 600, color: '#0d1f35', marginBottom: '0.1rem' }}>Role</p>
                 <p style={{ fontSize: '0.78rem', color: '#9ab0c8', textTransform: 'capitalize' }}>{role}</p>
@@ -284,7 +332,7 @@ export default function SettingsForm({
           </div>
 
           {/* Save button */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <div className="settings-save-row">
             <button
               type="submit"
               className="btn-primary"
@@ -298,7 +346,7 @@ export default function SettingsForm({
         </form>
 
         {/* ── Plan & billing ── */}
-        <div style={{ background: '#fff', borderRadius: '1.25rem', border: '1px solid rgba(26,107,191,0.10)', padding: '2rem', boxShadow: '0 2px 12px rgba(6,14,38,0.05)' }}>
+        <div className="settings-card">
           <p style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#9ab0c8', marginBottom: '1.5rem' }}>
             Plan &amp; billing
           </p>
@@ -375,13 +423,10 @@ export default function SettingsForm({
 
         {/* ── Danger zone ── */}
         <div
+          className="settings-card"
           style={{
             marginTop: '2rem',
-            background: '#fff',
-            borderRadius: '1.25rem',
             border: '1px solid rgba(220,38,38,0.15)',
-            padding: '2rem',
-            boxShadow: '0 2px 12px rgba(6,14,38,0.05)',
           }}
         >
           <p style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#dc2626', marginBottom: '1rem' }}>

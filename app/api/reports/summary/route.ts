@@ -43,13 +43,13 @@ function statusBadgeHtml(status: string): string {
   </span>`
 }
 
-// ── Vote pill — matches VoteButton component style ────────────────────────────
+// ── Like pill — heart icon matching IdeaCard component ───────────────────────
 function votePillHtml(count: number): string {
   return `<span style="display:inline-flex;align-items:center;gap:4px;
     font-size:11px;font-weight:700;color:${T.slate};
     background:rgba(26,107,191,0.05);border:1.5px solid rgba(26,107,191,0.14);
     border-radius:7px;padding:3px 9px;white-space:nowrap;">
-    ▲ ${count}
+    ♥ ${count}
   </span>`
 }
 

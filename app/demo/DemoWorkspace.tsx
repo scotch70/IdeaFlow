@@ -71,7 +71,9 @@ function VoteButton({ count, voted, onVote, size = 'md' }: {
           transition: 'background 0.15s, border-color 0.15s, color 0.15s',
         }}
       >
-        <span style={{ fontSize: size === 'sm' ? '0.62rem' : '0.68rem', lineHeight: 1 }}>▲</span>
+        <svg width={size === 'sm' ? 11 : 13} height={size === 'sm' ? 11 : 13} viewBox="0 0 24 24" fill={voted ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+        </svg>
         {count}
       </button>
       {showFloat && (
@@ -212,7 +214,7 @@ function IdeaDetail({ idea, voted, onVote, onClose }: {
         {/* Vote */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '0.875rem' }}>
           <VoteButton count={idea.votes} voted={voted} onVote={onVote} />
-          {voted && <span style={{ fontSize: '0.7rem', color: C.orange, fontWeight: 600 }}>Voted</span>}
+          {voted && <span style={{ fontSize: '0.7rem', color: C.orange, fontWeight: 600 }}>Liked</span>}
         </div>
 
         {/* Author */}

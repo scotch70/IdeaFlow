@@ -16,7 +16,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import LogoMark from '@/components/LogoMark'
+import { IdeaFlowWordmark } from '@/components/Logo'
 
 interface Props {
   userName:  string
@@ -114,12 +114,7 @@ export default function MobileDashboardHeader({ userName, userEmail, userRole }:
         borderBottom: '1px solid #e8ecf0',
       }}>
         {/* Logo */}
-        <Link href="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
-          <LogoMark size={22} />
-          <span style={{ fontSize: '1rem', fontWeight: 800, color: '#0d1f35', letterSpacing: '-0.03em' }}>
-            Idea<span style={{ color: '#f97316' }}>Flow</span>
-          </span>
-        </Link>
+        <IdeaFlowWordmark href="/" markWidth={18} fontSize="0.9375rem" />
 
         {/* Hamburger */}
         <button
