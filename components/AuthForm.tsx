@@ -5,10 +5,16 @@ import { useState, Suspense } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useSearchParams, useRouter } from 'next/navigation'
 
-// 'choose'  — first-time visitor selects their path
-// 'signup'  — creating a new workspace
-// 'signin'  — returning user
-// 'confirm' — signup succeeded but email confirmation is required
+/**
+ * Mode is derived entirely from the URL search param — never from useState.
+ * This means:
+ *   /auth              → 'choose'
+ *   /auth?mode=login   → 'signin'
+ *   /auth?mode=signup  → 'signup'
+ *
+ * The only local state used for mode is `showConfirm`, which is a transient
+ * post-signup screen that cannot be expressed in the URL cleanly.
+ */
 type Mode = 'choose' | 'signup' | 'signin' | 'confirm'
 
 export default function AuthForm() {
@@ -38,9 +44,18 @@ function AuthFormInner() {
   // Shown after a successful password reset
   const resetSuccess = params.get('reset') === 'success'
 
+  // ── Mode: URL is the single source of truth ────────────────────────────────
+  // showConfirm is the only local-state exception — it's a transient post-signup
+  // screen that has no URL representation and disappears on refresh intentionally.
+  const [showConfirm, setShowConfirm] = useState(false)
+  const [confirmEmail, setConfirmEmail] = useState('')
+
   const comingFromInvite = nextUrl.includes('/join')
-  const modeParam = params.get('mode')
-  const initialMode: Mode = comingFromInvite
+  const modeParam        = params.get('mode')
+
+  const mode: Mode = showConfirm
+    ? 'confirm'
+    : comingFromInvite
     ? 'signin'
     : modeParam === 'login'
     ? 'signin'
@@ -48,16 +63,25 @@ function AuthFormInner() {
     ? 'signup'
     : 'choose'
 
-  const [mode, setMode] = useState<Mode>(initialMode)
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [fullName, setFullName] = useState('')
+  const [email, setEmail]           = useState('')
+  const [password, setPassword]     = useState('')
+  const [fullName, setFullName]     = useState('')
   const [companyName, setCompanyName] = useState('')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [error, setError]           = useState('')
+  const [loading, setLoading]       = useState(false)
 
-  function switchMode(next: Mode) {
-    setMode(next)
+  /**
+   * Navigate to a different auth mode by updating the URL.
+   * Using router.push() keeps the browser history intact so Back/Forward work.
+   * The `next` param is preserved across mode switches.
+   */
+  function goTo(target: 'signin' | 'signup' | 'choose') {
+    const sp = new URLSearchParams()
+    if (target === 'signin')  sp.set('mode', 'login')
+    if (target === 'signup')  sp.set('mode', 'signup')
+    if (nextUrl !== '/dashboard') sp.set('next', nextUrl)
+    const qs = sp.toString()
+    router.push(`/auth${qs ? '?' + qs : ''}`)
     setError('')
   }
 
@@ -80,7 +104,8 @@ function AuthFormInner() {
         })
         if (signUpError) throw signUpError
         if (!signUpData.session) {
-          setMode('confirm')
+          setConfirmEmail(email)
+          setShowConfirm(true)
           return
         }
       } else {
@@ -164,7 +189,7 @@ function AuthFormInner() {
 
             <div style={{ marginTop: '1.5rem', paddingTop: '1.25rem', borderTop: '1px solid #e7e2d8', fontSize: '0.8rem', color: '#5d667a' }}>
               Wrong email?{' '}
-              <button type="button" onClick={() => { setMode('signup'); setError('') }} style={FOOTER_LINK}>
+              <button type="button" onClick={() => { setShowConfirm(false); setError('') }} style={FOOTER_LINK}>
                 Go back
               </button>
             </div>
@@ -190,7 +215,7 @@ function AuthFormInner() {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             <button
-              onClick={() => switchMode('signup')}
+              onClick={() => goTo('signup')}
               style={{
                 display: 'flex', alignItems: 'flex-start', gap: '0.875rem',
                 textAlign: 'left', width: '100%', cursor: 'pointer',
@@ -249,7 +274,7 @@ function AuthFormInner() {
 
           <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.825rem', color: '#5d667a' }}>
             Already have an account?{' '}
-            <button type="button" onClick={() => switchMode('signin')} style={FOOTER_LINK}>Sign in</button>
+            <button type="button" onClick={() => goTo('signin')} style={FOOTER_LINK}>Sign in</button>
           </div>
         </div>
       </div>
@@ -392,20 +417,20 @@ function AuthFormInner() {
           {mode === 'signin' ? (
             <>
               New to IdeaFlow?{' '}
-              <button type="button" onClick={() => switchMode(comingFromInvite ? 'signup' : 'choose')} style={FOOTER_LINK}>
+              <button type="button" onClick={() => goTo(comingFromInvite ? 'signup' : 'choose')} style={FOOTER_LINK}>
                 Get started
               </button>
             </>
           ) : (
             <>
               Already have an account?{' '}
-              <button type="button" onClick={() => switchMode('signin')} style={FOOTER_LINK}>
+              <button type="button" onClick={() => goTo('signin')} style={FOOTER_LINK}>
                 Sign in
               </button>
               {!comingFromInvite && (
                 <>
                   {' · '}
-                  <button type="button" onClick={() => switchMode('choose')} style={FOOTER_LINK}>
+                  <button type="button" onClick={() => goTo('choose')} style={FOOTER_LINK}>
                     Back
                   </button>
                 </>
