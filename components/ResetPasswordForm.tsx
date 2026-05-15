@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useState, Suspense } from 'react'
+import { useEffect, useRef, useState, Suspense } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter, useSearchParams } from 'next/navigation'
 
@@ -39,81 +39,79 @@ function ResetPasswordFormInner() {
   const params = useSearchParams()
   const supabase = createClient()
 
-  const [status, setStatus] = useState<PageStatus>(() => {
-    // If the callback already told us the link is expired, show that immediately
-    // (avoids a flash of the loading spinner)
-    if (typeof window !== 'undefined') {
-      const p = new URLSearchParams(window.location.search)
-      if (p.get('error') === 'expired') return 'expired'
-    }
-    return 'loading'
-  })
-
+  const [status, setStatus] = useState<PageStatus>('loading')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [loading, setLoading] = useState(false)
   const [formError, setFormError] = useState('')
   const [done, setDone] = useState(false)
 
+  // Guard against React StrictMode double-invoke and Fast Refresh re-runs.
+  // verifyOtp consumes the token on the FIRST call.  A second call with the
+  // same token_hash returns "Token has expired or is invalid" and overwrites
+  // the 'ready' state with 'expired'.  The ref prevents that second call.
+  const verifyRan = useRef(false)
+
   useEffect(() => {
-    // If the error=expired param was already picked up in useState initialiser,
-    // skip session detection entirely.
-    if (params.get('error') === 'expired') {
+    if (verifyRan.current) return
+    verifyRan.current = true
+
+    const tokenHash  = params.get('token_hash')
+    const typeParam  = params.get('type')
+    const errorParam = params.get('error')
+
+    // ── DEBUG (remove after confirming) ──────────────────────────────────────
+    console.log('[reset-password] url params', {
+      hasTokenHash: !!tokenHash,
+      tokenHashPrefix: tokenHash ? `${tokenHash.slice(0, 10)}…` : null,
+      type: typeParam,
+      error: errorParam,
+    })
+
+    // ── CASE 1: callback already flagged this link as expired ────────────────
+    if (errorParam === 'expired') {
       setStatus('expired')
       return
     }
 
-    // Three arrival paths:
+    // ── CASE 2: token_hash in URL — new cross-device flow ────────────────────
     //
-    //  PATH A — via /auth/callback (normal forgot-password flow):
-    //    No ?code in URL, no hash, but a session cookie was set server-side.
-    //    Read the session from cookies.
+    // The Supabase "Reset Password" email template links here directly:
+    //   /reset-password?token_hash={{ .TokenHash }}&type=recovery
     //
-    //  PATH B — direct PKCE link (Supabase dashboard fallback / older setup):
-    //    ?code=XXXX in URL. Exchange it client-side.
-    //
-    //  PATH C — legacy implicit hash flow:
-    //    #access_token=...&type=recovery in URL hash.
-    //    Supabase JS processes this automatically; listen for PASSWORD_RECOVERY.
-
-    let resolved = false
-    function resolve(next: PageStatus) {
-      if (resolved) return
-      resolved = true
-      setStatus(next)
-    }
-
-    const searchCode = new URLSearchParams(window.location.search).get('code')
-    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''))
-    const hashType   = hashParams.get('type')
-
-    // PATH A: no code in URL, no recovery hash — session already in cookies
-    if (!searchCode && hashType !== 'recovery') {
+    // verifyOtp with a token_hash does NOT require a PKCE code verifier cookie.
+    // It works regardless of which browser or device opened the email link.
+    if (tokenHash) {
+      // type param from the URL is always 'recovery' for this page, but we
+      // force it defensively so a missing or malformed URL param can't break the call.
       supabase.auth
-        .getSession()
-        .then(({ data: { session } }) => resolve(session ? 'ready' : 'expired'))
-        .catch(() => resolve('expired'))
+        .verifyOtp({ token_hash: tokenHash, type: 'recovery' })
+        .then(({ error }) => {
+          // ── DEBUG (remove after confirming) ────────────────────────────────
+          console.log('[reset-password] verifyOtp result', {
+            success: !error,
+            error: error ? { message: error.message, status: (error as { status?: number }).status } : null,
+          })
+          setStatus(error ? 'expired' : 'ready')
+        })
+        .catch((err: unknown) => {
+          // ── DEBUG (remove after confirming) ────────────────────────────────
+          console.error('[reset-password] verifyOtp threw', err)
+          setStatus('expired')
+        })
       return
     }
 
-    // PATH B: PKCE code in URL — exchange client-side
-    if (searchCode) {
-      supabase.auth
-        .exchangeCodeForSession(searchCode)
-        .then(({ error }) => resolve(error ? 'expired' : 'ready'))
-        .catch(() => resolve('expired'))
-      return
-    }
-
-    // PATH C: legacy implicit hash — wait for PASSWORD_RECOVERY event
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY') {
-        resolve('ready')
-      } else if (event === 'INITIAL_SESSION') {
-        if (hashType !== 'recovery') resolve('expired')
-      }
-    })
-    return () => subscription.unsubscribe()
+    // ── CASE 3: no token_hash — check for an existing session ────────────────
+    // Fallback for any session established via another path.
+    supabase.auth
+      .getSession()
+      .then(({ data: { session } }) => {
+        // ── DEBUG (remove after confirming) ──────────────────────────────────
+        console.log('[reset-password] session fallback', { hasSession: !!session })
+        setStatus(session ? 'ready' : 'expired')
+      })
+      .catch(() => setStatus('expired'))
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleSubmit(e: React.FormEvent) {
@@ -134,10 +132,8 @@ function ResetPasswordFormInner() {
       const { error } = await supabase.auth.updateUser({ password })
       if (error) throw error
       setDone(true)
-      // Small delay so the user sees the success state, then send to sign-in
-      setTimeout(() => {
-        router.push('/auth?mode=login&reset=success')
-      }, 1800)
+      // Brief success state before redirecting to sign-in
+      setTimeout(() => router.push('/auth?mode=login&reset=success'), 1800)
     } catch (err: unknown) {
       setFormError(err instanceof Error ? err.message : 'Something went wrong')
     } finally {
