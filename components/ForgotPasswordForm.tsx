@@ -46,14 +46,10 @@ function ForgotPasswordFormInner() {
     setFormError('')
     setLoading(true)
     try {
-      const redirectTo =
-        `${window.location.origin}/auth/callback` +
-        `?next=/reset-password&type=recovery`
-
-      const { error } = await supabase.auth.resetPasswordForEmail(
-        email.trim(),
-        { redirectTo }
-      )
+      // redirectTo is omitted: the Supabase "Reset Password" email template
+      // must use {{ .TokenHash }} linking to /reset-password (not {{ .ConfirmationURL }}).
+      // That makes the reset link work cross-device / cross-browser.
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim())
       if (error) throw error
       setSent(true)
     } catch (err: unknown) {

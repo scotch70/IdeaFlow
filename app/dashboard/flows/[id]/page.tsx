@@ -16,6 +16,8 @@ import NewIdeaForm       from '@/components/NewIdeaForm'
 import IdeaList          from '@/components/IdeaList'
 import FlowAdminPanel    from '@/components/FlowAdminPanel'
 import type { FlowInvite } from '@/components/FlowAdminPanel'
+import FlowWorkspaceClient from '@/components/FlowWorkspaceClient'
+import type { AccessibleFlow } from '@/components/FlowWorkspaceClient'
 import { getEffectiveRoundStatus } from '@/lib/rounds/getEffectiveRoundStatus'
 import type { Database, Idea } from '@/types/database'
 import type { SlimProfile } from '@/types/database'
@@ -141,6 +143,37 @@ export default async function FlowDetailPage({
     flowInvites     = invitesResult.data  ?? []
   }
 
+  // ── Accessible flows (for member workspace nav) ───────────────────────────
+  // Fetch all active/draft rounds for this company to populate the left nav.
+  // Members who click a restricted round they can't access will be redirected
+  // by that page's own access check — safe to show all here.
+  let accessibleFlows: AccessibleFlow[] = []
+  if (!isAdmin) {
+    const { data: allRounds } = await (admin as any)
+      .from('idea_rounds')
+      .select('id, name, status, manual_override, starts_at, ends_at')
+      .eq('company_id', profile.company_id)
+      .order('created_at', { ascending: false })
+
+    const rounds: Array<{
+      id: string; name: string | null;
+      status: string | null; manual_override: string | null;
+      starts_at: string | null; ends_at: string | null;
+    }> = allRounds ?? []
+
+    accessibleFlows = rounds
+      .map(r => {
+        const eff = getEffectiveRoundStatus({
+          raw_status:      (r.status      ?? null) as 'draft' | 'active' | 'closed' | null,
+          manual_override: (r.manual_override ?? null) as 'open' | 'closed' | null,
+          opens_at:        r.starts_at   ?? null,
+          closes_at:       r.ends_at     ?? null,
+        })
+        return { id: r.id, name: r.name ?? 'Unnamed IdeaFlow', status: eff }
+      })
+      .filter(r => r.status !== 'closed')
+  }
+
   // ── Status badge ──────────────────────────────────────────────────────────
   const STATUS_META: Record<string, { label: string; bg: string; color: string; border: string; dot: string }> = {
     active: { label: 'Active',  bg: 'rgba(16,185,129,0.07)',   color: '#065f46', border: 'rgba(16,185,129,0.22)', dot: '#10b981' },
@@ -149,13 +182,28 @@ export default async function FlowDetailPage({
   }
   const sm = STATUS_META[effectiveStatus] ?? STATUS_META.closed
 
+  // ── New idea form (reused in both views) ─────────────────────────────────
+  const newIdeaForm = (
+    <NewIdeaForm
+      userId={user.id}
+      companyId={profile.company_id}
+      isAdmin={isAdmin}
+      roundPrompt={round.prompt ?? null}
+      roundActive={effectiveStatus === 'active'}
+      roundName={round.name ?? null}
+      defaultOpen={ideasWithLikeStatus.length === 0}
+      roundIsDraft={effectiveStatus === 'draft'}
+      roundId={roundId}
+    />
+  )
+
   return (
-    <div>
-      {/* ── Header ──────────────────────────────────────────────────────── */}
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      {/* ── Sticky header ───────────────────────────────────────────────── */}
       <div style={{
         background: '#ffffff',
         borderBottom: '1px solid rgba(26,107,191,0.09)',
-        position: 'sticky', top: 0, zIndex: 9,
+        flexShrink: 0,
       }}>
         <PageContainer style={{ paddingTop: '1rem', paddingBottom: '1rem' }}>
 
@@ -205,11 +253,10 @@ export default async function FlowDetailPage({
       </div>
 
       {/* ── Main ────────────────────────────────────────────────────────── */}
-      <main>
-        <PageContainer style={{ paddingTop: '2rem', paddingBottom: '3rem' }}>
-
-          {isAdmin ? (
-            /* Two-column layout for admins */
+      {isAdmin ? (
+        /* ── Admin: two-column layout ─────────────────────────────────── */
+        <main style={{ flex: 1, overflowY: 'auto' }}>
+          <PageContainer style={{ paddingTop: '2rem', paddingBottom: '3rem' }}>
             <div style={{
               display: 'grid',
               gridTemplateColumns: '1fr 380px',
@@ -266,17 +313,7 @@ export default async function FlowDetailPage({
                       padding: '1.25rem',
                       marginBottom: '1.5rem',
                     }}>
-                      <NewIdeaForm
-                        userId={user.id}
-                        companyId={profile.company_id}
-                        isAdmin={isAdmin}
-                        roundPrompt={round.prompt ?? null}
-                        roundActive={true}
-                        roundName={round.name ?? null}
-                        defaultOpen={ideasWithLikeStatus.length === 0}
-                        roundIsDraft={false}
-                        roundId={roundId}
-                      />
+                      {newIdeaForm}
                     </div>
 
                     <IdeaList
@@ -326,101 +363,24 @@ export default async function FlowDetailPage({
               </div>
 
             </div>
-          ) : (
-            /* Single-column for members */
-            <>
-              {round.prompt && (
-                <div style={{
-                  borderRadius: '0.875rem',
-                  border: '1px solid rgba(26,107,191,0.12)',
-                  background: 'rgba(240,245,255,0.6)',
-                  padding: '0.875rem 1.125rem',
-                  marginBottom: '1.5rem',
-                }}>
-                  <p style={{ fontSize: '0.68rem', fontWeight: 700, color: '#9ab0c8', marginBottom: '0.2rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-                    Question
-                  </p>
-                  <p style={{ fontSize: '0.925rem', fontWeight: 600, color: '#0d1f35', lineHeight: 1.5 }}>
-                    {round.prompt}
-                  </p>
-                </div>
-              )}
-
-              {effectiveStatus === 'active' ? (
-                <>
-                  {ideasWithLikeStatus.length === 0 && (
-                    <div style={{
-                      background: '#ffffff',
-                      border: '1px solid rgba(26,107,191,0.10)',
-                      borderRadius: '1.25rem',
-                      padding: '2.5rem 2rem',
-                      textAlign: 'center',
-                      boxShadow: '0 2px 12px rgba(6,14,38,0.05)',
-                      marginBottom: '1.5rem',
-                    }}>
-                      <h2 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0d1f35', letterSpacing: '-0.02em', marginBottom: '0.4rem' }}>
-                        No ideas yet
-                      </h2>
-                      <p style={{ fontSize: '0.875rem', color: '#9ab0c8', lineHeight: 1.6, maxWidth: '22rem', margin: '0 auto' }}>
-                        Be the first to share an idea for this IdeaFlow.
-                      </p>
-                    </div>
-                  )}
-
-                  <div style={{
-                    borderRadius: '1.25rem',
-                    border: '1px solid rgba(26,107,191,0.11)',
-                    background: 'linear-gradient(180deg, #ffffff 0%, rgba(248,250,255,1) 100%)',
-                    boxShadow: '0 6px 24px rgba(6,14,38,0.04)',
-                    padding: '1.25rem',
-                    marginBottom: '1.5rem',
-                  }}>
-                    <NewIdeaForm
-                      userId={user.id}
-                      companyId={profile.company_id}
-                      isAdmin={isAdmin}
-                      roundPrompt={round.prompt ?? null}
-                      roundActive={true}
-                      roundName={round.name ?? null}
-                      defaultOpen={ideasWithLikeStatus.length === 0}
-                      roundIsDraft={false}
-                      roundId={roundId}
-                    />
-                  </div>
-
-                  <IdeaList
-                    ideas={ideasWithLikeStatus}
-                    currentUserId={user.id}
-                    companyId={profile.company_id}
-                    isAdmin={isAdmin}
-                  />
-                </>
-              ) : (
-                <div style={{
-                  background: '#ffffff',
-                  border: '1px solid rgba(26,107,191,0.10)',
-                  borderRadius: '1.25rem',
-                  padding: '3rem 2rem',
-                  textAlign: 'center',
-                  boxShadow: '0 2px 12px rgba(6,14,38,0.05)',
-                  maxWidth: '32rem',
-                  margin: '0 auto',
-                }}>
-                  <h2 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0d1f35', letterSpacing: '-0.02em', marginBottom: '0.4rem' }}>
-                    {effectiveStatus === 'draft' ? 'Coming soon' : 'IdeaFlow closed'}
-                  </h2>
-                  <p style={{ fontSize: '0.875rem', color: '#9ab0c8', lineHeight: 1.6, maxWidth: '22rem', margin: '0 auto' }}>
-                    {effectiveStatus === 'draft'
-                      ? 'This IdeaFlow is not yet open for submissions.'
-                      : 'This IdeaFlow is no longer accepting ideas.'}
-                  </p>
-                </div>
-              )}
-            </>
-          )}
-
-        </PageContainer>
-      </main>
+          </PageContainer>
+        </main>
+      ) : (
+        /* ── Member: three-column workspace ───────────────────────────── */
+        <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+          <FlowWorkspaceClient
+            ideas={ideasWithLikeStatus}
+            accessibleFlows={accessibleFlows}
+            currentFlowId={roundId}
+            userId={user.id}
+            companyId={profile.company_id}
+            isAdmin={false}
+            prompt={round.prompt ?? null}
+            effectiveStatus={effectiveStatus}
+            newIdeaForm={newIdeaForm}
+          />
+        </div>
+      )}
     </div>
   )
 }

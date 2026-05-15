@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import DashboardSidebar from '@/components/DashboardSidebar'
+import MobileDashboardHeader from '@/components/MobileDashboardHeader'
 import SiteHeader from '@/components/SiteHeader'
 
 export const HEADER_HEIGHT = '3.625rem'
@@ -27,41 +28,75 @@ export default async function DashboardLayout({
     data: { full_name: string | null; role: string } | null
   }
 
+  const userName  = profile?.full_name  ?? ''
+  const userEmail = user.email           ?? ''
+  const userRole  = profile?.role        ?? 'member'
+
   return (
     <>
-      {/* ── Top navbar — full width, sticky at top ── */}
-      <SiteHeader />
+      {/*
+        ── Global top navbar ─────────────────────────────────────────────────
+        Shown on desktop. On mobile we skip the public SiteHeader inside the
+        dashboard shell and replace it with MobileDashboardHeader below.
+      */}
+      <div className="hidden md:block">
+        <SiteHeader />
+      </div>
 
       {/*
-        ── Dashboard shell ──────────────────────────────────────────────────
+        ── Mobile sticky header ──────────────────────────────────────────────
+        Only visible below md (768px). Provides logo + hamburger drawer nav.
+        Sits above the content column so it stays sticky inside the viewport.
+      */}
+      <div className="md:hidden sticky top-0 z-40">
+        <MobileDashboardHeader
+          userName={userName}
+          userEmail={userEmail}
+          userRole={userRole}
+        />
+      </div>
+
+      {/*
+        ── Desktop dashboard shell ───────────────────────────────────────────
         Mirrors the exact centering system used by SiteHeader and PageContainer:
           mx-auto max-w-7xl px-6 lg:px-10
-        This gives identical left/right gutters to every other page on the site.
 
-        The sidebar is position:sticky (not fixed), so it lives inside this
-        centered container — no margin-left hacks, no CSS custom-property math.
-        Both sidebar and content are naturally bounded by max-w-7xl.
-      */}
-      {/*
-        Fixed-height flex shell — the key to making sticky sub-headers work.
-        height (not min-height) constrains the shell to exactly the visible area
-        below the navbar. The sidebar fills that height as a plain flex item.
-        The content column scrolls internally (overflow-y: auto), so
-        position:sticky inside it sticks at top:0 of the scroll viewport —
-        which is visually right below the global navbar.
+        Fixed-height flex shell — the sidebar fills the visible area naturally.
+        The content column scrolls internally (overflow-y: auto) so sticky
+        sub-headers inside pages stick at top: 0 of their scroll viewport,
+        which renders visually right below the global navbar.
+
+        ── Mobile shell ─────────────────────────────────────────────────────
+        On mobile (< md), the sidebar is hidden and the content takes full
+        width. The mobile header above provides navigation via the drawer.
+        No margin-left math, no horizontal scroll.
       */}
       <div
-        className="mx-auto flex max-w-7xl px-6 lg:px-10"
-        style={{ height: `calc(100vh - ${HEADER_HEIGHT})` }}
+        className="mx-auto flex max-w-7xl"
+        style={{
+          // Desktop: subtract the SiteHeader height
+          // Mobile:  subtract the MobileDashboardHeader height (3.5rem)
+          height: `calc(100vh - ${HEADER_HEIGHT})`,
+        }}
       >
-        <DashboardSidebar
-          userName={profile?.full_name ?? ''}
-          userEmail={user.email ?? ''}
-          userRole={profile?.role ?? 'member'}
-        />
+        {/* ── Sidebar — hidden on mobile ───────────────────────────────── */}
+        <div className="hidden md:flex" style={{ flexShrink: 0 }}>
+          <DashboardSidebar
+            userName={userName}
+            userEmail={userEmail}
+            userRole={userRole}
+          />
+        </div>
 
-        {/* Scrollable content column — only this area scrolls */}
-        <div style={{ flex: 1, minWidth: 0, overflowY: 'auto' }}>
+        {/* ── Scrollable content column ────────────────────────────────── */}
+        {/*
+          px-4 sm:px-6 lg:px-10 — tighter on mobile so cards have more room.
+          On desktop the padding matches the marketing site gutters.
+        */}
+        <div
+          className="px-4 sm:px-6 lg:px-10"
+          style={{ flex: 1, minWidth: 0, overflowY: 'auto' }}
+        >
           {children}
         </div>
       </div>
