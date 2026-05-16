@@ -462,14 +462,14 @@ export default async function HomePage() {
                 lineHeight: 1.15,
                 marginBottom: '0.625rem',
               }}>
-                Simple yearly pricing for small teams.
+                Simple yearly pricing for every team size.
               </h2>
               <p style={{ fontSize: '0.9375rem', lineHeight: 1.7, color: P.slate }}>
                 Start free, upgrade when you&apos;re ready.
               </p>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem', maxWidth: '52rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1rem', maxWidth: '74rem' }}>
 
               {/* Free */}
               <div style={{
@@ -607,6 +607,99 @@ export default async function HomePage() {
                     }}
                     label="Upgrade to Pro →"
                   />
+                )}
+              </div>
+
+              {/* Pro+ */}
+              <div style={{
+                background: 'linear-gradient(160deg, #1a2035 0%, #0f1726 100%)',
+                borderRadius: '1rem',
+                padding: '2rem',
+                display: 'flex', flexDirection: 'column',
+                position: 'relative', overflow: 'hidden',
+                border: '1px solid rgba(99,179,237,0.12)',
+                boxShadow: '0 4px 32px rgba(9,13,30,0.22)',
+              }}>
+                {/* Blue-teal glow */}
+                <div style={{
+                  position: 'absolute', top: 0, right: 0, width: '70%', height: '55%',
+                  background: 'radial-gradient(ellipse at top right, rgba(56,189,248,0.09) 0%, transparent 70%)',
+                  pointerEvents: 'none',
+                }} />
+
+                <div style={{ marginBottom: '1rem', position: 'relative' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '1rem' }}>
+                    <p style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.40)' }}>Pro+</p>
+                    <span style={{
+                      fontSize: '0.58rem', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase',
+                      color: 'rgba(186,230,253,0.90)',
+                      background: 'rgba(56,189,248,0.12)',
+                      borderRadius: '999px', padding: '0.15rem 0.5rem',
+                      border: '1px solid rgba(56,189,248,0.22)',
+                    }}>
+                      Large teams
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.375rem', marginBottom: '0.25rem' }}>
+                    <p style={{ fontSize: '2.5rem', fontWeight: 700, color: 'rgba(255,255,255,0.96)', letterSpacing: '-0.04em', lineHeight: 1 }}>€99</p>
+                    <p style={{ fontSize: '0.875rem', fontWeight: 500, color: 'rgba(255,255,255,0.35)' }}>/year</p>
+                  </div>
+                  <p style={{ fontSize: '0.825rem', color: 'rgba(255,255,255,0.35)' }}>Under €9/month · For growing organisations</p>
+                </div>
+
+                <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: '1.5rem', marginBottom: '1.75rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', flex: 1, position: 'relative' }}>
+                  {[
+                    'Everything in Pro',
+                    'Up to 100 workspace members',
+                    'Unlimited IdeaFlows',
+                    'Full analytics dashboard',
+                    'PDF report export',
+                    'Admin controls and roles',
+                    'Priority support',
+                  ].map((item, i) => (
+                    <div key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.625rem', fontSize: '0.875rem', color: i === 0 ? 'rgba(255,255,255,0.32)' : 'rgba(255,255,255,0.78)', fontStyle: i === 0 ? 'italic' : 'normal' }}>
+                      <svg width="13" height="13" viewBox="0 0 15 15" fill="none" style={{ flexShrink: 0, marginTop: '0.15rem', color: i === 0 ? 'rgba(255,255,255,0.22)' : 'rgba(56,189,248,0.75)' }}>
+                        <path d="M12.5 3.5L6 10 3 7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      {item}
+                    </div>
+                  ))}
+                </div>
+
+                {!user ? (
+                  <Link href="/auth?mode=signup" style={{
+                    display: 'block', textAlign: 'center', padding: '0.7rem 1rem',
+                    borderRadius: '0.5rem',
+                    background: 'rgba(56,189,248,0.14)',
+                    border: '1px solid rgba(56,189,248,0.26)',
+                    color: 'rgba(186,230,253,0.95)',
+                    fontSize: '0.875rem', fontWeight: 600,
+                    textDecoration: 'none',
+                    transition: 'background 0.12s',
+                  }}>
+                    Get started →
+                  </Link>
+                ) : companyPlan === 'pro_plus' ? (
+                  <div style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+                    padding: '0.7rem 1rem', borderRadius: '0.5rem',
+                    background: 'rgba(56,189,248,0.08)', border: '1px solid rgba(56,189,248,0.18)',
+                  }}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(186,230,253,0.65)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+                    <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'rgba(186,230,253,0.75)' }}>You&apos;re on Pro+</span>
+                  </div>
+                ) : (
+                  <Link href="/contact" style={{
+                    display: 'block', textAlign: 'center', padding: '0.7rem 1rem',
+                    borderRadius: '0.5rem',
+                    background: 'rgba(56,189,248,0.14)',
+                    border: '1px solid rgba(56,189,248,0.26)',
+                    color: 'rgba(186,230,253,0.95)',
+                    fontSize: '0.875rem', fontWeight: 600,
+                    textDecoration: 'none',
+                  }}>
+                    Contact us →
+                  </Link>
                 )}
               </div>
 

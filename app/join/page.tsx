@@ -11,18 +11,20 @@ export default function JoinPage() {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            padding: '2rem 1rem',
-            background:
-              'linear-gradient(160deg, #060e26 0%, #0a1f50 35%, #0e3278 60%, #1a5a9a 85%, #2e7abf 100%)',
+            padding: '3rem 1rem 4rem',
+            background: '#f3f0ea',
             fontFamily: "'DM Sans', sans-serif",
           }}
         >
           <div
             style={{
-              borderRadius: '1.5rem',
+              width: '100%',
+              maxWidth: '22rem',
+              borderRadius: '1.25rem',
               padding: '2rem',
-              background: 'rgba(255,255,255,0.97)',
-              boxShadow: '0 24px 64px rgba(0,0,0,0.28), 0 4px 16px rgba(0,0,0,0.12)',
+              background: '#ffffff',
+              border: '1px solid #e7e2d8',
+              boxShadow: '0 2px 16px rgba(6,14,38,0.06)',
             }}
           >
             <p style={{ textAlign: 'center', fontSize: '0.875rem', color: '#64748b' }}>

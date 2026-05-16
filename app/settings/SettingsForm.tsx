@@ -351,19 +351,21 @@ export default function SettingsForm({
             Plan &amp; billing
           </p>
 
-          {companyPlan === 'pro' ? (
-            /* ── Pro plan state ─────────────────────────────────────── */
+          {(companyPlan === 'pro' || companyPlan === 'pro_plus') ? (
+            /* ── Pro / Pro+ plan state ──────────────────────────────── */
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
               <div>
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.75rem' }}>
-                  <span style={{ fontSize: '1rem', fontWeight: 800, color: '#0d1f35' }}>Pro</span>
+                  <span style={{ fontSize: '1rem', fontWeight: 800, color: '#0d1f35' }}>
+                    {companyPlan === 'pro_plus' ? 'Pro+' : 'Pro'}
+                  </span>
                   <span style={{ fontSize: '0.6rem', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', background: '#f97316', color: '#fff', borderRadius: '999px', padding: '2px 7px' }}>
                     Active
                   </span>
                 </div>
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                   {[
-                    'Up to 50 workspace members',
+                    companyPlan === 'pro_plus' ? 'Up to 100 workspace members' : 'Up to 50 workspace members',
                     'Unlimited IdeaFlows',
                     'Full analytics dashboard',
                     'PDF report export',
@@ -380,7 +382,9 @@ export default function SettingsForm({
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.875rem', borderRadius: '0.625rem', background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)' }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
-                <span style={{ fontSize: '0.825rem', fontWeight: 700, color: '#065f46' }}>Pro plan active</span>
+                <span style={{ fontSize: '0.825rem', fontWeight: 700, color: '#065f46' }}>
+                  {companyPlan === 'pro_plus' ? 'Pro+ plan active' : 'Pro plan active'}
+                </span>
               </div>
             </div>
           ) : (

@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import LogoMark from '@/components/LogoMark'
+import { IdeaFlowWordmark } from '@/components/Logo'
 
 const INVITE_CODE_STORAGE_KEY = 'ideaflow_invite_code'
 
@@ -179,33 +179,18 @@ export default function JoinPageClient() {
       style={{
         minHeight: '100vh',
         display: 'flex',
+        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '2rem 1rem',
-        background: 'linear-gradient(160deg, #060e26 0%, #0a1f50 35%, #0e3278 60%, #1a5a9a 85%, #2e7abf 100%)',
-        position: 'relative',
-        overflow: 'hidden',
+        padding: '3rem 1rem 4rem',
+        background: '#f3f0ea',
         fontFamily: "'DM Sans', sans-serif",
       }}
     >
-      <div
-        aria-hidden
-        style={{
-          position: 'absolute',
-          inset: 0,
-          pointerEvents: 'none',
-          background: 'radial-gradient(ellipse 60% 55% at 30% 60%, rgba(249,115,22,0.09) 0%, transparent 65%)',
-        }}
-      />
-      <div style={{ width: '100%', maxWidth: '22rem', position: 'relative', zIndex: 1 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '2rem', justifyContent: 'center' }}>
-          <div style={{ filter: 'drop-shadow(0 3px 12px rgba(240,104,0,0.40))' }}>
-            <LogoMark size={30} />
-          </div>
-          <span style={{ fontSize: '1.15rem', fontWeight: 800, color: '#fff', letterSpacing: '-0.03em', fontFamily: "'DM Sans', sans-serif" }}>
-            Idea<span style={{ color: '#ffb733' }}>Flow</span>
-          </span>
-        </div>
+      <div style={{ marginBottom: '2rem' }}>
+        <IdeaFlowWordmark href="/" markWidth={18} fontSize="0.9375rem" />
+      </div>
+      <div style={{ width: '100%', maxWidth: '22rem' }}>
         {children}
       </div>
     </main>
@@ -214,11 +199,11 @@ export default function JoinPageClient() {
   const card = (children: React.ReactNode) => (
     <div
       style={{
-        borderRadius: '1.5rem',
+        borderRadius: '1.25rem',
         padding: '2rem',
-        background: 'rgba(255,255,255,0.97)',
-        boxShadow: '0 24px 64px rgba(0,0,0,0.28), 0 4px 16px rgba(0,0,0,0.12)',
-        border: '1px solid rgba(255,255,255,0.20)',
+        background: '#ffffff',
+        boxShadow: '0 2px 16px rgba(6,14,38,0.06)',
+        border: '1px solid #e7e2d8',
       }}
     >
       {children}
