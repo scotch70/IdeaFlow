@@ -287,303 +287,288 @@ export default async function DashboardPage({
   const showRoundBanner = roundStatus !== null
 
   return (
-    <>
-      {/* ── Page header — sticky below the SiteHeader (3.625rem) ── */}
-      <div
-        style={{
-          background: '#ffffff',
-          borderBottom: '1px solid rgba(26,107,191,0.09)',
-          position: 'sticky',
-          top: 0, /* sticky within the scrollable content column, not the document */
-          zIndex: 9,
-        }}
-      >
-        <PageContainer style={{ paddingTop: '1.125rem', paddingBottom: '1.125rem' }}>
+    <main>
+      <PageContainer style={{ paddingTop: '2.5rem', paddingBottom: '3rem' }}>
+
+        {/* ── Welcome header ── */}
+        <div style={{ marginBottom: '2rem' }}>
+          <h1
+            style={{
+              fontSize: '1.875rem',
+              fontWeight: 800,
+              color: '#0d1f35',
+              letterSpacing: '-0.03em',
+              lineHeight: 1.1,
+              marginBottom: '0.4rem',
+              fontFamily: "'DM Sans', sans-serif",
+            }}
+          >
+            Welcome back, {firstName}
+          </h1>
+          <p style={{ fontSize: '0.9rem', color: '#8b96a8', fontWeight: 400, lineHeight: 1.5 }}>
+            Here&apos;s what&apos;s happening in your workspace today.
+          </p>
+        </div>
+
+        {/* ── Just upgraded ── */}
+        {justUpgraded && (company?.plan === 'pro' || company?.plan === 'standard') && (
           <div
             style={{
+              marginBottom: '1.5rem',
+              borderRadius: '0.875rem',
+              padding: '1rem 1.25rem',
+              background: 'linear-gradient(135deg, #f0fdf4, #dcfce7)',
+              border: '1px solid rgba(16,185,129,0.25)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.75rem',
+            }}
+          >
+            <span style={{ fontSize: '1.25rem' }}>🎉</span>
+            <div>
+              <p style={{ fontWeight: 700, fontSize: '0.9rem', color: '#065f46' }}>
+                You&apos;re on IdeaFlow {company.plan === 'standard' ? 'Standard' : 'Pro'}!
+              </p>
+              <p style={{ fontSize: '0.8rem', color: '#047857' }}>
+                {company.plan === 'standard' ? 'Up to 50 members' : 'Up to 100 members'} · unlimited IdeaFlows · PDF exports &amp; full analytics.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* ── Free plan upgrade banner ── */}
+        {company?.plan === 'free' && (
+          <div
+            style={{
+              marginBottom: '1.75rem',
+              borderRadius: '0.875rem',
+              padding: '0.875rem 1.25rem',
+              background: '#fdf8f4',
+              border: '1px solid rgba(249,115,22,0.12)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '1.25rem',
+              flexWrap: 'wrap',
+            }}
+          >
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '0.2rem' }}>
+                <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: '#7c2d12' }}>Free plan</span>
+                <span
+                  style={{
+                    fontSize: '0.68rem',
+                    fontWeight: 600,
+                    color: '#c2410c',
+                    background: 'rgba(249,115,22,0.09)',
+                    borderRadius: '999px',
+                    padding: '1px 7px',
+                  }}
+                >
+                  {memberCount} / 10 members
+                </span>
+              </div>
+              <p style={{ fontSize: '0.8rem', color: '#92400e', lineHeight: 1.5 }}>
+                Upgrade for more members, advanced analytics, and unlimited IdeaFlows.
+              </p>
+              {memberCount <= 1 && (
+                <a
+                  href="/dashboard/flows"
+                  style={{ fontSize: '0.78rem', color: '#f97316', fontWeight: 600, textDecoration: 'none', display: 'inline-block', marginTop: '0.2rem' }}
+                >
+                  Open an IdeaFlow to invite your team →
+                </a>
+              )}
+            </div>
+            <UpgradePlans compact currentPlan="free" />
+          </div>
+        )}
+
+        {/* ── Multi-flow switcher ── */}
+        {accessibleActiveFlowCount > 1 && (
+          <div
+            style={{
+              marginBottom: '1.5rem',
+              borderRadius: '0.875rem',
+              padding: '0.875rem 1.125rem',
+              background: 'rgba(26,107,191,0.03)',
+              border: '1px solid rgba(26,107,191,0.10)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              flexWrap: 'wrap',
               gap: '1rem',
+              flexWrap: 'wrap',
             }}
           >
             <div>
-              <p
-                style={{
-                  fontSize: '0.68rem',
-                  fontWeight: 700,
-                  letterSpacing: '0.16em',
-                  textTransform: 'uppercase',
-                  color: '#9ab0c8',
-                  marginBottom: '0.2rem',
-                }}
-              >
-                Dashboard
+              <p style={{ fontSize: '0.8rem', fontWeight: 600, color: '#0d1f35', marginBottom: '0.1rem' }}>
+                You have access to {accessibleActiveFlowCount} active IdeaFlows
               </p>
-              <h1
-                style={{
-                  fontSize: '1.25rem',
-                  fontWeight: 800,
-                  color: '#0d1f35',
-                  letterSpacing: '-0.02em',
-                  lineHeight: 1.2,
-                }}
-              >
-                Welcome back, {firstName}
-              </h1>
+              <p style={{ fontSize: '0.75rem', color: '#8b96a8' }}>
+                This page shows one flow. Switch to see all of them.
+              </p>
             </div>
-
-            <p style={{ fontSize: '0.825rem', color: '#9ab0c8', fontWeight: 500 }}>
-              {memberCount} member{memberCount !== 1 ? 's' : ''} ·{' '}
-              {ideasWithLikeStatus.length} idea
-              {ideasWithLikeStatus.length !== 1 ? 's' : ''}
-            </p>
+            <a
+              href="/dashboard/flows"
+              style={{
+                flexShrink: 0,
+                display: 'inline-flex',
+                alignItems: 'center',
+                height: '2rem',
+                padding: '0 0.875rem',
+                borderRadius: '0.45rem',
+                border: '1px solid rgba(26,107,191,0.18)',
+                background: '#fff',
+                fontSize: '0.775rem',
+                fontWeight: 600,
+                color: '#1a6bbf',
+                textDecoration: 'none',
+              }}
+            >
+              Switch IdeaFlow →
+            </a>
           </div>
-        </PageContainer>
-      </div>
+        )}
 
-      <main>
-        <PageContainer style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
-          {justUpgraded && company?.plan === 'pro' && (
-            <div
-              style={{
-                marginBottom: '1.5rem',
-                borderRadius: '1rem',
-                padding: '1rem 1.25rem',
-                background: 'linear-gradient(135deg, #f0fdf4, #dcfce7)',
-                border: '1px solid rgba(16,185,129,0.30)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem',
-              }}
-            >
-              <span style={{ fontSize: '1.25rem' }}>🎉</span>
-              <div>
-                <p
+        {/* ── Idea round banner (all users: active / closed / expired / draft) ── */}
+        {showRoundBanner && (
+          <IdeaRoundBanner
+            name={roundData?.idea_round_name ?? null}
+            status={effectiveStatus ?? 'active'}
+            endsAt={roundEndsAt}
+            isAdmin={profile.role === 'admin'}
+            companyId={profile.company_id}
+            manualOverride={roundManualOverride}
+            ideaCount={ideasWithLikeStatus.length}
+            memberCount={memberCount}
+          />
+        )}
+
+        <section style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+
+          {effectiveStatus === 'active' ? (
+            <>
+              {/* ── Onboarding empty state ── */}
+              {ideasWithLikeStatus.length === 0 && (
+                <div
                   style={{
-                    fontWeight: 700,
-                    fontSize: '0.9rem',
-                    color: '#065f46',
-                  }}
-                >
-                  You&apos;re on IdeaFlow Pro!
-                </p>
-                <p
-                  style={{
-                    fontSize: '0.8rem',
-                    color: '#047857',
-                  }}
-                >
-                  Up to 50 members · unlimited IdeaFlows · PDF exports & full analytics.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {company?.plan === 'free' && (
-            <div
-              style={{
-                marginBottom: '1.5rem',
-                borderRadius: '1rem',
-                padding: '1rem 1.25rem',
-                background: 'linear-gradient(135deg, #fff7ed, #ffedd5)',
-                border: '1px solid rgba(249,115,22,0.25)',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                flexWrap: 'wrap',
-                gap: '0.75rem',
-              }}
-            >
-              <div>
-                <p style={{ fontWeight: 700, fontSize: '0.9rem' }}>
-                  Free plan
-                </p>
-                <p style={{ fontSize: '0.8rem', color: '#7c2d12' }}>
-                  {memberCount} / 10 members used
-                </p>
-                {memberCount <= 1 && (
-                  <a
-                    href="/dashboard/flows"
-                    style={{ fontSize: '0.8rem', color: 'var(--orange)', fontWeight: 600, textDecoration: 'none' }}
-                  >
-                    Open an IdeaFlow to invite your team →
-                  </a>
-                )}
-              </div>
-              <UpgradePlans compact currentPlan="free" />
-            </div>
-          )}
-
-          {/* ── Multi-flow switcher ── */}
-          {/* Show when the user has access to more than one active IdeaFlow so
-              they can navigate to the selector without hunting for it. */}
-          {accessibleActiveFlowCount > 1 && (
-            <div style={{
-              marginBottom: '1.5rem',
-              borderRadius: '1rem',
-              padding: '0.875rem 1.125rem',
-              background: 'rgba(26,107,191,0.04)',
-              border: '1px solid rgba(26,107,191,0.14)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: '1rem',
-              flexWrap: 'wrap',
-            }}>
-              <div>
-                <p style={{ fontSize: '0.775rem', fontWeight: 700, color: '#0d1f35', marginBottom: '0.15rem' }}>
-                  You have access to {accessibleActiveFlowCount} active IdeaFlows
-                </p>
-                <p style={{ fontSize: '0.72rem', color: '#64748b' }}>
-                  This page shows one flow. Switch to see all of them.
-                </p>
-              </div>
-              <a
-                href="/dashboard/flows"
-                style={{
-                  flexShrink: 0,
-                  display: 'inline-flex', alignItems: 'center',
-                  height: '2rem', padding: '0 0.875rem',
-                  borderRadius: '0.45rem',
-                  border: '1px solid rgba(26,107,191,0.22)',
-                  background: '#fff',
-                  fontSize: '0.775rem', fontWeight: 600, color: '#1a6bbf',
-                  textDecoration: 'none',
-                }}
-              >
-                Switch IdeaFlow →
-              </a>
-            </div>
-          )}
-
-          {/* ── Idea round banner (all users: active / closed / expired / draft) ── */}
-          {showRoundBanner && (
-            <IdeaRoundBanner
-              name={roundData?.idea_round_name ?? null}
-              status={effectiveStatus ?? 'active'}
-              endsAt={roundEndsAt}
-              isAdmin={profile.role === 'admin'}
-              companyId={profile.company_id}
-              manualOverride={roundManualOverride}
-            />
-          )}
-
-          <section className="space-y-6">
-
-            {effectiveStatus === 'active' ? (
-              <>
-                {/* ── Onboarding empty state ── */}
-                {ideasWithLikeStatus.length === 0 && (
-                  <div style={{
                     background: '#ffffff',
-                    border: '1px solid rgba(26,107,191,0.10)',
-                    borderRadius: '1.25rem',
+                    border: '1px solid rgba(0,0,0,0.06)',
+                    borderRadius: '1rem',
                     padding: '2.5rem 2rem',
                     textAlign: 'center',
-                    boxShadow: '0 2px 12px rgba(6,14,38,0.05)',
-                  }}>
-                    <div style={{
-                      width: '3rem', height: '3rem',
-                      borderRadius: '0.875rem',
-                      background: 'rgba(249,115,22,0.08)',
-                      border: '1px solid rgba(249,115,22,0.15)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      margin: '0 auto 1.25rem',
-                      fontSize: '1.25rem',
-                    }}>
-                      💡
-                    </div>
-                    <h2 style={{
-                      fontSize: '1.05rem', fontWeight: 800,
-                      color: '#0d1f35', letterSpacing: '-0.02em',
-                      marginBottom: '0.4rem',
-                    }}>
-                      No ideas yet
-                    </h2>
-                    <p style={{
-                      fontSize: '0.875rem', color: '#9ab0c8',
-                      lineHeight: 1.6, maxWidth: '22rem',
-                      margin: '0 auto 1.75rem',
-                    }}>
-                      The best ideas come from the people doing the work. Be the first to share one.
-                    </p>
-                    <div style={{ display: 'flex', gap: '0.625rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-                      <a
-                        href="#new-idea-form"
-                        className="btn-primary"
-                        style={{ fontSize: '0.85rem', padding: '0.55rem 1.25rem', textDecoration: 'none' }}
-                      >
-                        Post your first idea →
-                      </a>
-                    </div>
-                  </div>
-                )}
-
-                <div
-                  id="new-idea-form"
-                  style={{
-                    borderRadius: '1.25rem',
-                    border: '1px solid rgba(26,107,191,0.11)',
-                    background: 'linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(248,250,255,1) 100%)',
-                    boxShadow: '0 6px 24px rgba(6,14,38,0.04)',
-                    padding: '1.25rem',
                   }}
                 >
-                  <NewIdeaForm
-                    userId={user.id}
-                    companyId={profile.company_id}
-                    isAdmin={profile.role === 'admin'}
-                    roundPrompt={roundPrompt}
-                    roundActive={true}
-                    roundName={roundData?.idea_round_name ?? null}
-                    defaultOpen={ideasWithLikeStatus.length === 0}
-                    roundIsDraft={false}
-                  />
+                  <div
+                    style={{
+                      width: '2.75rem',
+                      height: '2.75rem',
+                      borderRadius: '0.875rem',
+                      background: 'rgba(249,115,22,0.07)',
+                      border: '1px solid rgba(249,115,22,0.12)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      margin: '0 auto 1.25rem',
+                      fontSize: '1.25rem',
+                    }}
+                  >
+                    💡
+                  </div>
+                  <h2
+                    style={{
+                      fontSize: '1rem',
+                      fontWeight: 700,
+                      color: '#0d1f35',
+                      letterSpacing: '-0.02em',
+                      marginBottom: '0.4rem',
+                    }}
+                  >
+                    No ideas yet
+                  </h2>
+                  <p
+                    style={{
+                      fontSize: '0.875rem',
+                      color: '#8b96a8',
+                      lineHeight: 1.65,
+                      maxWidth: '22rem',
+                      margin: '0 auto 1.75rem',
+                    }}
+                  >
+                    The best ideas come from the people doing the work. Be the first to share one.
+                  </p>
+                  <div style={{ display: 'flex', gap: '0.625rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                    <a
+                      href="#new-idea-form"
+                      className="btn-primary"
+                      style={{ fontSize: '0.85rem', padding: '0.55rem 1.25rem', textDecoration: 'none' }}
+                    >
+                      Post your first idea →
+                    </a>
+                  </div>
                 </div>
+              )}
 
-                <IdeaList
-                  ideas={ideasWithLikeStatus}
-                  currentUserId={user.id}
+              <div
+                id="new-idea-form"
+                style={{
+                  borderRadius: '0.875rem',
+                  border: '1px solid rgba(0,0,0,0.07)',
+                  background: '#ffffff',
+                  padding: '1.25rem',
+                }}
+              >
+                <NewIdeaForm
+                  userId={user.id}
                   companyId={profile.company_id}
                   isAdmin={profile.role === 'admin'}
+                  roundPrompt={roundPrompt}
+                  roundActive={true}
+                  roundName={roundData?.idea_round_name ?? null}
+                  defaultOpen={ideasWithLikeStatus.length === 0}
+                  roundIsDraft={false}
                 />
+              </div>
 
-              </>
-            ) : (
-              /* ── Gate card only: no ideas shown when round is not active ── */
-              <RoundGateCard
-                status={effectiveStatus}
-                isAdmin={profile.role === 'admin'}
+              <IdeaList
+                ideas={ideasWithLikeStatus}
+                currentUserId={user.id}
                 companyId={profile.company_id}
-                roundName={roundData?.idea_round_name ?? null}
+                isAdmin={profile.role === 'admin'}
               />
-            )}
-          </section>
 
-          {/* id=analytics — sidebar "Analytics" link scrolls here */}
-          <div
-            id="analytics"
-            style={{
-              marginTop: '2rem',
-              paddingTop: '2rem',
-              borderTop: '1px solid var(--tint-border)',
-            }}
-          >
-            <AnalyticsPanel
-              totalIdeas={ideasWithLikeStatus.length}
-              totalLikes={totalLikes}
-              ideasThisWeek={ideasThisWeek}
-              activeMembers={activeMembers}
-              topContributors={topContributors}
-              dailyActivity={dailyActivity}
-              topIdea={topIdea}
-              heading="Workspace insights"
+            </>
+          ) : (
+            /* ── Gate card only: no ideas shown when round is not active ── */
+            <RoundGateCard
+              status={effectiveStatus}
+              isAdmin={profile.role === 'admin'}
+              companyId={profile.company_id}
+              roundName={roundData?.idea_round_name ?? null}
             />
-          </div>
-        </PageContainer>
-      </main>
-    </>
+          )}
+        </section>
+
+        {/* id=analytics — sidebar "Analytics" link scrolls here */}
+        <div
+          id="analytics"
+          style={{
+            marginTop: '2.5rem',
+            paddingTop: '2rem',
+            borderTop: '1px solid rgba(0,0,0,0.06)',
+          }}
+        >
+          <AnalyticsPanel
+            totalIdeas={ideasWithLikeStatus.length}
+            totalLikes={totalLikes}
+            ideasThisWeek={ideasThisWeek}
+            activeMembers={activeMembers}
+            topContributors={topContributors}
+            dailyActivity={dailyActivity}
+            topIdea={topIdea}
+            heading="Workspace insights"
+          />
+        </div>
+      </PageContainer>
+    </main>
   )
 }

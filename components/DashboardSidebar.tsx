@@ -1,29 +1,11 @@
 'use client'
 
-/**
- * DashboardSidebar
- *
- * position: fixed — intentionally kept out of the document flow so
- * the main content column retains its full max-w-7xl width.
- *
- * Sidebar width is exposed via --sidebar-w CSS variable on :root so the
- * layout's margin-left can reference it without hard-coding a number in
- * two places.
- *
- * All navigation uses real Next.js routes — no anchor (#) links.
- */
-
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
-// ── Width + height tokens ──────────────────────────────────────────────────────
-const SIDEBAR_W = 240   // px  (keep in sync with --sidebar-w)
-// SiteHeader inner container is 3.625rem tall; the <header> element itself
-// renders at that exact height (border-bottom is inset via box-sizing).
+const SIDEBAR_W = 240
 const HEADER_H  = '3.625rem'
-
-// ── Icons ─────────────────────────────────────────────────────────────────────
 
 function Ico({ d, d2 }: { d: string; d2?: string }) {
   return (
@@ -52,25 +34,22 @@ const ICONS = {
   signout:    <Ico d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" d2="M16 17l5-5-5-5M21 12H9" />,
 }
 
-// ── Section label ─────────────────────────────────────────────────────────────
-
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
     <p style={{
-      fontSize: '0.575rem',
+      fontSize: '0.58rem',
       fontWeight: 700,
-      letterSpacing: '0.1em',
+      letterSpacing: '0.08em',
       textTransform: 'uppercase',
-      color: '#94a3b8',
+      color: '#b0bac8',
       padding: '0 0.5rem',
-      marginBottom: '0.25rem',
+      marginBottom: '0.3rem',
+      marginTop: '0.125rem',
     }}>
       {children}
     </p>
   )
 }
-
-// ── Nav link ──────────────────────────────────────────────────────────────────
 
 interface NavLinkProps {
   href: string
@@ -88,29 +67,25 @@ function NavLink({ href, icon, label, active, badge }: NavLinkProps) {
         display: 'flex',
         alignItems: 'center',
         gap: '0.5rem',
-        // Active: left-border accent + orange tint; keep padding compensated so text stays aligned
         paddingTop: '0.375rem',
         paddingBottom: '0.375rem',
-        paddingRight: '0.5rem',
-        paddingLeft: active ? 'calc(0.5rem - 2px)' : '0.5rem',
-        borderRadius: '7px',
+        paddingRight: '0.625rem',
+        paddingLeft: active ? 'calc(0.625rem - 2px)' : '0.625rem',
+        borderRadius: '0.5rem',
         textDecoration: 'none',
-        background: active ? 'rgba(249,115,22,0.09)' : 'transparent',
-        color: active ? '#c2540a' : '#475569',
-        borderLeft: active ? '2px solid #f97316' : '2px solid transparent',
-        transition: 'background 0.12s ease, color 0.12s ease, border-color 0.12s ease',
+        background: active ? 'rgba(249,115,22,0.07)' : 'transparent',
+        color: active ? '#b84a09' : '#5d667a',
+        borderLeft: active ? '2px solid rgba(249,115,22,0.65)' : '2px solid transparent',
+        transition: 'background 0.12s ease, color 0.12s ease',
       }}
       className={active ? '' : 'db-nav-inactive'}
     >
-      <span style={{ color: active ? '#ea580c' : '#94a3b8', display: 'flex', flexShrink: 0 }}>
+      <span style={{ color: active ? '#ea580c' : '#9faab8', display: 'flex', flexShrink: 0 }}>
         {icon}
       </span>
       <span style={{ fontSize: '0.775rem', fontWeight: active ? 700 : 500, flex: 1, letterSpacing: '-0.01em' }}>
         {label}
       </span>
-      {active && (
-        <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#f97316', flexShrink: 0 }} />
-      )}
       {!active && badge !== undefined && badge > 0 && (
         <span style={{
           fontSize: '0.55rem', fontWeight: 700,
@@ -125,13 +100,9 @@ function NavLink({ href, icon, label, active, badge }: NavLinkProps) {
   )
 }
 
-// ── Divider ───────────────────────────────────────────────────────────────────
-
 function Divider() {
-  return <div style={{ height: '1px', background: '#e8ecf0', margin: '0.5rem 0' }} />
+  return <div style={{ height: '1px', background: 'rgba(0,0,0,0.055)', margin: '0.5rem 0' }} />
 }
-
-// ── Main sidebar ──────────────────────────────────────────────────────────────
 
 interface Props {
   userName: string
@@ -159,9 +130,7 @@ export default function DashboardSidebar({
     .join('')
     .toUpperCase() || '?'
 
-  // Exact-match helper — prevents /dashboard from matching /dashboard/review etc.
   const exact = (href: string) => pathname === href
-  // Prefix-match helper for sections that have nested routes
   const under = (href: string) => pathname.startsWith(href + '/')
 
   async function handleSignOut() {
@@ -172,26 +141,32 @@ export default function DashboardSidebar({
 
   return (
     <>
-      {/* Inject hover styles */}
       <style>{`
-        .db-nav-inactive:hover { background: rgba(0,0,0,0.04) !important; }
-        .db-signout-btn:hover  { background: rgba(0,0,0,0.05) !important; }
+        .db-nav-inactive:hover {
+          background: rgba(0,0,0,0.035) !important;
+          color: #3d4758 !important;
+        }
+        .db-nav-inactive:hover span:first-child {
+          color: #6b7688 !important;
+        }
+        .db-signout-btn:hover {
+          background: rgba(0,0,0,0.04) !important;
+          color: #3d4758 !important;
+        }
+        .db-user-card:hover {
+          background: rgba(0,0,0,0.03) !important;
+        }
       `}</style>
 
       <aside
         style={{
-          // Plain flex item — no sticky, no fixed.
-          // The layout shell (dashboard/layout.tsx) has a fixed height equal to
-          // 100vh minus the navbar, so this sidebar naturally fills that height
-          // without any positioning tricks. The content column scrolls; the
-          // sidebar never moves.
           width: `${SIDEBAR_W}px`,
           flexShrink: 0,
-          background: '#ffffff',
-          borderRight: '1px solid #e8ecf0',
+          background: '#faf9f7',
+          borderRight: '1px solid rgba(0,0,0,0.06)',
           display: 'flex',
           flexDirection: 'column',
-          padding: '0.5rem 0.625rem 0.875rem',
+          padding: '0.75rem 0.625rem 1rem',
           overflowY: 'auto',
           overflowX: 'hidden',
         }}
@@ -199,7 +174,7 @@ export default function DashboardSidebar({
 
         {/* ─────────────────── Workspace ──────────────────── */}
         <SectionLabel>Workspace</SectionLabel>
-        <nav style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginBottom: '0.25rem' }}>
+        <nav style={{ display: 'flex', flexDirection: 'column', gap: '1px', marginBottom: '0.25rem' }}>
           <NavLink
             href="/dashboard"
             icon={ICONS.dashboard}
@@ -225,7 +200,7 @@ export default function DashboardSidebar({
           <>
             <Divider />
             <SectionLabel>Management</SectionLabel>
-            <nav style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginBottom: '0.25rem' }}>
+            <nav style={{ display: 'flex', flexDirection: 'column', gap: '1px', marginBottom: '0.25rem' }}>
               <NavLink
                 href="/dashboard/review"
                 icon={ICONS.review}
@@ -252,7 +227,7 @@ export default function DashboardSidebar({
         {/* ─────────────────── Team ───────────────────────── */}
         <Divider />
         <SectionLabel>Team</SectionLabel>
-        <nav style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+        <nav style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
           <NavLink
             href="/dashboard/members"
             icon={ICONS.members}
@@ -277,40 +252,42 @@ export default function DashboardSidebar({
 
           {/* User card */}
           <div
+            className="db-user-card"
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '0.5rem',
-              padding: '0.5rem',
-              borderRadius: '8px',
-              background: '#f8fafc',
-              border: '1px solid #e8ecf0',
-              marginTop: '0.375rem',
-              marginBottom: '0.375rem',
+              gap: '0.625rem',
+              padding: '0.5rem 0.625rem',
+              borderRadius: '0.5rem',
+              marginTop: '0.25rem',
+              marginBottom: '0.25rem',
+              cursor: 'default',
+              transition: 'background 0.12s ease',
             }}
           >
             <div
               style={{
-                width: '1.75rem',
-                height: '1.75rem',
+                width: '2rem',
+                height: '2rem',
                 borderRadius: '50%',
                 background: 'linear-gradient(135deg, #f97316, #ea580c)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 flexShrink: 0,
-                fontSize: '0.6rem',
+                fontSize: '0.625rem',
                 fontWeight: 800,
                 color: '#fff',
+                letterSpacing: '0.03em',
               }}
             >
               {initials}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ fontSize: '0.7rem', fontWeight: 700, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {firstName}
+              <p style={{ fontSize: '0.725rem', fontWeight: 600, color: '#1e2533', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {userName || firstName}
               </p>
-              <p style={{ fontSize: '0.575rem', color: '#94a3b8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <p style={{ fontSize: '0.59rem', color: '#9faab8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {isAdmin ? 'Admin' : 'Member'}
               </p>
             </div>
@@ -324,17 +301,17 @@ export default function DashboardSidebar({
               display: 'flex',
               alignItems: 'center',
               gap: '0.5rem',
-              padding: '0.375rem 0.5rem',
-              borderRadius: '7px',
+              padding: '0.375rem 0.625rem',
+              borderRadius: '0.5rem',
               background: 'transparent',
               border: 'none',
               cursor: 'pointer',
               width: '100%',
-              color: '#64748b',
-              transition: 'background 0.12s ease',
+              color: '#8b96a8',
+              transition: 'background 0.12s ease, color 0.12s ease',
             }}
           >
-            <span style={{ color: '#94a3b8', display: 'flex' }}>{ICONS.signout}</span>
+            <span style={{ color: '#b0bac8', display: 'flex' }}>{ICONS.signout}</span>
             <span style={{ fontSize: '0.75rem', fontWeight: 500 }}>Sign out</span>
           </button>
         </div>

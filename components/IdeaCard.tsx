@@ -153,17 +153,28 @@ export default function IdeaCard({ idea, currentUserId, isAdmin }: IdeaCardProps
   }
 
   return (
-    <div className="card" style={{ display: 'flex', gap: '0.875rem' }}>
+    <div
+      style={{
+        display: 'flex',
+        gap: '0.875rem',
+        background: '#ffffff',
+        border: '1px solid rgba(0,0,0,0.06)',
+        borderRadius: '0.75rem',
+        padding: '1rem 1.125rem',
+        transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
+      }}
+      className="idea-card-item"
+    >
 
       {/* Like column */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.2rem', paddingTop: '0.125rem', minWidth: '2rem' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.2rem', paddingTop: '0.1rem', minWidth: '1.875rem' }}>
         <button
           onClick={toggleLike}
           disabled={loading || deleting || editing || saving}
           title={liked ? 'Unlike' : 'Like this idea'}
           style={{
-            width: '2rem',
-            height: '2rem',
+            width: '1.875rem',
+            height: '1.75rem',
             borderRadius: '0.5rem',
             display: 'flex',
             alignItems: 'center',
