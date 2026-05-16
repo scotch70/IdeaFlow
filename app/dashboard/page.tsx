@@ -6,7 +6,7 @@ import NewIdeaForm from '@/components/NewIdeaForm'
 import type { Database, Idea } from '@/types/database'
 import AnalyticsPanel from '@/components/AnalyticsPanel'
 import type { DailyPoint, Contributor } from '@/components/AnalyticsPanel'
-import UpgradeButton from '@/components/UpgradeButton'
+import UpgradePlans from '@/components/UpgradePlans'
 import PageContainer from '@/components/PageContainer'
 import IdeaRoundBanner from '@/components/IdeaRoundBanner'
 import RoundGateCard from '@/components/RoundGateCard'
@@ -412,7 +412,7 @@ export default async function DashboardPage({
                   </a>
                 )}
               </div>
-              <UpgradeButton />
+              <UpgradePlans compact currentPlan="free" />
             </div>
           )}
 

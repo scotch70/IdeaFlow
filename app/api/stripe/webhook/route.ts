@@ -11,6 +11,13 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2024-06-20',
 })
 
+/** Map a Stripe price ID to a DB plan value. Returns null if unrecognised. */
+function planFromPriceId(priceId: string): 'standard' | 'pro' | null {
+  if (priceId === process.env.STRIPE_STANDARD_PRICE_ID) return 'standard'
+  if (priceId === process.env.STRIPE_PRO_PRICE_ID)      return 'pro'
+  return null
+}
+
 export async function POST(req: Request) {
   const body      = await req.text()
   const signature = (await headers()).get('stripe-signature')
@@ -39,7 +46,7 @@ export async function POST(req: Request) {
 
   try {
     // ── checkout.session.completed ─────────────────────────────────────────
-    // Fires once after a successful payment. Upgrade company to pro.
+    // Fires once after a successful payment. Upgrade company to the purchased plan.
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object as Stripe.Checkout.Session
 
@@ -61,40 +68,58 @@ export async function POST(req: Request) {
         )
       }
 
+      // Determine plan from metadata (set at checkout creation time).
+      // Fall back to 'standard' for any legacy sessions that predated multi-plan
+      // so existing 'pro' DB records (old €49/yr) are preserved correctly.
+      const metaPlan = session.metadata?.plan
+      const plan: string =
+        metaPlan === 'standard' || metaPlan === 'pro' ? metaPlan : 'standard'
+
       const { error } = await (adminClient as any)
-  .from('companies')
-  .update({
-    plan: 'pro',
-    stripe_customer_id: customerId,
-    stripe_subscription_id: subscriptionId,
-  })
-  .eq('id', companyId)
+        .from('companies')
+        .update({
+          plan,
+          stripe_customer_id:    customerId,
+          stripe_subscription_id: subscriptionId,
+        })
+        .eq('id', companyId)
 
       if (error) {
         console.error('[stripe/webhook] failed to upgrade company:', error)
         return NextResponse.json({ error: 'DB update failed' }, { status: 500 })
       }
 
-      console.log(`[stripe/webhook] company ${companyId} upgraded to pro`)
+      console.log(`[stripe/webhook] company ${companyId} upgraded to ${plan}`)
     }
 
     // ── customer.subscription.updated ─────────────────────────────────────
     // Fires on renewals, plan changes, cancellation-at-period-end, etc.
-    // We keep it simple: if Stripe says the sub is active/trialing → pro,
-    // otherwise → free.
+    // Determine the plan from the price ID on the subscription item.
+    // If active/trialing → persist the correct plan; otherwise → free.
     if (event.type === 'customer.subscription.updated') {
       const subscription = event.data.object as Stripe.Subscription
       const isActive     = ['active', 'trialing'].includes(subscription.status)
 
+      let newPlan: string = 'free'
+      if (isActive) {
+        const priceId = subscription.items.data[0]?.price?.id
+        const mapped  = priceId ? planFromPriceId(priceId) : null
+        // If the price ID isn't recognised (e.g. legacy price), keep existing
+        // plan by reading it from the DB — but to stay safe, fall back to 'standard'.
+        newPlan = mapped ?? 'standard'
+      }
+
       const { error } = await (adminClient as any)
-  .from('companies')
-  .update({ plan: isActive ? 'pro' : 'free' })
-  .eq('stripe_subscription_id', subscription.id)
+        .from('companies')
+        .update({ plan: newPlan })
+        .eq('stripe_subscription_id', subscription.id)
 
       if (error) {
         console.error('[stripe/webhook] subscription.updated DB error:', error)
         return NextResponse.json({ error: 'DB update failed' }, { status: 500 })
       }
+
+      console.log(`[stripe/webhook] subscription ${subscription.id} updated — plan set to ${newPlan}`)
     }
 
     // ── customer.subscription.deleted ─────────────────────────────────────
@@ -103,12 +128,12 @@ export async function POST(req: Request) {
       const subscription = event.data.object as Stripe.Subscription
 
       const { error } = await (adminClient as any)
-  .from('companies')
-  .update({
-    plan: 'free',
-    stripe_subscription_id: null,
-  })
-  .eq('stripe_subscription_id', subscription.id)
+        .from('companies')
+        .update({
+          plan: 'free',
+          stripe_subscription_id: null,
+        })
+        .eq('stripe_subscription_id', subscription.id)
 
       if (error) {
         console.error('[stripe/webhook] subscription.deleted DB error:', error)

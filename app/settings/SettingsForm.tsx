@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import InnerPageHeader from '@/components/InnerPageHeader'
 import PageContainer from '@/components/PageContainer'
 import DeleteAccountButton from '@/components/DeleteAccountButton'
-import UpgradeButton from '@/components/UpgradeButton'
+import UpgradePlans from '@/components/UpgradePlans'
 
 interface Props {
   userId: string
@@ -351,13 +351,13 @@ export default function SettingsForm({
             Plan &amp; billing
           </p>
 
-          {(companyPlan === 'pro' || companyPlan === 'pro_plus') ? (
-            /* ── Pro / Pro+ plan state ──────────────────────────────── */
+          {(companyPlan === 'standard' || companyPlan === 'pro' || companyPlan === 'pro_plus') ? (
+            /* ── Paid plan state ────────────────────────────────────── */
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
               <div>
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.75rem' }}>
                   <span style={{ fontSize: '1rem', fontWeight: 800, color: '#0d1f35' }}>
-                    {companyPlan === 'pro_plus' ? 'Pro+' : 'Pro'}
+                    {companyPlan === 'pro' || companyPlan === 'pro_plus' ? 'Pro' : 'Standard'}
                   </span>
                   <span style={{ fontSize: '0.6rem', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', background: '#f97316', color: '#fff', borderRadius: '999px', padding: '2px 7px' }}>
                     Active
@@ -365,7 +365,7 @@ export default function SettingsForm({
                 </div>
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                   {[
-                    companyPlan === 'pro_plus' ? 'Up to 100 workspace members' : 'Up to 50 workspace members',
+                    (companyPlan === 'pro' || companyPlan === 'pro_plus') ? 'Up to 100 workspace members' : 'Up to 50 workspace members',
                     'Unlimited IdeaFlows',
                     'Full analytics dashboard',
                     'PDF report export',
@@ -380,11 +380,17 @@ export default function SettingsForm({
                   ))}
                 </ul>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.875rem', borderRadius: '0.625rem', background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)' }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
-                <span style={{ fontSize: '0.825rem', fontWeight: 700, color: '#065f46' }}>
-                  {companyPlan === 'pro_plus' ? 'Pro+ plan active' : 'Pro plan active'}
-                </span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', alignItems: 'flex-end' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.875rem', borderRadius: '0.625rem', background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)' }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+                  <span style={{ fontSize: '0.825rem', fontWeight: 700, color: '#065f46' }}>
+                    {(companyPlan === 'pro' || companyPlan === 'pro_plus') ? 'Pro plan active' : 'Standard plan active'}
+                  </span>
+                </div>
+                {/* Offer Pro upgrade if on Standard */}
+                {companyPlan === 'standard' && role === 'admin' && (
+                  <UpgradePlans compact currentPlan={companyPlan} />
+                )}
               </div>
             </div>
           ) : (
@@ -410,15 +416,12 @@ export default function SettingsForm({
                   ))}
                 </ul>
                 <p style={{ fontSize: '0.775rem', color: '#9ab0c8', lineHeight: 1.5 }}>
-                  Upgrade to Pro for up to 50 members, unlimited IdeaFlows, PDF exports, and full analytics.
+                  Upgrade to Standard (50 members) or Pro (100 members) for unlimited IdeaFlows, PDF exports, and full analytics.
                 </p>
               </div>
               {role === 'admin' && (
                 <div style={{ flexShrink: 0 }}>
-                  <p style={{ fontSize: '0.7rem', fontWeight: 700, color: '#0d1f35', marginBottom: '0.375rem' }}>
-                    Pro — €49<span style={{ fontWeight: 400, color: '#9ab0c8' }}>/year</span>
-                  </p>
-                  <UpgradeButton />
+                  <UpgradePlans currentPlan={companyPlan} />
                 </div>
               )}
             </div>

@@ -541,7 +541,7 @@ export default async function HomePage() {
 
                 <div style={{ marginBottom: '1rem', position: 'relative' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '1rem' }}>
-                    <p style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.40)' }}>Pro</p>
+                    <p style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.40)' }}>Standard</p>
                     <span style={{
                       fontSize: '0.58rem', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase',
                       color: 'rgba(255,255,255,0.80)',
@@ -587,25 +587,28 @@ export default async function HomePage() {
                     textDecoration: 'none',
                     transition: 'opacity 0.12s',
                   }}>
-                    Start free →
+                    Get started →
                   </Link>
-                ) : companyPlan === 'pro' ? (
+                ) : (companyPlan === 'standard' || companyPlan === 'pro' || companyPlan === 'pro_plus') ? (
                   <div style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
                     padding: '0.7rem 1rem', borderRadius: '0.5rem',
                     background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.13)',
                   }}>
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.65)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
-                    <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'rgba(255,255,255,0.65)' }}>You&apos;re on Pro</span>
+                    <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'rgba(255,255,255,0.65)' }}>
+                      {companyPlan === 'standard' ? "You’re on Standard" : "You’re on a higher plan"}
+                    </span>
                   </div>
                 ) : (
                   <UpgradeButton
+                    plan="standard"
                     style={{
                       display: 'block', width: '100%', textAlign: 'center',
                       padding: '0.7rem 1rem', fontSize: '0.875rem', borderRadius: '0.5rem',
                       background: '#ffffff', color: P.ink, fontWeight: 600,
                     }}
-                    label="Upgrade to Pro →"
+                    label="Upgrade to Standard →"
                   />
                 )}
               </div>
@@ -629,7 +632,7 @@ export default async function HomePage() {
 
                 <div style={{ marginBottom: '1rem', position: 'relative' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '1rem' }}>
-                    <p style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.40)' }}>Pro+</p>
+                    <p style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.40)' }}>Pro</p>
                     <span style={{
                       fontSize: '0.58rem', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase',
                       color: 'rgba(186,230,253,0.90)',
@@ -649,7 +652,7 @@ export default async function HomePage() {
 
                 <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: '1.5rem', marginBottom: '1.75rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', flex: 1, position: 'relative' }}>
                   {[
-                    'Everything in Pro',
+                    'Everything in Standard',
                     'Up to 100 workspace members',
                     'Unlimited IdeaFlows',
                     'Full analytics dashboard',
@@ -679,27 +682,28 @@ export default async function HomePage() {
                   }}>
                     Get started →
                   </Link>
-                ) : companyPlan === 'pro_plus' ? (
+                ) : (companyPlan === 'pro' || companyPlan === 'pro_plus') ? (
                   <div style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
                     padding: '0.7rem 1rem', borderRadius: '0.5rem',
                     background: 'rgba(56,189,248,0.08)', border: '1px solid rgba(56,189,248,0.18)',
                   }}>
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(186,230,253,0.65)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
-                    <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'rgba(186,230,253,0.75)' }}>You&apos;re on Pro+</span>
+                    <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'rgba(186,230,253,0.75)' }}>You&apos;re on Pro</span>
                   </div>
                 ) : (
-                  <Link href="/contact" style={{
-                    display: 'block', textAlign: 'center', padding: '0.7rem 1rem',
-                    borderRadius: '0.5rem',
-                    background: 'rgba(56,189,248,0.14)',
-                    border: '1px solid rgba(56,189,248,0.26)',
-                    color: 'rgba(186,230,253,0.95)',
-                    fontSize: '0.875rem', fontWeight: 600,
-                    textDecoration: 'none',
-                  }}>
-                    Contact us →
-                  </Link>
+                  <UpgradeButton
+                    plan="pro"
+                    style={{
+                      display: 'block', width: '100%', textAlign: 'center',
+                      padding: '0.7rem 1rem', fontSize: '0.875rem', borderRadius: '0.5rem',
+                      background: 'rgba(56,189,248,0.14)',
+                      border: '1px solid rgba(56,189,248,0.26)',
+                      color: 'rgba(186,230,253,0.95)', fontWeight: 600,
+                      boxShadow: 'none',
+                    }}
+                    label="Upgrade to Pro →"
+                  />
                 )}
               </div>
 
