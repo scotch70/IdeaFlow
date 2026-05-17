@@ -626,3 +626,381 @@ button, a.btn-primary {
   transition: opacity 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   AI PRO GATE — teaser overlay animations
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Shimmer sweep on the blurred preview section */
+@keyframes ai-shimmer-sweep {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%);  }
+}
+
+/* Pulse glow on the ✦ Pro badge */
+@keyframes ai-badge-pulse {
+  0%, 100% { box-shadow: 0 0 0 0   rgba(249,115,22,0.3); }
+  50%       { box-shadow: 0 0 0 6px rgba(249,115,22,0);   }
+}
+
+.ai-pro-badge {
+  animation: ai-badge-pulse 2.5s ease-in-out infinite;
+}
+
+/* Glow pulse on the "Upgrade to Pro" CTA button */
+@keyframes pro-cta-glow {
+  0%, 100% { box-shadow: 0 4px 20px rgba(249,115,22,0.40); }
+  50%       { box-shadow: 0 4px 28px rgba(249,115,22,0.65); }
+}
+
+.upgrade-pro-cta {
+  animation: pro-cta-glow 2.8s ease-in-out infinite;
+}
+.upgrade-pro-cta:hover {
+  animation: none !important;
+  box-shadow: 0 6px 28px rgba(249,115,22,0.55) !important;
+  transform: translateY(-1px);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DASHBOARD HIERARCHY — improved spacing & section separators
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Section gap between major dashboard blocks */
+.dashboard-section-gap {
+  margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
+}
+
+/* Subtle section divider */
+.section-divider {
+  height: 1px;
+  background: rgba(0,0,0,0.05);
+  margin: clamp(1.5rem, 3vw, 2.5rem) 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   FREE PLAN UPGRADE BANNER — premium two-column redesign
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.free-plan-banner {
+  margin-bottom: 1.75rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(0,0,0,0.07);
+  background: #ffffff;
+  padding: clamp(1rem, 3vw, 1.375rem) clamp(1rem, 3vw, 1.375rem);
+  display: flex;
+  align-items: flex-start;
+  gap: 1.5rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+
+.free-plan-banner__left {
+  flex: 1;
+  min-width: 0;
+}
+
+.free-plan-banner__right {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 180px;
+  max-width: 210px;
+}
+
+@media (max-width: 600px) {
+  .free-plan-banner {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .free-plan-banner__right {
+    width: 100%;
+    max-width: none;
+  }
+  .free-plan-banner__right button {
+    width: 100%;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ONBOARDING CHECKLIST — lighter, more delightful
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Completed step fade */
+@keyframes step-complete {
+  0%   { background-color: rgba(5,150,105,0.10); }
+  80%  { background-color: rgba(5,150,105,0.05); }
+  100% { background-color: transparent; }
+}
+
+.onboarding-step-done {
+  animation: step-complete 0.6s ease-out both;
+}
+
+/* Hover state on incomplete steps */
+.onboarding-step:hover {
+  background: rgba(26,107,191,0.03);
+  border-radius: 0.5rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MOBILE UX FIXES — comprehensive responsive coverage
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Prevent any horizontal overflow on mobile */
+@media (max-width: 768px) {
+  body {
+    overflow-x: hidden;
+  }
+
+  /* Dashboard top-level section gap */
+  .dashboard-content-container > * + * {
+    /* already handled by component margins */
+  }
+
+  /* Tighten section spacing on small screens */
+  section[style] {
+    gap: 1rem !important;
+  }
+}
+
+/* Analytics stat grid — 2-col on narrow phones */
+@media (max-width: 480px) {
+  .analytics-stat-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 0.5rem !important;
+  }
+}
+
+/* Idea list container — no side overflow */
+@media (max-width: 520px) {
+  .idea-card-item {
+    border-radius: 0.75rem !important;
+  }
+}
+
+/* WorkspaceMetrics pills — tighter on very small screens */
+@media (max-width: 360px) {
+  .metric-pill-responsive {
+    padding: 0.625rem 0.75rem !important;
+    min-width: 0 !important;
+    flex: 1 1 0 !important;
+  }
+}
+
+/* AI summary card columns — single col below 500px */
+@media (max-width: 500px) {
+  .ai-summary-col {
+    padding: 0.875rem 1rem !important;
+    border-right: none !important;
+    border-bottom: 1px solid rgba(0,0,0,0.05) !important;
+  }
+  .ai-summary-col:last-child {
+    border-bottom: none !important;
+  }
+}
+
+/* Exec report stat grid — 2-col on phones */
+@media (max-width: 500px) {
+  .exec-stat-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+
+/* FlowTemplates — stack to 2-col on phones, 1-col on tiny */
+@media (max-width: 480px) {
+  .flow-templates-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+@media (max-width: 320px) {
+  .flow-templates-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Settings form — profile form full-width on mobile */
+@media (max-width: 520px) {
+  .settings-card {
+    padding: 1rem !important;
+    border-radius: 0.75rem !important;
+  }
+}
+
+/* Upgrade plans grid — always stack on mobile */
+@media (max-width: 520px) {
+  .upgrade-plans-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Dashboard container — better safe-area handling */
+@media (max-width: 768px) {
+  .dashboard-content-container {
+    padding-left:  max(1rem, env(safe-area-inset-left))  !important;
+    padding-right: max(1rem, env(safe-area-inset-right)) !important;
+  }
+}
+
+/* WorkspacePulse items — single col on narrow phones */
+@media (max-width: 400px) {
+  .workspace-pulse-items {
+    flex-direction: column !important;
+    gap: 0.625rem !important;
+  }
+}
+
+/* ══════════════════════════════════════════════
+   LAUNCH POLISH — hover, focus, transitions
+   ══════════════════════════════════════════════ */
+
+/* ── Smooth link transitions for all anchors ── */
+a {
+  transition: color 0.15s ease, opacity 0.15s ease;
+}
+
+/* ── Button focus rings — accessible and premium-feeling ── */
+.btn-primary:focus-visible,
+.btn-dark:focus-visible,
+.btn-secondary:focus-visible,
+.btn-ghost:focus-visible,
+.btn-ghost-dark:focus-visible {
+  outline: 2px solid rgba(249, 115, 22, 0.6);
+  outline-offset: 3px;
+}
+
+/* ── Input focus ring polish ── */
+.input:focus-visible {
+  outline: none;
+  border-color: rgba(61, 95, 166, 0.5);
+  box-shadow: 0 0 0 3px rgba(61, 95, 166, 0.1);
+}
+
+/* ── Interactive card — used on idea cards, flow cards, etc. ── */
+.interactive-card {
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  cursor: pointer;
+}
+.interactive-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.09), 0 1px 4px rgba(0,0,0,0.05);
+  border-color: rgba(0,0,0,0.13) !important;
+}
+
+/* ── Skeleton shimmer — consistent across all loading states ── */
+@keyframes shimmer-sweep {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--shimmer-base) 25%,
+    var(--shimmer-peak) 50%,
+    var(--shimmer-base) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer-sweep 1.6s ease infinite;
+  border-radius: 0.5rem;
+}
+
+/* ── Success flash — brief green pulse on successful actions ── */
+@keyframes success-flash {
+  0%   { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.35); }
+  50%  { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+.success-flash {
+  animation: success-flash 0.55s ease-out forwards;
+}
+
+/* ── Page fade-in — applied to main content containers ── */
+@keyframes page-enter {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.page-enter {
+  animation: page-enter 0.35s ease forwards;
+}
+
+/* ── Tooltip / hint text ── */
+.hint-text {
+  font-size: 0.75rem;
+  color: var(--ink-faint);
+  line-height: 1.5;
+}
+
+/* ── Footer responsive polish ── */
+@media (max-width: 600px) {
+  footer > div > div:first-child {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* ── Legal pages responsive ── */
+@media (max-width: 640px) {
+  .legal-prose table {
+    font-size: 0.8rem !important;
+  }
+  .legal-prose th,
+  .legal-prose td {
+    padding: 0.5rem 0.625rem !important;
+  }
+}
+
+/* ── Auth page form polish ── */
+.auth-form-link {
+  color: var(--ink-mid);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: color 0.15s ease;
+}
+.auth-form-link:hover {
+  color: var(--ink);
+}
+
+/* ── Dashboard sidebar nav hover ── */
+.sidebar-nav-item {
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.sidebar-nav-item:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+/* ── IdeaCard vote button — micro-interaction ── */
+@keyframes vote-pop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.22); }
+  100% { transform: scale(1); }
+}
+.vote-pop {
+  animation: vote-pop 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* ── Scroll-into-view smooth reveal ── */
+@keyframes reveal-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Premium AI gradient text ── */
+.ai-gradient-text {
+  background: linear-gradient(135deg, #f97316 0%, #fb923c 50%, #fbbf24 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Not-found & error page button alignment ── */
+@media (max-width: 400px) {
+  .error-page-actions {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  .error-page-actions a,
+  .error-page-actions button {
+    text-align: center;
+  }
+}
+

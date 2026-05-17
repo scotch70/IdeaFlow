@@ -28,7 +28,9 @@ interface ActionRecommendationsProps {
   participationRate: number
   memberCount: number
   activeMembers: number
-  isPaidPlan: boolean
+  /** @deprecated use isProPlan — kept for backward compat */
+  isPaidPlan?: boolean
+  isProPlan: boolean
   roundName?: string | null
 }
 
@@ -146,10 +148,10 @@ export default function ActionRecommendations({
   participationRate,
   memberCount,
   activeMembers,
-  isPaidPlan,
+  isProPlan,
   roundName,
 }: ActionRecommendationsProps) {
-  if (!isPaidPlan || ideas.length === 0) return null
+  if (!isProPlan || ideas.length === 0) return null
 
   const recommendations = generateRecommendations(ideas, participationRate, memberCount, activeMembers)
   if (recommendations.length === 0) return null

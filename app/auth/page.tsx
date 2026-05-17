@@ -1,5 +1,12 @@
+import type { Metadata } from 'next'
 import SiteHeader from '@/components/SiteHeader'
 import AuthForm from '@/components/AuthForm'
+
+export const metadata: Metadata = {
+  title: 'Sign in',
+  description: 'Sign in to your IdeaFlow workspace, or create a free account.',
+  robots: { index: false, follow: false },
+}
 
 export default function AuthPage() {
   return (

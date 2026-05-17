@@ -425,18 +425,26 @@ export default function SettingsForm({
                   </span>
                 </div>
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                  {[
-                    (companyPlan === 'pro' || companyPlan === 'pro_plus') ? 'Up to 100 workspace members' : 'Up to 50 workspace members',
-                    'Unlimited IdeaFlows',
-                    'Full analytics dashboard',
-                    'PDF report export',
-                    'Admin controls & roles',
-                  ].map(item => (
-                    <li key={item} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.825rem', color: '#2c4a6e' }}>
-                      <svg width="12" height="12" viewBox="0 0 15 15" fill="none" style={{ flexShrink: 0, color: '#10b981' }}>
-                        <path d="M12.5 3.5L6 10 3 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                      {item}
+                  {((companyPlan === 'pro' || companyPlan === 'pro_plus') ? [
+                    { label: 'Up to 100 workspace members',  ai: false },
+                    { label: 'Unlimited IdeaFlows',          ai: false },
+                    { label: 'Full analytics dashboard',     ai: false },
+                    { label: 'AI workspace summaries',       ai: true  },
+                    { label: 'Executive AI reports',         ai: true  },
+                    { label: 'PDF executive exports',        ai: true  },
+                    { label: 'AI action recommendations',    ai: true  },
+                  ] : [
+                    { label: 'Up to 50 workspace members',   ai: false },
+                    { label: 'Unlimited IdeaFlows',          ai: false },
+                    { label: 'Full analytics dashboard',     ai: false },
+                    { label: 'Member management & roles',    ai: false },
+                    { label: 'Participation reports',        ai: false },
+                  ]).map(({ label, ai }: { label: string; ai: boolean }) => (
+                    <li key={label} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.825rem', color: ai ? '#1a6bbf' : '#2c4a6e' }}>
+                      <span style={{ flexShrink: 0, fontSize: '0.75rem', color: ai ? '#f97316' : '#10b981' }}>
+                        {ai ? '✦' : '✓'}
+                      </span>
+                      {label}
                     </li>
                   ))}
                 </ul>

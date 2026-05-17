@@ -27,7 +27,7 @@ interface WorkspacePulseProps {
   ideasThisWeek: number
   activeMembers: number
   memberCount: number
-  isPaidPlan: boolean
+  isProPlan: boolean
 }
 
 // ── Weighted hot-topic extraction ─────────────────────────────────────────────
@@ -180,9 +180,9 @@ export default function WorkspacePulse({
   ideasThisWeek,
   activeMembers,
   memberCount,
-  isPaidPlan,
+  isProPlan,
 }: WorkspacePulseProps) {
-  if (!isPaidPlan || ideas.length === 0) return null
+  if (!isProPlan || ideas.length === 0) return null
 
   const hotTopic = getHotTopic(ideas)
   const momentum = getMomentum(ideasThisWeek)

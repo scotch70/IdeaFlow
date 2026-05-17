@@ -17,6 +17,7 @@ import ActionRecommendations from '@/components/ActionRecommendations'
 import OnboardingChecklist from '@/components/OnboardingChecklist'
 import FlowTemplates from '@/components/FlowTemplates'
 import ExecutiveReport from '@/components/ExecutiveReport'
+import UpgradeCheckout from '@/components/UpgradeCheckout'
 import { getEffectiveRoundStatus } from '@/lib/rounds/getEffectiveRoundStatus'
 
 type ProfileResult = Pick<
@@ -73,14 +74,6 @@ export default async function DashboardPage({
     data: ProfileResult | null
     error: Error | null
   }
-
-  // ── DEBUG (remove after confirming sylvana loop is fixed) ───────────────────
-  console.log('[dashboard auth]', {
-    userId: user?.id,
-    email: user?.email,
-    profile,
-    companyId: profile?.company_id,
-  })
 
   // Admins who created a workspace have company_name in user_metadata.
   // Invited members do not — sending them to /api/onboard causes a sign-out loop
@@ -299,29 +292,31 @@ export default async function DashboardPage({
     ideasWithLikeStatus.length > 0
       ? parseFloat((totalLikes / ideasWithLikeStatus.length).toFixed(1))
       : 0
-  const isPaidPlan = company?.plan === 'standard' || company?.plan === 'pro'
+  const isPaidPlan = company?.plan === 'standard' || company?.plan === 'pro' || company?.plan === 'pro_plus'
+  const isProPlan  = company?.plan === 'pro'      || company?.plan === 'pro_plus'
 
   return (
     <main>
       <PageContainer className="dashboard-content-container">
 
         {/* ── Welcome header ── */}
-        <div className="stagger-fade-1" style={{ marginBottom: '2rem' }}>
+        <div className="stagger-fade-1" style={{ marginBottom: 'clamp(1.75rem, 4vw, 2.75rem)', paddingTop: '0.5rem' }}>
           <h1
             style={{
-              fontSize: '1.875rem',
-              fontWeight: 800,
-              color: '#0d1f35',
+              fontSize:      'clamp(1.5rem, 4vw, 2rem)',
+              fontWeight:    800,
+              color:         '#0d1f35',
               letterSpacing: '-0.03em',
-              lineHeight: 1.1,
-              marginBottom: '0.4rem',
-              fontFamily: "'DM Sans', sans-serif",
+              lineHeight:    1.1,
+              marginBottom:  '0.4rem',
+              fontFamily:    "'DM Sans', sans-serif",
             }}
           >
             Welcome back, {firstName}
           </h1>
-          <p style={{ fontSize: '0.9rem', color: '#8b96a8', fontWeight: 400, lineHeight: 1.5 }}>
-            Here&apos;s what&apos;s happening in your workspace today.
+          <p style={{ fontSize: '0.875rem', color: '#8b96a8', fontWeight: 400, lineHeight: 1.5 }}>
+            Here&apos;s what&apos;s happening in your workspace
+            {isProPlan ? <span style={{ color: '#c2540a', fontWeight: 600 }}> · Pro AI</span> : isPaidPlan ? <span style={{ color: '#f97316', fontWeight: 600 }}> · Standard</span> : null}.
           </p>
         </div>
 
@@ -347,13 +342,13 @@ export default async function DashboardPage({
           />
         )}
 
-        {/* ── Workspace pulse (paid plan live intelligence strip) ── */}
+        {/* ── Workspace pulse (Pro-only live intelligence strip) ── */}
         <WorkspacePulse
           ideas={ideasWithLikeStatus}
           ideasThisWeek={ideasThisWeek}
           activeMembers={activeMembers}
           memberCount={memberCount}
-          isPaidPlan={isPaidPlan}
+          isProPlan={isProPlan}
         />
 
         {/* ── Just upgraded ── */}
@@ -376,56 +371,50 @@ export default async function DashboardPage({
                 You&apos;re on IdeaFlow {company.plan === 'standard' ? 'Standard' : 'Pro'}!
               </p>
               <p style={{ fontSize: '0.8rem', color: '#047857' }}>
-                {company.plan === 'standard' ? 'Up to 50 members' : 'Up to 100 members'} · unlimited IdeaFlows · PDF exports &amp; full analytics.
+                {company.plan === 'standard'
+                  ? 'Up to 50 members · unlimited IdeaFlows · full analytics.'
+                  : 'Up to 100 members · AI summaries · executive reports · PDF exports.'}
               </p>
             </div>
           </div>
         )}
 
-        {/* ── Free plan upgrade banner ── */}
+        {/* ── Free plan upgrade banner (premium redesign) ── */}
         {company?.plan === 'free' && (
-          <div
-            style={{
-              marginBottom: '1.75rem',
-              borderRadius: '0.875rem',
-              padding: '0.875rem 1.25rem',
-              background: '#fdf8f4',
-              border: '1px solid rgba(249,115,22,0.12)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '1.25rem',
-              flexWrap: 'wrap',
-            }}
-          >
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '0.2rem' }}>
-                <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: '#7c2d12' }}>Free plan</span>
-                <span
-                  style={{
-                    fontSize: '0.68rem',
-                    fontWeight: 600,
-                    color: '#c2410c',
-                    background: 'rgba(249,115,22,0.09)',
-                    borderRadius: '999px',
-                    padding: '1px 7px',
-                  }}
-                >
-                  {memberCount} / 10 members
+          <div className="free-plan-banner stagger-fade-2">
+            {/* Left: headline + feature bullets */}
+            <div className="free-plan-banner__left">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                <span style={{
+                  fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.1em',
+                  textTransform: 'uppercase', color: '#b0bac8',
+                  background: 'rgba(0,0,0,0.04)', borderRadius: '999px',
+                  padding: '0.2rem 0.6rem', border: '1px solid rgba(0,0,0,0.07)',
+                }}>
+                  Free plan · {memberCount} / 10 members
                 </span>
               </div>
-              <p style={{ fontSize: '0.8rem', color: '#92400e', lineHeight: 1.5 }}>
-                Upgrade for more members, advanced analytics, and unlimited IdeaFlows.
+              <p style={{
+                fontSize: 'clamp(0.9375rem, 2vw, 1.0625rem)',
+                fontWeight: 800, color: '#0d1f35', letterSpacing: '-0.02em',
+                lineHeight: 1.2, marginBottom: '0.4rem',
+              }}>
+                Unlock AI-powered team insights
               </p>
-              {memberCount <= 1 && (
-                <a
-                  href="/dashboard/flows"
-                  style={{ fontSize: '0.78rem', color: '#f97316', fontWeight: 600, textDecoration: 'none', display: 'inline-block', marginTop: '0.2rem' }}
-                >
-                  Open an IdeaFlow to invite your team →
-                </a>
-              )}
+              <p style={{ fontSize: '0.8125rem', color: '#5d667a', lineHeight: 1.6, marginBottom: '0.75rem', maxWidth: '26rem' }}>
+                Generate executive summaries, trend analysis, PDF reports, and smart recommendations.
+              </p>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexWrap: 'wrap', gap: '0.3rem 0.75rem' }}>
+                {['AI summaries', 'Executive PDF exports', 'Trend detection', 'Participation analytics'].map(f => (
+                  <li key={f} style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.75rem', color: '#8b96a8' }}>
+                    <span style={{ color: '#f97316', fontSize: '0.6rem' }}>✦</span> {f}
+                  </li>
+                ))}
+              </ul>
             </div>
-            <UpgradePlans compact currentPlan="free" />
+
+            {/* Right: plan buttons — client component (onClick needs hydration) */}
+            <UpgradeCheckout memberCount={memberCount} />
           </div>
         )}
 
@@ -582,11 +571,11 @@ export default async function DashboardPage({
                 isAdmin={profile.role === 'admin'}
               />
 
-              {/* ── AI Workspace Insights ── */}
+              {/* ── AI Workspace Insights (Pro gate — teaser shown for Free/Standard) ── */}
               {ideasWithLikeStatus.length > 0 && (
                 <AISummaryCard
                   ideas={ideasWithLikeStatus}
-                  isPaidPlan={isPaidPlan}
+                  isProPlan={isProPlan}
                   roundName={roundData?.idea_round_name ?? null}
                   participationRate={participationRate}
                   memberCount={memberCount}
@@ -594,7 +583,7 @@ export default async function DashboardPage({
                 />
               )}
 
-              {/* ── Executive insight report (paid plan, 5+ ideas) ── */}
+              {/* ── Executive insight report (Pro + 5+ ideas) ── */}
               <ExecutiveReport
                 ideas={ideasWithLikeStatus}
                 participationRate={participationRate}
@@ -602,16 +591,16 @@ export default async function DashboardPage({
                 activeMembers={activeMembers}
                 ideasThisWeek={ideasThisWeek}
                 roundName={roundData?.idea_round_name ?? null}
-                isPaidPlan={isPaidPlan}
+                isProPlan={isProPlan}
               />
 
-              {/* ── Action recommendations (paid plan only, auto-hidden when empty) ── */}
+              {/* ── Action recommendations (Pro only) ── */}
               <ActionRecommendations
                 ideas={ideasWithLikeStatus}
                 participationRate={participationRate}
                 memberCount={memberCount}
                 activeMembers={activeMembers}
-                isPaidPlan={isPaidPlan}
+                isProPlan={isProPlan}
                 roundName={roundData?.idea_round_name ?? null}
               />
 

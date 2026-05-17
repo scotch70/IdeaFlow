@@ -425,10 +425,10 @@ export async function GET(_request: NextRequest) {
       .eq('id', profile.company_id)
       .single()
 
-    const isPaidPlan = company?.plan === 'pro' || company?.plan === 'standard'
-    if (!isPaidPlan) {
+    const isProPlan = company?.plan === 'pro' || company?.plan === 'pro_plus'
+    if (!isProPlan) {
       return NextResponse.json(
-        { error: 'PDF reports require a Standard or Pro plan. Upgrade to access this.' },
+        { error: 'PDF executive reports are a Pro feature. Upgrade to Pro to access this.' },
         { status: 403 }
       )
     }

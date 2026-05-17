@@ -565,8 +565,8 @@ export default async function HomePage() {
                     'Up to 50 workspace members',
                     'Unlimited IdeaFlows',
                     'Full analytics dashboard',
-                    'PDF report export',
-                    'Admin controls and roles',
+                    'Member management & roles',
+                    'Participation reports',
                     'Priority support',
                   ].map((item, i) => (
                     <div key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.625rem', fontSize: '0.875rem', color: i === 0 ? 'rgba(255,255,255,0.32)' : 'rgba(255,255,255,0.78)', fontStyle: i === 0 ? 'italic' : 'normal' }}>
@@ -634,37 +634,37 @@ export default async function HomePage() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '1rem' }}>
                     <p style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.40)' }}>Pro</p>
                     <span style={{
-                      fontSize: '0.58rem', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase',
-                      color: 'rgba(186,230,253,0.90)',
-                      background: 'rgba(56,189,248,0.12)',
+                      fontSize: '0.58rem', fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase',
+                      color: 'rgba(249,115,22,0.95)',
+                      background: 'rgba(249,115,22,0.14)',
                       borderRadius: '999px', padding: '0.15rem 0.5rem',
-                      border: '1px solid rgba(56,189,248,0.22)',
+                      border: '1px solid rgba(249,115,22,0.25)',
                     }}>
-                      Large teams
+                      ✦ AI-powered
                     </span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.375rem', marginBottom: '0.25rem' }}>
                     <p style={{ fontSize: '2.5rem', fontWeight: 700, color: 'rgba(255,255,255,0.96)', letterSpacing: '-0.04em', lineHeight: 1 }}>€99</p>
                     <p style={{ fontSize: '0.875rem', fontWeight: 500, color: 'rgba(255,255,255,0.35)' }}>/year</p>
                   </div>
-                  <p style={{ fontSize: '0.825rem', color: 'rgba(255,255,255,0.35)' }}>Under €9/month · For growing organisations</p>
+                  <p style={{ fontSize: '0.825rem', color: 'rgba(255,255,255,0.35)' }}>Smart AI workspace · up to 100 members</p>
                 </div>
 
                 <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: '1.5rem', marginBottom: '1.75rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', flex: 1, position: 'relative' }}>
-                  {[
-                    'Everything in Standard',
-                    'Up to 100 workspace members',
-                    'Unlimited IdeaFlows',
-                    'Full analytics dashboard',
-                    'PDF report export',
-                    'Admin controls and roles',
-                    'Priority support',
-                  ].map((item, i) => (
-                    <div key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.625rem', fontSize: '0.875rem', color: i === 0 ? 'rgba(255,255,255,0.32)' : 'rgba(255,255,255,0.78)', fontStyle: i === 0 ? 'italic' : 'normal' }}>
-                      <svg width="13" height="13" viewBox="0 0 15 15" fill="none" style={{ flexShrink: 0, marginTop: '0.15rem', color: i === 0 ? 'rgba(255,255,255,0.22)' : 'rgba(56,189,248,0.75)' }}>
-                        <path d="M12.5 3.5L6 10 3 7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                      {item}
+                  {([
+                    { label: 'Everything in Standard',      ai: false },
+                    { label: 'AI workspace summaries',       ai: true  },
+                    { label: 'Executive AI reports',         ai: true  },
+                    { label: 'AI action recommendations',    ai: true  },
+                    { label: 'PDF executive exports',        ai: true  },
+                    { label: 'Workspace Pulse & trends',     ai: true  },
+                    { label: 'Up to 100 workspace members',  ai: false },
+                  ] as { label: string; ai: boolean }[]).map(({ label, ai }, i) => (
+                    <div key={label} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.625rem', fontSize: '0.875rem', color: i === 0 ? 'rgba(255,255,255,0.30)' : ai ? 'rgba(186,230,253,0.85)' : 'rgba(255,255,255,0.70)', fontStyle: i === 0 ? 'italic' : 'normal' }}>
+                      <span style={{ flexShrink: 0, marginTop: '0.15rem', fontSize: '0.8rem', color: ai ? 'rgba(249,115,22,0.7)' : i === 0 ? 'rgba(255,255,255,0.18)' : 'rgba(99,179,237,0.6)' }}>
+                        {ai ? '✦' : '✓'}
+                      </span>
+                      {label}
                     </div>
                   ))}
                 </div>
@@ -778,27 +778,63 @@ export default async function HomePage() {
         {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
             FOOTER
         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-        <footer style={{ background: P.dark, borderTop: '1px solid rgba(255,255,255,0.06)', padding: '2rem 0' }}>
-          <PageContainer style={{
-            display: 'flex', alignItems: 'center',
-            justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-              <IdeaFlowMark width={16} color="rgba(255,255,255,0.32)" />
-              <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'rgba(255,255,255,0.32)', letterSpacing: '-0.02em', fontFamily: "'DM Sans', sans-serif" }}>
-                IdeaFlow
-              </span>
+        <footer style={{ background: P.dark, borderTop: '1px solid rgba(255,255,255,0.06)', padding: '2.5rem 0' }}>
+          <PageContainer>
+            {/* Top row: brand + navigation */}
+            <div style={{
+              display: 'flex', alignItems: 'flex-start',
+              justifyContent: 'space-between', flexWrap: 'wrap', gap: '2rem',
+              marginBottom: '2rem',
+              paddingBottom: '2rem',
+              borderBottom: '1px solid rgba(255,255,255,0.06)',
+            }}>
+              {/* Brand */}
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.5rem' }}>
+                  <IdeaFlowMark width={16} color="rgba(255,255,255,0.5)" />
+                  <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'rgba(255,255,255,0.5)', letterSpacing: '-0.02em', fontFamily: "'DM Sans', sans-serif" }}>
+                    IdeaFlow
+                  </span>
+                </div>
+                <p style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.2)', lineHeight: 1.6, maxWidth: '16rem' }}>
+                  AI-powered employee insight platform.<br />
+                  Built for teams that want to improve.
+                </p>
+              </div>
+
+              {/* Navigation columns */}
+              <div style={{ display: 'flex', gap: '3rem', flexWrap: 'wrap' }}>
+                <div>
+                  <p style={{ fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.22)', marginBottom: '0.75rem' }}>
+                    Product
+                  </p>
+                  {([['Features', '/features'], ['Pricing', '/#pricing'], ['Contact', '/contact']] as [string, string][]).map(([label, href]) => (
+                    <div key={label} style={{ marginBottom: '0.4rem' }}>
+                      <a href={href} style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.32)', textDecoration: 'none', fontWeight: 500 }}>
+                        {label}
+                      </a>
+                    </div>
+                  ))}
+                </div>
+                <div>
+                  <p style={{ fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.22)', marginBottom: '0.75rem' }}>
+                    Legal
+                  </p>
+                  {([['Privacy Policy', '/privacy'], ['Terms of Service', '/terms'], ['Cookie Policy', '/cookies']] as [string, string][]).map(([label, href]) => (
+                    <div key={label} style={{ marginBottom: '0.4rem' }}>
+                      <a href={href} style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.32)', textDecoration: 'none', fontWeight: 500 }}>
+                        {label}
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
-            <p style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.16)' }}>
+
+            {/* Bottom row: copyright */}
+            <p style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.14)' }}>
               © {new Date().getFullYear()} IdeaFlow. All rights reserved.
             </p>
-            <div style={{ display: 'flex', gap: '1.75rem' }}>
-              {([['Features', '/features'], ['Pricing', '/#pricing'], ['Contact', '/contact']] as [string, string][]).map(([label, href]) => (
-                <a key={label} href={href} style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.28)', textDecoration: 'none', fontWeight: 500 }}>
-                  {label}
-                </a>
-              ))}
-            </div>
           </PageContainer>
         </footer>
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { logEvent, logError } from '@/lib/monitoring/events'
 
 type ExistingProfileResult = {
   company_id: string | null
@@ -85,10 +86,7 @@ export async function GET(request: NextRequest) {
   .single()
 
   if (companyError || !company) {
-    // Transient DB write failure — no company row was created, so no
-    // partial state exists.  Preserve the session so the user can retry
-    // without re-entering their email and password.
-    console.error('[api/onboard] company insert failed:', companyError?.message)
+    logError('onboard/company_insert', companyError, { userId: user.id })
     return NextResponse.redirect(
       new URL('/auth?error=temporary_error', request.url)
     )
@@ -110,12 +108,13 @@ export async function GET(request: NextRequest) {
   .single()
 
   if (profileError || !upsertedProfile) {
-    console.error('[api/onboard] profile upsert failed:', profileError?.message)
+    logError('onboard/profile_upsert', profileError, { userId: user.id, companyId: company.id })
     await supabase.auth.signOut()
     return NextResponse.redirect(
       new URL('/auth?error=onboarding_failed', request.url)
     )
   }
 
+  logEvent('workspace_created', { userId: user.id, companyId: company.id, companyName })
   return NextResponse.redirect(new URL('/dashboard', request.url))
 }

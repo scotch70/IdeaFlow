@@ -31,7 +31,7 @@ interface ExecutiveReportProps {
   activeMembers:    number
   ideasThisWeek:    number
   roundName?:       string | null
-  isPaidPlan:       boolean
+  isProPlan:        boolean
 }
 
 // ── Theme extraction (word frequency, weighted by likes) ──────────────────────
@@ -179,9 +179,9 @@ export default function ExecutiveReport({
   activeMembers,
   ideasThisWeek,
   roundName,
-  isPaidPlan,
+  isProPlan,
 }: ExecutiveReportProps) {
-  if (!isPaidPlan || ideas.length < 5) return null
+  if (!isProPlan || ideas.length < 5) return null
 
   const themes      = extractThemes(ideas)
   const narrative   = buildNarrative(ideas, participationRate, memberCount, activeMembers, ideasThisWeek, roundName, themes)

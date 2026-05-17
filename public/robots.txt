@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /
+
+# Marketing pages
+Allow: /features
+Allow: /contact
+
+# Disallow authenticated / private areas
+Disallow: /dashboard/
+Disallow: /settings/
+Disallow: /api/
+Disallow: /flow-invite/
+Disallow: /join/
+Disallow: /join-workspace/
+
+Sitemap: https://useideaflow.com/sitemap.xml

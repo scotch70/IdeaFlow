@@ -2,6 +2,7 @@ import { headers } from 'next/headers'
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { logEvent, logError } from '@/lib/monitoring/events'
 
 // Webhooks arrive with no cookie session — we must use the service-role client.
 // NEVER use createClient() (SSR/cookie) here; it has no session and all writes
@@ -43,6 +44,10 @@ export async function POST(req: Request) {
   }
 
   const adminClient = createAdminClient()
+
+  // Log every event for traceability. The event.id is stable across Stripe retries,
+  // so it can be used to correlate support cases with webhook deliveries.
+  console.log(`[stripe/webhook] event=${event.type} id=${event.id} livemode=${event.livemode}`)
 
   try {
     // ── checkout.session.completed ─────────────────────────────────────────
@@ -89,6 +94,7 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'DB update failed' }, { status: 500 })
       }
 
+      logEvent('subscription_activated', { companyId, plan })
       console.log(`[stripe/webhook] company ${companyId} upgraded to ${plan}`)
     }
 
