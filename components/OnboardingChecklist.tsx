@@ -80,36 +80,38 @@ export default function OnboardingChecklist({
   const steps: Step[] = [
     {
       id:     'workspace',
-      label:  'Create your workspace',
-      detail: 'Your IdeaFlow workspace is live and ready.',
+      label:  'Workspace created',
+      detail: 'Your AI-powered insight workspace is live and ready.',
       done:   true,
     },
     {
       id:       'invite',
       label:    'Invite your team',
       detail:   memberCount > 1
-        ? `${memberCount} members have joined.`
-        : 'Share the invite link so your team can participate.',
+        ? `${memberCount} team members have joined.`
+        : 'Insights are better with more voices — invite your team to participate.',
       done:     memberCount > 1,
-      ctaLabel: 'Go to Members',
+      ctaLabel: 'Invite teammates',
       ctaHref:  '/dashboard/members',
     },
     {
       id:       'flow',
-      label:    'Launch an IdeaFlow',
+      label:    'Launch your first IdeaFlow',
       detail:   hasActiveFlow
-        ? 'Your IdeaFlow is active — ideas are coming in.'
-        : 'Open a round so your team can start submitting ideas.',
+        ? 'Your IdeaFlow is live — ideas are flowing in.'
+        : 'Open a focused round so your team can start sharing what they think.',
       done:     hasActiveFlow,
-      ctaLabel: 'Manage flows',
+      ctaLabel: 'Create a flow',
       ctaHref:  '/dashboard/flows',
     },
     {
       id:       'ideas',
-      label:    'Collect your first 3 ideas',
+      label:    'Collect 3+ ideas',
       detail:   ideaCount >= 3
-        ? `${ideaCount} ideas in — you're off to a great start!`
-        : `${ideaCount} of 3 so far. Ask your team to contribute.`,
+        ? `${ideaCount} ideas collected — enough to start seeing patterns.`
+        : ideaCount > 0
+          ? `${ideaCount} idea${ideaCount > 1 ? 's' : ''} so far. Keep the momentum going.`
+          : 'Once ideas come in, AI can surface themes and insights for you.',
       done:     ideaCount >= 3,
     },
   ]
@@ -154,12 +156,12 @@ export default function OnboardingChecklist({
               marginBottom:  '0.2rem',
             }}
           >
-            {allDone ? '🎉 You\'re all set!' : 'Getting started'}
+            {allDone ? 'Setup complete' : 'Set up your workspace'}
           </p>
           <p style={{ fontSize: '0.75rem', color: '#8b96a8' }}>
             {allDone
-              ? 'Your workspace is fully configured. Dismiss this anytime.'
-              : `${completedCount} of ${steps.length} steps complete`}
+              ? 'Your workspace is ready. AI insights unlock once ideas come in.'
+              : `${completedCount} of ${steps.length} steps done`}
           </p>
         </div>
         <button

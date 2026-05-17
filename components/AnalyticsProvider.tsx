@@ -33,8 +33,10 @@ function AnalyticsInner() {
     if (!POSTHOG_KEY) return
 
     // Dynamically import posthog-js only if a key is configured.
-    // This keeps the bundle lean for installations without analytics.
-    import('posthog-js').then(({ default: posthog }) => {
+    // posthog-js is an optional peer dependency — the dynamic import + .catch()
+    // ensures the app works without it installed.
+    // @ts-expect-error — posthog-js is optional and may not be present in node_modules
+    import('posthog-js').then(({ default: posthog }: { default: any }) => { // eslint-disable-line @typescript-eslint/no-explicit-any
       if (!posthog.__loaded) {
         posthog.init(POSTHOG_KEY!, {
           api_host:          POSTHOG_HOST,
@@ -45,7 +47,7 @@ function AnalyticsInner() {
       }
       // Expose on window for imperative tracking in onClick handlers
       ;(window as typeof window & { posthog?: typeof posthog }).posthog = posthog
-    }).catch(() => {/* ignore if not installed */})
+    }).catch(() => {/* posthog-js not installed — analytics silently disabled */})
   }, [])
 
   // ── Track page views on route change ──────────────────────────────────────

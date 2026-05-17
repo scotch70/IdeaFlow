@@ -1004,3 +1004,154 @@ a {
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   MOBILE UX — COMPREHENSIVE FINAL PASS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── AI Pro gate overlay — readable on small screens ── */
+@media (max-width: 520px) {
+  .ai-pro-gate-inner {
+    padding: 1.25rem 1rem !important;
+  }
+  .ai-pro-gate-inner h3 {
+    font-size: 0.9rem !important;
+  }
+  .ai-pro-gate-inner p {
+    font-size: 0.8rem !important;
+  }
+}
+
+/* ── Onboarding checklist — CTA button full-width on tiny screens ── */
+@media (max-width: 380px) {
+  .onboarding-step-cta {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
+}
+
+/* ── Auth card — ensure no overflow on very narrow phones ── */
+@media (max-width: 380px) {
+  .auth-card-shell {
+    padding: 1.25rem 1rem !important;
+  }
+}
+
+/* ── Pricing cards (homepage) — stack gracefully ── */
+@media (max-width: 640px) {
+  .pricing-card-grid {
+    grid-template-columns: 1fr !important;
+    max-width: 360px;
+    margin: 0 auto;
+  }
+}
+
+/* ── Flow templates — readable on narrow screens ── */
+@media (max-width: 360px) {
+  .flow-template-card {
+    padding: 0.875rem !important;
+  }
+  .flow-template-card p {
+    font-size: 0.75rem !important;
+  }
+}
+
+/* ── Executive report — padding tighter on phones ── */
+@media (max-width: 520px) {
+  .exec-report-header {
+    padding: 1rem !important;
+  }
+  .exec-report-body {
+    padding: 1rem !important;
+  }
+}
+
+/* ── Analytics panel heading row — stack on phones ── */
+@media (max-width: 480px) {
+  .analytics-panel-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.5rem !important;
+  }
+}
+
+/* ── Digest / weekly email CTA banner — stack on phones ── */
+@media (max-width: 480px) {
+  .digest-cta-row {
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+  }
+  .digest-cta-row button,
+  .digest-cta-row a {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+}
+
+/* ── Round banner — tighter text on smallest screens ── */
+@media (max-width: 360px) {
+  .round-banner-chips {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+}
+
+/* ── Dashboard sidebar — prevent text overflow on mid phones ── */
+@media (max-width: 640px) {
+  .dashboard-nav-label {
+    font-size: 0.8125rem !important;
+  }
+}
+
+/* ── Members table — responsive on mobile ── */
+@media (max-width: 560px) {
+  .members-table-row {
+    flex-wrap: wrap !important;
+    gap: 0.25rem !important;
+  }
+  .members-table-email {
+    display: none !important;
+  }
+}
+
+/* ── Upgrade banner — ensure buttons don't overflow ── */
+@media (max-width: 400px) {
+  .upgrade-banner-actions {
+    flex-direction: column !important;
+    width: 100% !important;
+  }
+  .upgrade-banner-actions button {
+    width: 100% !important;
+  }
+}
+
+/* ── Idea submission form — full width on phones ── */
+@media (max-width: 520px) {
+  .idea-submit-form {
+    padding: 1rem !important;
+  }
+}
+
+/* ── Safe-area top padding for fixed headers on iOS ── */
+@supports (padding: env(safe-area-inset-top)) {
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top);
+  }
+}
+
+/* ── Prevent tap highlight on interactive elements ── */
+button, a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ── Improve touch targets — minimum 44×44px on mobile ── */
+@media (max-width: 768px) {
+  .btn-primary,
+  .btn-dark,
+  .btn-secondary,
+  .btn-ghost {
+    min-height: 44px;
+  }
+}
+

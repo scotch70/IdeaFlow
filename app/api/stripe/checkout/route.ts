@@ -22,6 +22,7 @@ import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient }      from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { logEvent, logError } from '@/lib/monitoring/events'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2024-06-20',
@@ -115,9 +116,10 @@ export async function POST(req: Request) {
         : { customer_email: user.email ?? undefined }),
     })
 
+    logEvent('checkout_started', { userId: user.id, companyId: profile.company_id, plan })
     return NextResponse.json({ url: session.url })
   } catch (error) {
-    console.error('[stripe/checkout]', error)
+    logError('stripe/checkout', error)
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Something went wrong' },
       { status: 500 },
