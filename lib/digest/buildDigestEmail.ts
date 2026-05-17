@@ -16,10 +16,12 @@ import type { DigestMetrics  } from './aggregateDigestMetrics'
 import type { DigestInsights } from './generateDigestInsights'
 
 interface BuildDigestEmailParams {
-  adminName:    string
-  metrics:      DigestMetrics
-  insights:     DigestInsights
-  appUrl:       string
+  adminName:      string
+  metrics:        DigestMetrics
+  insights:       DigestInsights
+  appUrl:         string
+  /** Optional URL shown as "Unsubscribe" in the email footer (CAN-SPAM / GDPR). */
+  unsubscribeUrl?: string
 }
 
 interface DigestEmailResult {
@@ -192,6 +194,7 @@ export function buildDigestEmail({
   metrics,
   insights,
   appUrl,
+  unsubscribeUrl,
 }: BuildDigestEmailParams): DigestEmailResult {
   const firstName   = adminName.split(' ')[0] || adminName
   const isProPlan   = metrics.plan === 'pro' || metrics.plan === 'pro_plus'
@@ -418,9 +421,12 @@ export function buildDigestEmail({
               <p style="margin:0 0 4px;font-size:12px;color:#9ab0c8;line-height:1.6;">
                 You're receiving this as an admin of <strong>${e(metrics.companyName)}</strong> on IdeaFlow.
               </p>
-              <p style="margin:0;font-size:12px;color:#b0bac8;">
+              <p style="margin:0 0 4px;font-size:12px;color:#b0bac8;">
                 IdeaFlow · Weekly digest · ${e(metrics.weekLabel)}
               </p>
+              ${unsubscribeUrl ? `<p style="margin:4px 0 0;font-size:11px;color:#c0cad8;">
+                <a href="${unsubscribeUrl}" style="color:#9ab0c8;text-decoration:underline;">Unsubscribe from weekly digests</a>
+              </p>` : ''}
             </td>
           </tr>
 

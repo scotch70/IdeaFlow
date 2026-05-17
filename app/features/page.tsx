@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import PageContainer from '@/components/PageContainer'
 import SiteHeader from '@/components/SiteHeader'
+import SiteFooter from '@/components/SiteFooter'
 
 export const metadata = {
   title: 'Features — IdeaFlow',
@@ -368,65 +369,8 @@ export default async function FeaturesPage() {
       </section>
 
 
-      {/* ── CTA ──────────────────────────────────────────────────────────────── */}
-      <section className="cta-dark" style={{ padding: 'clamp(4rem,7vw,6rem) 0', ...DIVIDER }}>
-        <PageContainer style={{ position: 'relative', zIndex: 1 }}>
-          <div style={{ maxWidth: '32rem' }}>
-            <p style={{
-              fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.14em',
-              textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)',
-              marginBottom: '1rem',
-            }}>
-              Get started today
-            </p>
-            <h2 style={{
-              fontFamily: "'Instrument Serif', serif", fontStyle: 'italic',
-              fontSize: 'clamp(1.875rem, 3.5vw, 2.5rem)',
-              lineHeight: 1.1, letterSpacing: '-0.025em',
-              color: 'rgba(255,255,255,0.96)',
-              marginBottom: '1rem',
-            }}>
-              Ready to give every idea a fair chance?
-            </h2>
-            <p style={{
-              fontSize: '0.9375rem', lineHeight: 1.75,
-              color: 'rgba(255,255,255,0.45)',
-              marginBottom: '2rem',
-            }}>
-              Set up your workspace in minutes. Free to start, no credit card required.
-            </p>
-            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-              {user ? (
-                <Link href="/dashboard"
-                  style={{
-                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                    padding: '0.65rem 1.5rem', borderRadius: '0.5rem',
-                    fontSize: '0.9rem', fontWeight: 600,
-                    background: '#ffffff', color: '#1c1f2e',
-                    textDecoration: 'none', letterSpacing: '-0.005em',
-                    transition: 'opacity 0.12s',
-                  }}>
-                  Open dashboard →
-                </Link>
-              ) : (
-                <Link href="/auth?mode=signup"
-                  style={{
-                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                    padding: '0.65rem 1.5rem', borderRadius: '0.5rem',
-                    fontSize: '0.9rem', fontWeight: 600,
-                    background: '#ffffff', color: '#1c1f2e',
-                    textDecoration: 'none', letterSpacing: '-0.005em',
-                    transition: 'opacity 0.12s',
-                  }}>
-                  Get started free →
-                </Link>
-              )}
-            </div>
-          </div>
-        </PageContainer>
-      </section>
-
     </main>
+    <SiteFooter isLoggedIn={!!user} />
     </>
   )
 }

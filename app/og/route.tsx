@@ -64,13 +64,12 @@ export async function GET(req: NextRequest) {
 
           {/* Logo */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '48px' }}>
-            {/* Mark: simple orange square with rounded corners as a proxy */}
-            <div style={{
-              width: '32px', height: '32px',
-              borderRadius: '8px',
-              background: 'linear-gradient(135deg, #f97316, #ea580c)',
-              display: 'flex',
-            }} />
+            {/* IdeaFlow three-bar mark — short/faint, medium, tall/full */}
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: '5px', height: '28px' }}>
+              <div style={{ width: '7px', height: '14px', background: 'rgba(249,115,22,0.32)', borderRadius: '2px', display: 'flex' }} />
+              <div style={{ width: '7px', height: '19px', background: 'rgba(249,115,22,0.62)', borderRadius: '2px', display: 'flex' }} />
+              <div style={{ width: '9px', height: '28px', background: '#f97316',             borderRadius: '2px', display: 'flex' }} />
+            </div>
             <span style={{
               fontSize: '22px',
               fontWeight: 700,

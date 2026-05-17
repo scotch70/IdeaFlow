@@ -2,6 +2,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import SiteHeader from '@/components/SiteHeader'
 import PageContainer from '@/components/PageContainer'
+import SiteFooter from '@/components/SiteFooter'
 
 export const metadata: Metadata = {
   title: 'Cookie Policy',
@@ -141,20 +142,9 @@ export default function CookiesPage() {
             </div>
           </div>
 
-          {/* Footer nav */}
-          <div style={{ marginTop: '3rem', paddingTop: '2rem', borderTop: '1px solid rgba(0,0,0,0.07)', display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
-            <Link href="/privacy" style={{ fontSize: '0.875rem', color: '#5d667a', textDecoration: 'none' }}>
-              Privacy Policy →
-            </Link>
-            <Link href="/terms" style={{ fontSize: '0.875rem', color: '#5d667a', textDecoration: 'none' }}>
-              Terms of Service →
-            </Link>
-            <Link href="/" style={{ fontSize: '0.875rem', color: '#b8c0ce', textDecoration: 'none' }}>
-              ← Back to home
-            </Link>
-          </div>
         </div>
       </PageContainer>
     </div>
+    <SiteFooter />
   )
 }

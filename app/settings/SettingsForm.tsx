@@ -460,6 +460,10 @@ export default function SettingsForm({
                 {companyPlan === 'standard' && role === 'admin' && (
                   <UpgradePlans compact currentPlan={companyPlan} />
                 )}
+                {/* Manage billing via Stripe Customer Portal */}
+                {role === 'admin' && (
+                  <ManageBillingButton />
+                )}
               </div>
             </div>
           ) : (

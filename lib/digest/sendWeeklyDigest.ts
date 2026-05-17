@@ -71,10 +71,11 @@ export async function sendWeeklyDigest(
 
   for (const admin of admins) {
     const { subject, html } = buildDigestEmail({
-      adminName: admin.name,
+      adminName:      admin.name,
       metrics,
       insights,
       appUrl,
+      unsubscribeUrl: `${appUrl}/settings`,
     })
 
     if (dryRun) {
