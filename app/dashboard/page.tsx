@@ -10,6 +10,10 @@ import UpgradePlans from '@/components/UpgradePlans'
 import PageContainer from '@/components/PageContainer'
 import IdeaRoundBanner from '@/components/IdeaRoundBanner'
 import RoundGateCard from '@/components/RoundGateCard'
+import WorkspaceMetrics from '@/components/WorkspaceMetrics'
+import AISummaryCard from '@/components/AISummaryCard'
+import WorkspacePulse from '@/components/WorkspacePulse'
+import ActionRecommendations from '@/components/ActionRecommendations'
 import { getEffectiveRoundStatus } from '@/lib/rounds/getEffectiveRoundStatus'
 
 type ProfileResult = Pick<
@@ -286,9 +290,17 @@ export default async function DashboardPage({
 
   const showRoundBanner = roundStatus !== null
 
+  // ── Derived metrics for participation + AI cards ────────────────────────────
+  const participationRate = Math.round((activeMembers / Math.max(memberCount, 1)) * 100)
+  const avgLikesPerIdea =
+    ideasWithLikeStatus.length > 0
+      ? parseFloat((totalLikes / ideasWithLikeStatus.length).toFixed(1))
+      : 0
+  const isPaidPlan = company?.plan === 'standard' || company?.plan === 'pro'
+
   return (
     <main>
-      <PageContainer style={{ paddingTop: '2.5rem', paddingBottom: '3rem' }}>
+      <PageContainer className="dashboard-content-container">
 
         {/* ── Welcome header ── */}
         <div style={{ marginBottom: '2rem' }}>
@@ -309,6 +321,27 @@ export default async function DashboardPage({
             Here&apos;s what&apos;s happening in your workspace today.
           </p>
         </div>
+
+        {/* ── Workspace participation metrics strip ── */}
+        {ideasWithLikeStatus.length > 0 && (
+          <WorkspaceMetrics
+            participationRate={participationRate}
+            ideasThisWeek={ideasThisWeek}
+            totalIdeas={ideasWithLikeStatus.length}
+            memberCount={memberCount}
+            activeMembers={activeMembers}
+            avgLikesPerIdea={avgLikesPerIdea}
+          />
+        )}
+
+        {/* ── Workspace pulse (paid plan live intelligence strip) ── */}
+        <WorkspacePulse
+          ideas={ideasWithLikeStatus}
+          ideasThisWeek={ideasThisWeek}
+          activeMembers={activeMembers}
+          memberCount={memberCount}
+          isPaidPlan={isPaidPlan}
+        />
 
         {/* ── Just upgraded ── */}
         {justUpgraded && (company?.plan === 'pro' || company?.plan === 'standard') && (
@@ -534,6 +567,28 @@ export default async function DashboardPage({
                 currentUserId={user.id}
                 companyId={profile.company_id}
                 isAdmin={profile.role === 'admin'}
+              />
+
+              {/* ── AI Workspace Insights ── */}
+              {ideasWithLikeStatus.length > 0 && (
+                <AISummaryCard
+                  ideas={ideasWithLikeStatus}
+                  isPaidPlan={isPaidPlan}
+                  roundName={roundData?.idea_round_name ?? null}
+                  participationRate={participationRate}
+                  memberCount={memberCount}
+                  activeMembers={activeMembers}
+                />
+              )}
+
+              {/* ── Action recommendations (paid plan only, auto-hidden when empty) ── */}
+              <ActionRecommendations
+                ideas={ideasWithLikeStatus}
+                participationRate={participationRate}
+                memberCount={memberCount}
+                activeMembers={activeMembers}
+                isPaidPlan={isPaidPlan}
+                roundName={roundData?.idea_round_name ?? null}
               />
 
             </>

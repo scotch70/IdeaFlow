@@ -164,6 +164,67 @@ export default function SettingsForm({
           flex-wrap: wrap;
           gap: 0.75rem;
         }
+        /* Billing plan row — stacks on mobile */
+        .settings-plan-row {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 1rem;
+          flex-wrap: wrap;
+        }
+        .settings-plan-actions {
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
+          align-items: flex-end;
+          flex-shrink: 0;
+        }
+        @media (max-width: 560px) {
+          .settings-plan-actions {
+            align-items: stretch;
+            width: 100%;
+          }
+        }
+        /* Danger zone row */
+        .settings-danger-zone-row {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 1rem;
+          flex-wrap: wrap;
+        }
+        @media (max-width: 480px) {
+          .settings-danger-zone-row {
+            flex-direction: column;
+          }
+        }
+        /* Mobile sign-out — full width */
+        @media (max-width: 480px) {
+          .settings-account-footer {
+            flex-direction: column;
+            align-items: stretch;
+          }
+          .settings-account-footer button {
+            width: 100%;
+          }
+        }
+        /* Free plan upgrade — full width on mobile */
+        .settings-free-plan-row {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 1.5rem;
+          flex-wrap: wrap;
+        }
+        @media (max-width: 480px) {
+          .settings-free-plan-row {
+            flex-direction: column;
+          }
+          .settings-free-plan-row > div:last-child {
+            flex-shrink: unset;
+            width: 100%;
+          }
+        }
       `}</style>
 
       {/* Toast */}
@@ -353,7 +414,7 @@ export default function SettingsForm({
 
           {(companyPlan === 'standard' || companyPlan === 'pro' || companyPlan === 'pro_plus') ? (
             /* ── Paid plan state ────────────────────────────────────── */
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+            <div className="settings-plan-row">
               <div>
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.75rem' }}>
                   <span style={{ fontSize: '1rem', fontWeight: 800, color: '#0d1f35' }}>
@@ -380,7 +441,7 @@ export default function SettingsForm({
                   ))}
                 </ul>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', alignItems: 'flex-end' }}>
+              <div className="settings-plan-actions">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.875rem', borderRadius: '0.625rem', background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)' }}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
                   <span style={{ fontSize: '0.825rem', fontWeight: 700, color: '#065f46' }}>
@@ -395,7 +456,7 @@ export default function SettingsForm({
             </div>
           ) : (
             /* ── Free plan state ────────────────────────────────────── */
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1.5rem', flexWrap: 'wrap' }}>
+            <div className="settings-free-plan-row">
               <div>
                 <p style={{ fontSize: '1rem', fontWeight: 800, color: '#0d1f35', marginBottom: '0.5rem' }}>
                   Free plan
@@ -439,7 +500,7 @@ export default function SettingsForm({
           <p style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#dc2626', marginBottom: '1rem' }}>
             Danger zone
           </p>
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+          <div className="settings-danger-zone-row">
             <div>
               <p style={{ fontSize: '0.875rem', fontWeight: 600, color: '#0d1f35', marginBottom: '0.2rem' }}>
                 Delete my account

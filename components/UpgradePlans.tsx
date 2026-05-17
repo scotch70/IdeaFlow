@@ -88,7 +88,7 @@ export default function UpgradePlans({ compact = false, currentPlan }: UpgradePl
 
   // ── Full card mode ─────────────────────────────────────────────────────────
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
+    <div className="upgrade-plans-grid">
       {/* Standard card */}
       <div
         style={{

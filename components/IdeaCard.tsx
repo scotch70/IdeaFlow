@@ -242,13 +242,13 @@ export default function IdeaCard({ idea, currentUserId, isAdmin }: IdeaCardProps
         ) : (
           <>
             {/* Title row */}
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
+            <div className="idea-card-title-row">
               <p style={{ flex: 1, fontSize: '0.875rem', fontWeight: 600, lineHeight: 1.45, color: 'var(--ink)' }}>
                 {idea.title}
               </p>
 
               {/* Status badge + admin inline actions */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', flexShrink: 0, paddingTop: '0.1rem' }}>
+              <div className="idea-card-actions">
                 <StatusBadge status={idea.status} />
 
                 {isAdmin && isOpen && (
