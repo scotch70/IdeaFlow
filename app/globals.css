@@ -474,3 +474,155 @@ textarea.input:focus-visible { outline: none; }
     font-size: 1.25rem !important;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PHASE 3 — PRODUCT DELIGHT: animations, micro-interactions, skeletons
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Keyframes ────────────────────────────────────────────────────────────── */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position:  400px 0; }
+}
+
+@keyframes like-pop {
+  0%   { transform: scale(1);    }
+  35%  { transform: scale(1.35); }
+  60%  { transform: scale(0.9);  }
+  80%  { transform: scale(1.1);  }
+  100% { transform: scale(1);    }
+}
+
+@keyframes success-flash {
+  0%   { background-color: rgba(5,150,105,0.12); }
+  60%  { background-color: rgba(5,150,105,0.06); }
+  100% { background-color: transparent; }
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1;   transform: scale(1);    }
+  50%       { opacity: 0.5; transform: scale(1.35); }
+}
+
+/* ── Stagger fade-in classes (apply to top-level sections) ───────────────── */
+.stagger-fade-1 { animation: fadeInUp 0.35s ease both; animation-delay: 0.05s; }
+.stagger-fade-2 { animation: fadeInUp 0.35s ease both; animation-delay: 0.12s; }
+.stagger-fade-3 { animation: fadeInUp 0.35s ease both; animation-delay: 0.20s; }
+.stagger-fade-4 { animation: fadeInUp 0.35s ease both; animation-delay: 0.28s; }
+
+/* ── Idea card hover lift ─────────────────────────────────────────────────── */
+.idea-card-item {
+  transition: box-shadow 0.18s ease, transform 0.18s ease, border-color 0.18s ease;
+}
+.idea-card-item:hover {
+  transform:    translateY(-2px);
+  box-shadow:   0 4px 16px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.04);
+  border-color: rgba(26,107,191,0.16) !important;
+}
+
+/* ── Like / vote button pop ──────────────────────────────────────────────── */
+.like-pop {
+  animation: like-pop 0.38s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* ── Success flash overlay (one-shot, add via JS) ────────────────────────── */
+.success-flash {
+  animation: success-flash 0.8s ease-out both;
+}
+
+/* ── Skeleton loader ─────────────────────────────────────────────────────── */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(0,0,0,0.05) 25%,
+    rgba(0,0,0,0.09) 37%,
+    rgba(0,0,0,0.05) 63%
+  );
+  background-size: 400px 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+  border-radius: 0.375rem;
+}
+.skeleton-text {
+  height: 0.85rem;
+  border-radius: 999px;
+}
+.skeleton-text-sm {
+  height: 0.65rem;
+  border-radius: 999px;
+}
+.skeleton-heading {
+  height: 1.25rem;
+  border-radius: 999px;
+}
+.skeleton-pill {
+  height: 2rem;
+  border-radius: 0.875rem;
+}
+.skeleton-card {
+  height: 5rem;
+  border-radius: 0.875rem;
+}
+
+/* ── Pulse dot animation (WorkspacePulse header) ─────────────────────────── */
+.pulse-dot {
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+/* ── "New this week" badge ───────────────────────────────────────────────── */
+.badge-new-this-week {
+  display:        inline-flex;
+  align-items:    center;
+  gap:            0.2rem;
+  font-size:      0.65rem;
+  font-weight:    700;
+  color:          #059669;
+  background:     rgba(5,150,105,0.09);
+  border:         1px solid rgba(5,150,105,0.2);
+  border-radius:  999px;
+  padding:        1px 7px;
+  letter-spacing: 0.01em;
+  white-space:    nowrap;
+}
+
+/* ── FlowTemplates grid ───────────────────────────────────────────────────── */
+.flow-templates-grid {
+  display:               grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap:                   0.625rem;
+}
+
+/* ── Flow template card hover ────────────────────────────────────────────── */
+.flow-template-card {
+  transition: box-shadow 0.15s ease, transform 0.15s ease, border-color 0.15s ease !important;
+}
+.flow-template-card:hover:not(:disabled) {
+  transform:    translateY(-2px) !important;
+  box-shadow:   0 4px 12px rgba(0,0,0,0.08) !important;
+  border-color: rgba(26,107,191,0.18) !important;
+}
+
+/* ── Executive report — stat grid responsive ─────────────────────────────── */
+.exec-stat-grid {
+  grid-template-columns: repeat(4, 1fr);
+}
+@media (max-width: 640px) {
+  .exec-stat-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+@media (max-width: 380px) {
+  .exec-stat-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+
+/* ── Smooth button transitions (global) ──────────────────────────────────── */
+button, a.btn-primary {
+  transition: opacity 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+

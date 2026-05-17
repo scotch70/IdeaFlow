@@ -368,7 +368,7 @@ function buildHtml(data: Awaited<ReturnType<typeof getCompanyReportData>>): stri
 
     <!-- Footer -->
     <div class="footer">
-      <span>IdeaFlow Pro · ${escapeHtml(data.companyName)}</span>
+      <span>IdeaFlow · ${escapeHtml(data.companyName)}</span>
       <span>useideaflow.com</span>
     </div>
 
@@ -425,9 +425,10 @@ export async function GET(_request: NextRequest) {
       .eq('id', profile.company_id)
       .single()
 
-    if (company?.plan !== 'pro') {
+    const isPaidPlan = company?.plan === 'pro' || company?.plan === 'standard'
+    if (!isPaidPlan) {
       return NextResponse.json(
-        { error: 'PDF reports are a Pro feature. Upgrade to access this.' },
+        { error: 'PDF reports require a Standard or Pro plan. Upgrade to access this.' },
         { status: 403 }
       )
     }

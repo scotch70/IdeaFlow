@@ -14,6 +14,9 @@ import WorkspaceMetrics from '@/components/WorkspaceMetrics'
 import AISummaryCard from '@/components/AISummaryCard'
 import WorkspacePulse from '@/components/WorkspacePulse'
 import ActionRecommendations from '@/components/ActionRecommendations'
+import OnboardingChecklist from '@/components/OnboardingChecklist'
+import FlowTemplates from '@/components/FlowTemplates'
+import ExecutiveReport from '@/components/ExecutiveReport'
 import { getEffectiveRoundStatus } from '@/lib/rounds/getEffectiveRoundStatus'
 
 type ProfileResult = Pick<
@@ -303,7 +306,7 @@ export default async function DashboardPage({
       <PageContainer className="dashboard-content-container">
 
         {/* ── Welcome header ── */}
-        <div style={{ marginBottom: '2rem' }}>
+        <div className="stagger-fade-1" style={{ marginBottom: '2rem' }}>
           <h1
             style={{
               fontSize: '1.875rem',
@@ -321,6 +324,16 @@ export default async function DashboardPage({
             Here&apos;s what&apos;s happening in your workspace today.
           </p>
         </div>
+
+        {/* ── Onboarding checklist (admin, fresh workspace) ── */}
+        {profile.role === 'admin' && (memberCount <= 1 || effectiveStatus !== 'active' || ideasWithLikeStatus.length < 3) && (
+          <OnboardingChecklist
+            memberCount={memberCount}
+            hasActiveFlow={effectiveStatus === 'active'}
+            ideaCount={ideasWithLikeStatus.length}
+            companyId={profile.company_id}
+          />
+        )}
 
         {/* ── Workspace participation metrics strip ── */}
         {ideasWithLikeStatus.length > 0 && (
@@ -476,7 +489,7 @@ export default async function DashboardPage({
           />
         )}
 
-        <section style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+        <section className="stagger-fade-2" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
 
           {effectiveStatus === 'active' ? (
             <>
@@ -581,6 +594,17 @@ export default async function DashboardPage({
                 />
               )}
 
+              {/* ── Executive insight report (paid plan, 5+ ideas) ── */}
+              <ExecutiveReport
+                ideas={ideasWithLikeStatus}
+                participationRate={participationRate}
+                memberCount={memberCount}
+                activeMembers={activeMembers}
+                ideasThisWeek={ideasThisWeek}
+                roundName={roundData?.idea_round_name ?? null}
+                isPaidPlan={isPaidPlan}
+              />
+
               {/* ── Action recommendations (paid plan only, auto-hidden when empty) ── */}
               <ActionRecommendations
                 ideas={ideasWithLikeStatus}
@@ -593,18 +617,25 @@ export default async function DashboardPage({
 
             </>
           ) : (
-            /* ── Gate card only: no ideas shown when round is not active ── */
-            <RoundGateCard
-              status={effectiveStatus}
-              isAdmin={profile.role === 'admin'}
-              companyId={profile.company_id}
-              roundName={roundData?.idea_round_name ?? null}
-            />
+            /* ── Gate card + optional template picker when round is not active ── */
+            <>
+              <RoundGateCard
+                status={effectiveStatus}
+                isAdmin={profile.role === 'admin'}
+                companyId={profile.company_id}
+                roundName={roundData?.idea_round_name ?? null}
+              />
+              {/* Show template launcher when admin has no flow configured at all */}
+              {profile.role === 'admin' && roundStatus === null && (
+                <FlowTemplates companyId={profile.company_id} />
+              )}
+            </>
           )}
         </section>
 
         {/* id=analytics — sidebar "Analytics" link scrolls here */}
         <div
+          className="stagger-fade-4"
           id="analytics"
           style={{
             marginTop: '2.5rem',
