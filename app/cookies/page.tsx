@@ -13,6 +13,7 @@ const LAST_UPDATED = 'May 2025'
 
 export default function CookiesPage() {
   return (
+    <>
     <div style={{ minHeight: '100vh', background: 'var(--page-bg)', fontFamily: "'DM Sans', sans-serif" }}>
       <SiteHeader />
 
@@ -146,5 +147,6 @@ export default function CookiesPage() {
       </PageContainer>
     </div>
     <SiteFooter />
+    </>
   )
 }

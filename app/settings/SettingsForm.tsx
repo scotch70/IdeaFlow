@@ -529,3 +529,48 @@ export default function SettingsForm({
     </main>
   )
 }
+
+// ── Manage Billing button ──────────────────────────────────────────────────────
+
+function ManageBillingButton() {
+  const [loading, setLoading] = useState(false)
+  const [error, setError]     = useState<string | null>(null)
+
+  async function handleClick() {
+    setLoading(true)
+    setError(null)
+    try {
+      const res  = await fetch('/api/stripe/portal', { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Something went wrong')
+      window.location.href = data.url
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not open billing portal')
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div>
+      <button
+        onClick={handleClick}
+        disabled={loading}
+        style={{
+          display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
+          height: '2.25rem', padding: '0 1rem',
+          borderRadius: '0.5rem', fontSize: '0.825rem', fontWeight: 600,
+          background: 'transparent',
+          color: '#2c4a6e',
+          border: '1px solid rgba(44,74,110,0.25)',
+          cursor: loading ? 'not-allowed' : 'pointer',
+          opacity: loading ? 0.6 : 1,
+        }}
+      >
+        {loading ? 'Opening…' : 'Manage billing →'}
+      </button>
+      {error && (
+        <p style={{ marginTop: '0.35rem', fontSize: '0.75rem', color: '#dc2626' }}>{error}</p>
+      )}
+    </div>
+  )
+}

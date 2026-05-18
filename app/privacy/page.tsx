@@ -14,6 +14,7 @@ const CONTACT_EMAIL = 'privacy@useideaflow.com'
 
 export default function PrivacyPage() {
   return (
+    <>
     <div style={{ minHeight: '100vh', background: 'var(--page-bg)', fontFamily: "'DM Sans', sans-serif" }}>
       <SiteHeader />
 
@@ -171,6 +172,7 @@ export default function PrivacyPage() {
       </PageContainer>
     </div>
     <SiteFooter />
+    </>
   )
 }
 

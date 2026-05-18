@@ -14,6 +14,7 @@ const CONTACT_EMAIL = 'legal@useideaflow.com'
 
 export default function TermsPage() {
   return (
+    <>
     <div style={{ minHeight: '100vh', background: 'var(--page-bg)', fontFamily: "'DM Sans', sans-serif" }}>
       <SiteHeader />
 
@@ -142,6 +143,7 @@ export default function TermsPage() {
       </PageContainer>
     </div>
     <SiteFooter />
+    </>
   )
 }
 

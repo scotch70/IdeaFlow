@@ -42,6 +42,7 @@ export type EventName =
   | 'webhook_error'
   | 'cron_error'
   | 'checkout_error'
+  | 'billing_portal_opened'
 
 export interface EventPayload {
   companyId?:  string
