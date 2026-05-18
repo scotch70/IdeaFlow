@@ -151,8 +151,14 @@ export default function SiteFooter({ isLoggedIn = false }: SiteFooterProps) {
               </div>
               <p style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.2)', lineHeight: 1.6, maxWidth: '16rem' }}>
                 AI-powered employee insight platform.<br />
-                Built for teams that want to improve.
+                Made for modern teams that want to improve.
               </p>
+              <a
+                href="mailto:hello@useideaflow.com"
+                style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.25)', textDecoration: 'none', marginTop: '0.5rem', display: 'inline-block' }}
+              >
+                hello@useideaflow.com
+              </a>
             </div>
 
             {/* Navigation columns */}
@@ -176,10 +182,7 @@ export default function SiteFooter({ isLoggedIn = false }: SiteFooterProps) {
                   ] as [string, string][]
                 ).map(([label, href]) => (
                   <div key={label} style={{ marginBottom: '0.4rem' }}>
-                    <a
-                      href={href}
-                      style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.32)', textDecoration: 'none', fontWeight: 500 }}
-                    >
+                    <a href={href} className="footer-nav-link">
                       {label}
                     </a>
                   </div>
@@ -204,10 +207,7 @@ export default function SiteFooter({ isLoggedIn = false }: SiteFooterProps) {
                   ] as [string, string][]
                 ).map(([label, href]) => (
                   <div key={label} style={{ marginBottom: '0.4rem' }}>
-                    <a
-                      href={href}
-                      style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.32)', textDecoration: 'none', fontWeight: 500 }}
-                    >
+                    <a href={href} className="footer-nav-link">
                       {label}
                     </a>
                   </div>
