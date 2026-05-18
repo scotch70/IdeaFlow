@@ -1360,3 +1360,57 @@ button, a {
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   ROUTE LOADING SKELETON SYSTEM
+   All loading.tsx files share these classes for consistent, premium skeletons.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Base row/block sizes — pair with .skeleton */
+.sk-h-xs  { height: 0.65rem; }   /* tiny labels, meta text */
+.sk-h-sm  { height: 0.8rem;  }   /* body text */
+.sk-h-md  { height: 1rem;    }   /* standard text / sub-heading */
+.sk-h-lg  { height: 1.4rem;  }   /* headings */
+.sk-h-xl  { height: 2rem;    }   /* page titles */
+.sk-h-2xl { height: 2.5rem;  }   /* large display */
+.sk-h-btn { height: 2.25rem; }   /* button-height elements */
+.sk-h-input { height: 2.75rem; } /* input field */
+
+/* Flow card skeleton */
+.sk-flow-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.875rem;
+  padding: 1.375rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-height: 10rem;
+}
+
+/* Idea card skeleton */
+.sk-idea-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 1rem 1.125rem;
+  display: flex;
+  gap: 0.875rem;
+}
+
+/* Sticky page-sub-header skeleton — matches all dashboard page sticky headers */
+.sk-page-header {
+  background: #ffffff;
+  border-bottom: 1px solid rgba(26,107,191,0.09);
+  position: sticky;
+  top: 0;
+  z-index: 9;
+}
+
+/* Metric pill */
+.sk-metric-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 0.875rem 1rem;
+}
+

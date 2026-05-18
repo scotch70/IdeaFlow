@@ -48,9 +48,9 @@ export default async function SettingsLayout({
         />
       </div>
 
-      {/* Shell — identical pattern to dashboard/layout.tsx */}
+      {/* Shell — identical pattern to dashboard/layout.tsx: full-width, no outer max-w */}
       <div
-        className="mx-auto flex max-w-7xl"
+        className="flex"
         style={{ height: `calc(100vh - ${HEADER_HEIGHT})` }}
       >
         {/* Sidebar — hidden on mobile */}
@@ -62,11 +62,8 @@ export default async function SettingsLayout({
           />
         </div>
 
-        {/* Scrollable content column — full width on mobile */}
-        <div
-          className="px-4 sm:px-6 lg:px-10"
-          style={{ flex: 1, minWidth: 0, overflowY: 'auto' }}
-        >
+        {/* Scrollable content column — full remaining width; PageContainer handles padding */}
+        <div style={{ flex: 1, minWidth: 0, overflowY: 'auto' }}>
           {children}
         </div>
       </div>

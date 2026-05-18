@@ -57,27 +57,22 @@ export default async function DashboardLayout({
       </div>
 
       {/*
-        ── Desktop dashboard shell ───────────────────────────────────────────
-        Mirrors the exact centering system used by SiteHeader and PageContainer:
-          mx-auto max-w-7xl px-6 lg:px-10
+        ── Dashboard shell ───────────────────────────────────────────────────
+        Full-viewport-width flex shell. No outer max-width so content fills
+        the screen at every breakpoint (1280px, 1440px, 1728px+).
 
-        Fixed-height flex shell — the sidebar fills the visible area naturally.
-        The content column scrolls internally (overflow-y: auto) so sticky
-        sub-headers inside pages stick at top: 0 of their scroll viewport,
-        which renders visually right below the global navbar.
+        The sidebar is 240px fixed. The content column takes the rest (flex:1).
+        PageContainer inside each page provides its own max-width + padding so
+        there is intentionally NO outer padding here — that was the source of
+        double-padding on desktop (40px outer + 40px inner = 80px wasted each side).
 
-        ── Mobile shell ─────────────────────────────────────────────────────
-        On mobile (< md), the sidebar is hidden and the content takes full
-        width. The mobile header above provides navigation via the drawer.
-        No margin-left math, no horizontal scroll.
+        On mobile (< md): sidebar hidden, content = full viewport width.
+        PageContainer's px-6 handles mobile padding. The safe-area override in
+        globals.css adds env(safe-area-inset-*) for notch/home-indicator devices.
       */}
       <div
-        className="mx-auto flex max-w-7xl"
-        style={{
-          // Desktop: subtract the SiteHeader height
-          // Mobile:  subtract the MobileDashboardHeader height (3.5rem)
-          height: `calc(100vh - ${HEADER_HEIGHT})`,
-        }}
+        className="flex"
+        style={{ height: `calc(100vh - ${HEADER_HEIGHT})` }}
       >
         {/* ── Sidebar — hidden on mobile ───────────────────────────────── */}
         <div className="hidden md:flex" style={{ flexShrink: 0 }}>
@@ -88,15 +83,8 @@ export default async function DashboardLayout({
           />
         </div>
 
-        {/* ── Scrollable content column ────────────────────────────────── */}
-        {/*
-          px-4 sm:px-6 lg:px-10 — tighter on mobile so cards have more room.
-          On desktop the padding matches the marketing site gutters.
-        */}
-        <div
-          className="px-4 sm:px-6 lg:px-10"
-          style={{ flex: 1, minWidth: 0, overflowY: 'auto' }}
-        >
+        {/* ── Scrollable content column — full remaining width ─────────── */}
+        <div style={{ flex: 1, minWidth: 0, overflowY: 'auto' }}>
           {children}
         </div>
       </div>
