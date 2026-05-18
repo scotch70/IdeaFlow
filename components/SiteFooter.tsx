@@ -58,10 +58,10 @@ export default function SiteFooter() {
                 Made for modern teams that want to improve.
               </p>
               <a
-                href="mailto:hello@useideaflow.com"
+                href="mailto:ideaflow@appstimize.nl"
                 style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.25)', textDecoration: 'none', marginTop: '0.5rem', display: 'inline-block' }}
               >
-                hello@useideaflow.com
+                ideaflow@appstimize.nl
               </a>
             </div>
 

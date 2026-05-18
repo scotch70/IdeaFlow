@@ -64,11 +64,30 @@ export async function GET(req: NextRequest) {
 
           {/* Logo */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '48px' }}>
-            {/* IdeaFlow three-bar mark — short/faint, medium, tall/full */}
-            <div style={{ display: 'flex', alignItems: 'flex-end', gap: '5px', height: '28px' }}>
-              <div style={{ width: '7px', height: '14px', background: 'rgba(249,115,22,0.32)', borderRadius: '2px', display: 'flex' }} />
-              <div style={{ width: '7px', height: '19px', background: 'rgba(249,115,22,0.62)', borderRadius: '2px', display: 'flex' }} />
-              <div style={{ width: '9px', height: '28px', background: '#f97316',             borderRadius: '2px', display: 'flex' }} />
+            {/*
+              IdeaFlow flowing-nodes mark (OG inline version — uses divs, not SVG,
+              because next/og ImageResponse doesn't support SVG children).
+              Three circles ascending on a diagonal: input → aggregation → insight.
+            */}
+            <div style={{ display: 'flex', position: 'relative', width: '28px', height: '28px' }}>
+              {/* Node A — bottom-left, faint */}
+              <div style={{
+                position: 'absolute', bottom: '0', left: '0',
+                width: '9px', height: '9px', borderRadius: '50%',
+                background: 'rgba(249,115,22,0.28)', display: 'flex',
+              }} />
+              {/* Node B — center, medium */}
+              <div style={{
+                position: 'absolute', bottom: '8px', left: '8px',
+                width: '11px', height: '11px', borderRadius: '50%',
+                background: 'rgba(249,115,22,0.62)', display: 'flex',
+              }} />
+              {/* Node C — top-right, full */}
+              <div style={{
+                position: 'absolute', top: '0', right: '0',
+                width: '14px', height: '14px', borderRadius: '50%',
+                background: '#f97316', display: 'flex',
+              }} />
             </div>
             <span style={{
               fontSize: '22px',

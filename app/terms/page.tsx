@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 }
 
 const LAST_UPDATED = 'May 2025'
-const CONTACT_EMAIL = 'legal@useideaflow.com'
+const CONTACT_EMAIL = 'ideaflow@appstimize.nl'
 
 export default function TermsPage() {
   return (

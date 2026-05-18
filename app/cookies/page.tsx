@@ -134,7 +134,7 @@ export default function CookiesPage() {
                   Questions
                 </h2>
                 <p>If you have questions about our use of cookies, contact us at{' '}
-                  <a href="mailto:privacy@useideaflow.com">privacy@useideaflow.com</a>.
+                  <a href="mailto:ideaflow@appstimize.nl">ideaflow@appstimize.nl</a>.
                 </p>
               </div>
 

@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 }
 
 const LAST_UPDATED = 'May 2025'
-const CONTACT_EMAIL = 'privacy@useideaflow.com'
+const CONTACT_EMAIL = 'ideaflow@appstimize.nl'
 
 export default function PrivacyPage() {
   return (
@@ -145,7 +145,7 @@ export default function PrivacyPage() {
                 <li>Stripe webhook signature verification</li>
                 <li>Rate limiting on sensitive endpoints</li>
               </ul>
-              <p>If you discover a security vulnerability, please disclose it responsibly to <a href="mailto:security@useideaflow.com">security@useideaflow.com</a>.</p>
+              <p>If you discover a security vulnerability, please disclose it responsibly to <a href="mailto:ideaflow@appstimize.nl">ideaflow@appstimize.nl</a>.</p>
             </Section>
 
             <Section title="11. Children">
