@@ -275,6 +275,27 @@ export interface Database {
         }
       }
 
+      idea_flow_reminders: {
+        Row: {
+          id:             string
+          idea_round_id:  string
+          reminder_type:  '7_days_before' | '1_day_before'
+          sent_at:        string
+        }
+        Insert: {
+          id?:            string
+          idea_round_id:  string
+          reminder_type:  '7_days_before' | '1_day_before'
+          sent_at?:       string
+        }
+        Update: {
+          id?:            string
+          idea_round_id?: string
+          reminder_type?: '7_days_before' | '1_day_before'
+          sent_at?:       string
+        }
+      }
+
       invites: {
         Row: {
           id: string

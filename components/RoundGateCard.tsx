@@ -20,11 +20,13 @@ export default function RoundGateCard({ status, isAdmin, companyId, roundName }:
 
   const isClosed = status === 'closed'
 
-  const icon        = isClosed ? '🔴' : '⏳'
-  const headline    = isClosed ? 'IdeaFlow is closed'         : 'IdeaFlow has not started yet'
-  const subCopy     = isClosed ? 'Idea submission is not available right now.'
-                               : 'Your admin is setting up this IdeaFlow.'
-  const memberCopy  = 'Your admin will reopen IdeaFlow when it\'s time to collect new ideas.'
+  const icon        = isClosed ? '📊' : '⏸️'
+  const headline    = isClosed ? 'This round has closed'      : 'IdeaFlow hasn\'t launched yet'
+  const subCopy     = isClosed ? 'Idea submission is complete for this round. Your admin is reviewing insights.'
+                               : 'Your admin is preparing a focused question for your team.'
+  const memberCopy  = isClosed
+    ? 'Watch for the next round — your input shapes what leadership prioritises.'
+    : 'You\'ll be notified when it\'s time to contribute.'
 
   const borderColor = isClosed ? 'rgba(239,68,68,0.12)'  : 'rgba(249,115,22,0.13)'
   const iconBg      = isClosed ? 'rgba(239,68,68,0.07)'  : 'rgba(249,115,22,0.07)'

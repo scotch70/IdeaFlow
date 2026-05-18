@@ -13,6 +13,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { getEffectiveRoundStatus } from '@/lib/rounds/getEffectiveRoundStatus'
 import { checkRateLimit } from '@/lib/ratelimit'
 import { canCreateFlow }   from '@/lib/billing'
+import { logEvent, logError } from '@/lib/monitoring/events'
 
 // ── GET ────────────────────────────────────────────────────────────────────────
 
@@ -193,9 +194,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: insertError.message }, { status: 500 })
     }
 
+    if (status === 'active') {
+      logEvent('flow_launched', { companyId: profile.company_id, userId: user.id })
+    }
     return NextResponse.json({ ...round, effectiveStatus: status, ideaCount: 0, memberCount: 0 }, { status: 201 })
   } catch (err) {
-    console.error('[POST /api/rounds]', err)
+    logError('rounds/POST', err)
     return NextResponse.json({ error: 'Something went wrong' }, { status: 500 })
   }
 }

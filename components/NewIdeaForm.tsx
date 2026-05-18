@@ -95,20 +95,10 @@ export default function NewIdeaForm({
 
   // ── Shared heading block ───────────────────────────────────────────────────
   const headingBlock = (
-    <div style={{ marginBottom: '0.85rem' }}>
-      <p style={{
-        fontSize: '0.68rem',
-        fontWeight: 700,
-        letterSpacing: '0.16em',
-        textTransform: 'uppercase',
-        color: 'var(--ink-light)',
-        marginBottom: '0.25rem',
-      }}>
-        Share your idea
-      </p>
+    <div style={{ marginBottom: '0.875rem' }}>
       <h2 style={{
-        fontSize: '1rem',
-        fontWeight: 700,
+        fontSize: '0.9375rem',
+        fontWeight: 600,
         color: 'var(--ink)',
         margin: 0,
         lineHeight: 1.5,
@@ -160,31 +150,50 @@ export default function NewIdeaForm({
         {headingBlock}
         <button
           onClick={() => setOpen(true)}
+          className="new-idea-trigger"
           style={{
             width: '100%',
-            display: 'flex', alignItems: 'center',
-            gap: '0.75rem', padding: '0.875rem 1rem',
-            borderRadius: '1rem',
-            border: '1.5px dashed var(--tint-border)',
-            background: 'var(--tint-bg)',
-            color: 'var(--ink-light)',
-            cursor: 'pointer', textAlign: 'left',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.625rem',
+            padding: '0.7rem 0.875rem',
+            borderRadius: '0.625rem',
+            border: '1px solid rgba(0,0,0,0.09)',
+            background: '#ffffff',
+            color: 'var(--ink-faint)',
+            cursor: 'pointer',
+            textAlign: 'left',
+            transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
           }}
         >
-          <span style={{
-            width: '1.75rem', height: '1.75rem',
-            borderRadius: '0.45rem',
-            background: 'rgba(249,115,22,0.10)',
-            color: 'var(--orange)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '1rem', flexShrink: 0,
-          }}>
+          <span
+            style={{
+              width: '1.5rem',
+              height: '1.5rem',
+              borderRadius: '0.375rem',
+              background: 'rgba(249,115,22,0.08)',
+              color: '#f97316',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '0.9rem',
+              fontWeight: 600,
+              flexShrink: 0,
+              lineHeight: 1,
+            }}
+          >
             +
           </span>
-          <span style={{ fontSize: '0.875rem', fontWeight: 500 }}>
-            Share a new idea…
+          <span style={{ fontSize: '0.875rem', fontWeight: 400, color: '#b8c0ce' }}>
+            Share an idea...
           </span>
         </button>
+        <style>{`
+          .new-idea-trigger:hover {
+            border-color: rgba(249,115,22,0.22) !important;
+            box-shadow: 0 0 0 3px rgba(249,115,22,0.05) !important;
+          }
+        `}</style>
       </div>
     )
   }

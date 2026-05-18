@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getEffectiveRoundStatus } from '@/lib/rounds/getEffectiveRoundStatus'
 import { checkRateLimit, getClientIp } from '@/lib/ratelimit'
+import { logEvent, logError } from '@/lib/monitoring/events'
 
 export async function POST(request: NextRequest) {
   try {
@@ -202,6 +203,7 @@ export async function POST(request: NextRequest) {
         )
       }
 
+      logEvent('idea_submitted', { companyId: profile.company_id, userId: user.id })
       return NextResponse.json(data)
     }
 
@@ -284,8 +286,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
   } catch (error) {
-    console.error('ideas route crash:', error)
-
+    logError('ideas/route', error)
     return NextResponse.json(
       {
         error: error instanceof Error ? error.message : 'Something went wrong',

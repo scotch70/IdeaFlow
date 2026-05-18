@@ -75,10 +75,10 @@ export default function IdeaList({
       {/* Header + filter tabs */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <h2 style={{ fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#9ab0c8', margin: 0 }}>
-            Ideas · sorted by likes
+          <h2 style={{ fontSize: '0.775rem', fontWeight: 500, color: 'var(--ink-light)', margin: 0, letterSpacing: '-0.01em' }}>
+            {ideas.length === 1 ? '1 idea' : `${ideas.length} ideas`} · sorted by most liked
           </h2>
-          <span style={{ fontSize: '0.72rem', color: '#9ab0c8', fontVariantNumeric: 'tabular-nums' }}>
+          <span style={{ fontSize: '0.72rem', color: '#b8c0ce', fontVariantNumeric: 'tabular-nums' }}>
             {filtered.length}{activeFilter !== 'all' ? ` / ${ideas.length}` : ''} total
           </span>
         </div>
@@ -101,7 +101,7 @@ export default function IdeaList({
                       ? '1px solid rgba(26,107,191,0.25)'
                       : '1px solid rgba(0,0,0,0.08)',
                     background: active ? 'rgba(26,107,191,0.07)' : 'transparent',
-                    color: active ? '#1a6bbf' : '#9ab0c8',
+                    color: active ? '#1a6bbf' : '#b0bac8',
                     cursor: 'pointer',
                     transition: 'all 0.12s ease',
                     lineHeight: 1.4,

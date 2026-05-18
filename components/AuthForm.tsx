@@ -5,10 +5,16 @@ import { useState, Suspense } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useSearchParams, useRouter } from 'next/navigation'
 
-// 'choose'  — first-time visitor selects their path
-// 'signup'  — creating a new workspace
-// 'signin'  — returning user
-// 'confirm' — signup succeeded but email confirmation is required
+/**
+ * Mode is derived entirely from the URL search param — never from useState.
+ * This means:
+ *   /auth              → 'choose'
+ *   /auth?mode=login   → 'signin'
+ *   /auth?mode=signup  → 'signup'
+ *
+ * The only local state used for mode is `showConfirm`, which is a transient
+ * post-signup screen that cannot be expressed in the URL cleanly.
+ */
 type Mode = 'choose' | 'signup' | 'signin' | 'confirm'
 
 export default function AuthForm() {
@@ -38,9 +44,18 @@ function AuthFormInner() {
   // Shown after a successful password reset
   const resetSuccess = params.get('reset') === 'success'
 
+  // ── Mode: URL is the single source of truth ────────────────────────────────
+  // showConfirm is the only local-state exception — it's a transient post-signup
+  // screen that has no URL representation and disappears on refresh intentionally.
+  const [showConfirm, setShowConfirm] = useState(false)
+  const [confirmEmail, setConfirmEmail] = useState('')
+
   const comingFromInvite = nextUrl.includes('/join')
-  const modeParam = params.get('mode')
-  const initialMode: Mode = comingFromInvite
+  const modeParam        = params.get('mode')
+
+  const mode: Mode = showConfirm
+    ? 'confirm'
+    : comingFromInvite
     ? 'signin'
     : modeParam === 'login'
     ? 'signin'
@@ -48,16 +63,25 @@ function AuthFormInner() {
     ? 'signup'
     : 'choose'
 
-  const [mode, setMode] = useState<Mode>(initialMode)
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [fullName, setFullName] = useState('')
+  const [email, setEmail]           = useState('')
+  const [password, setPassword]     = useState('')
+  const [fullName, setFullName]     = useState('')
   const [companyName, setCompanyName] = useState('')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [error, setError]           = useState('')
+  const [loading, setLoading]       = useState(false)
 
-  function switchMode(next: Mode) {
-    setMode(next)
+  /**
+   * Navigate to a different auth mode by updating the URL.
+   * Using router.push() keeps the browser history intact so Back/Forward work.
+   * The `next` param is preserved across mode switches.
+   */
+  function goTo(target: 'signin' | 'signup' | 'choose') {
+    const sp = new URLSearchParams()
+    if (target === 'signin')  sp.set('mode', 'login')
+    if (target === 'signup')  sp.set('mode', 'signup')
+    if (nextUrl !== '/dashboard') sp.set('next', nextUrl)
+    const qs = sp.toString()
+    router.push(`/auth${qs ? '?' + qs : ''}`)
     setError('')
   }
 
@@ -80,7 +104,8 @@ function AuthFormInner() {
         })
         if (signUpError) throw signUpError
         if (!signUpData.session) {
-          setMode('confirm')
+          setConfirmEmail(email)
+          setShowConfirm(true)
           return
         }
       } else {
@@ -136,35 +161,45 @@ function AuthFormInner() {
             <div style={{
               width: '3rem', height: '3rem',
               borderRadius: '0.75rem',
-              background: 'rgba(0,0,0,0.05)',
+              background: 'rgba(249,115,22,0.08)',
+              border: '1px solid rgba(249,115,22,0.15)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               margin: '0 auto 1.25rem',
             }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5d667a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f97316" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
                 <polyline points="22,6 12,13 2,6"/>
               </svg>
             </div>
 
             <p style={{ fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#b8c0ce', marginBottom: '0.4rem' }}>
-              One more step
+              Almost there
             </p>
             <h1 style={{ fontSize: '1.375rem', fontWeight: 800, color: '#1f2330', letterSpacing: '-0.02em', lineHeight: 1.2, marginBottom: '0.75rem' }}>
-              Check your inbox
+              Confirm your email
             </h1>
             <p style={{ fontSize: '0.875rem', color: '#5d667a', lineHeight: 1.6, marginBottom: '0.5rem' }}>
-              We&apos;ve sent a confirmation link to
+              We sent a confirmation link to
             </p>
-            <p style={{ fontSize: '0.9rem', fontWeight: 700, color: '#1f2330', marginBottom: '1.25rem', wordBreak: 'break-all' }}>
-              {email}
+            <p style={{ fontSize: '0.9rem', fontWeight: 700, color: '#1f2330', marginBottom: '1rem', wordBreak: 'break-all' }}>
+              {confirmEmail || email}
             </p>
-            <p style={{ fontSize: '0.825rem', color: '#5d667a', lineHeight: 1.6 }}>
-              Click the link in the email to activate your account and log in.
+            <p style={{ fontSize: '0.825rem', color: '#5d667a', lineHeight: 1.6, marginBottom: '0.75rem' }}>
+              Click the link to activate your workspace and sign in.
+            </p>
+            <p style={{
+              fontSize: '0.775rem', color: '#b8c0ce', lineHeight: 1.5,
+              padding: '0.5rem 0.75rem',
+              background: 'rgba(0,0,0,0.025)',
+              borderRadius: '0.5rem',
+              border: '1px solid rgba(0,0,0,0.05)',
+            }}>
+              Don&apos;t see it? Check your spam or promotions folder.
             </p>
 
             <div style={{ marginTop: '1.5rem', paddingTop: '1.25rem', borderTop: '1px solid #e7e2d8', fontSize: '0.8rem', color: '#5d667a' }}>
               Wrong email?{' '}
-              <button type="button" onClick={() => { setMode('signup'); setError('') }} style={FOOTER_LINK}>
+              <button type="button" onClick={() => { setShowConfirm(false); setError('') }} style={FOOTER_LINK}>
                 Go back
               </button>
             </div>
@@ -180,17 +215,20 @@ function AuthFormInner() {
       <div style={{ width: '100%', maxWidth: '22rem' }}>
         <div style={CARD_SHELL}>
           <div style={{ marginBottom: '1.75rem' }}>
+            <p style={{ fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#b8c0ce', marginBottom: '0.35rem' }}>
+              Welcome
+            </p>
             <h1 style={{ fontSize: '1.375rem', fontWeight: 800, color: '#1f2330', letterSpacing: '-0.02em', lineHeight: 1.2, marginBottom: '0.4rem' }}>
-              Get started with IdeaFlow
+              How do you want to start?
             </h1>
             <p style={{ fontSize: '0.875rem', color: '#5d667a', lineHeight: 1.6 }}>
-              Create a workspace for your team, or join one you&apos;ve been invited to.
+              Set up your team&apos;s insight workspace, or join one you&apos;ve been invited to.
             </p>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             <button
-              onClick={() => switchMode('signup')}
+              onClick={() => goTo('signup')}
               style={{
                 display: 'flex', alignItems: 'flex-start', gap: '0.875rem',
                 textAlign: 'left', width: '100%', cursor: 'pointer',
@@ -212,8 +250,8 @@ function AuthFormInner() {
                 </svg>
               </div>
               <div>
-                <p style={{ fontSize: '0.9rem', fontWeight: 700, color: '#1f2330', lineHeight: 1.3 }}>Create workspace</p>
-                <p style={{ fontSize: '0.8rem', color: '#8b96a8', marginTop: '0.2rem', lineHeight: 1.5 }}>Set up IdeaFlow for your team</p>
+                <p style={{ fontSize: '0.9rem', fontWeight: 700, color: '#1f2330', lineHeight: 1.3 }}>Start a new workspace</p>
+                <p style={{ fontSize: '0.8rem', color: '#8b96a8', marginTop: '0.2rem', lineHeight: 1.5 }}>Collect insights from your team — free to start</p>
               </div>
             </button>
 
@@ -241,15 +279,15 @@ function AuthFormInner() {
                 </svg>
               </div>
               <div>
-                <p style={{ fontSize: '0.9rem', fontWeight: 700, color: '#1f2330', lineHeight: 1.3 }}>Join with invite</p>
-                <p style={{ fontSize: '0.8rem', color: '#8b96a8', marginTop: '0.2rem', lineHeight: 1.5 }}>You have an invite code from your admin</p>
+                <p style={{ fontSize: '0.9rem', fontWeight: 700, color: '#1f2330', lineHeight: 1.3 }}>Join an existing workspace</p>
+                <p style={{ fontSize: '0.8rem', color: '#8b96a8', marginTop: '0.2rem', lineHeight: 1.5 }}>Enter an invite code from your team admin</p>
               </div>
             </button>
           </div>
 
           <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.825rem', color: '#5d667a' }}>
             Already have an account?{' '}
-            <button type="button" onClick={() => switchMode('signin')} style={FOOTER_LINK}>Sign in</button>
+            <button type="button" onClick={() => goTo('signin')} style={FOOTER_LINK}>Sign in</button>
           </div>
         </div>
       </div>
@@ -358,8 +396,8 @@ function AuthFormInner() {
             required
           />
           {mode === 'signup' && (
-            <p style={{ fontSize: '0.75rem', color: '#b8c0ce', marginTop: '-0.25rem' }}>
-              At least 8 characters
+            <p style={{ fontSize: '0.75rem', color: '#b8c0ce', marginTop: '-0.25rem', lineHeight: 1.4 }}>
+              Minimum 8 characters
             </p>
           )}
 
@@ -383,8 +421,8 @@ function AuthFormInner() {
             disabled={loading}
           >
             {loading
-              ? mode === 'signin' ? 'Signing in…' : 'Creating account…'
-              : mode === 'signin' ? 'Sign in' : 'Create account'}
+              ? mode === 'signin' ? 'Signing in…' : 'Creating workspace…'
+              : mode === 'signin' ? 'Sign in' : comingFromInvite ? 'Create account' : 'Create free workspace'}
           </button>
         </form>
 
@@ -392,20 +430,20 @@ function AuthFormInner() {
           {mode === 'signin' ? (
             <>
               New to IdeaFlow?{' '}
-              <button type="button" onClick={() => switchMode(comingFromInvite ? 'signup' : 'choose')} style={FOOTER_LINK}>
+              <button type="button" onClick={() => goTo(comingFromInvite ? 'signup' : 'choose')} style={FOOTER_LINK}>
                 Get started
               </button>
             </>
           ) : (
             <>
               Already have an account?{' '}
-              <button type="button" onClick={() => switchMode('signin')} style={FOOTER_LINK}>
+              <button type="button" onClick={() => goTo('signin')} style={FOOTER_LINK}>
                 Sign in
               </button>
               {!comingFromInvite && (
                 <>
                   {' · '}
-                  <button type="button" onClick={() => switchMode('choose')} style={FOOTER_LINK}>
+                  <button type="button" onClick={() => goTo('choose')} style={FOOTER_LINK}>
                     Back
                   </button>
                 </>

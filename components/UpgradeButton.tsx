@@ -4,13 +4,15 @@ import { useState } from 'react'
 import React from 'react'
 
 interface UpgradeButtonProps {
+  /** Which plan to check out. Required. */
+  plan: 'standard' | 'pro'
   /** Override button styles (merged with the default style) */
   style?: React.CSSProperties
-  /** Override button label. Defaults to "Upgrade to Pro" */
+  /** Override button label */
   label?: string
 }
 
-export default function UpgradeButton({ style: styleProp, label }: UpgradeButtonProps) {
+export default function UpgradeButton({ plan, style: styleProp, label }: UpgradeButtonProps) {
   const [loading, setLoading] = useState(false)
 
   async function handleUpgrade() {
@@ -19,6 +21,8 @@ export default function UpgradeButton({ style: styleProp, label }: UpgradeButton
 
       const res = await fetch('/api/stripe/checkout', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan }),
       })
 
       const text = await res.text()
@@ -55,13 +59,15 @@ export default function UpgradeButton({ style: styleProp, label }: UpgradeButton
     transition: 'opacity 0.15s',
   }
 
+  const defaultLabel = plan === 'pro' ? 'Upgrade to Pro' : 'Upgrade to Standard'
+
   return (
     <button
       onClick={handleUpgrade}
       disabled={loading}
       style={{ ...defaultStyle, ...styleProp }}
     >
-      {loading ? 'Redirecting…' : (label ?? 'Upgrade to Pro')}
+      {loading ? 'Redirecting…' : (label ?? defaultLabel)}
     </button>
   )
 }

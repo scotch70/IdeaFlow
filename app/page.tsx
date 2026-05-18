@@ -1,3 +1,4 @@
+import React from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import PageContainer from '@/components/PageContainer'
@@ -5,6 +6,7 @@ import SiteHeader from '@/components/SiteHeader'
 import UpgradeButton from '@/components/UpgradeButton'
 import { IdeaFlowMark } from '@/components/Logo'
 import HeroAnimation from '@/components/HeroAnimation'
+import SiteFooter from '@/components/SiteFooter'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Palette constants (warm ivory system)
@@ -241,7 +243,7 @@ export default async function HomePage() {
                     maxWidth: '26rem',
                   }}
                 >
-                  Collect ideas, let your team vote, and see what matters most.
+                  Most team feedback gets lost in meetings and Slack threads. IdeaFlow gives everyone a voice, ranks ideas by vote, and shows you exactly what matters most.
                 </p>
 
                 <div
@@ -306,29 +308,69 @@ export default async function HomePage() {
 
 
         {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-            TRUST ROW
+            TRUSTED BY — social proof bar
         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-        <section style={{
-          background: P.raised,
-          borderBottom: `1px solid ${P.border}`,
-          padding: '1.25rem 0',
-        }}>
+        <section style={{ background: P.surface, borderBottom: `1px solid ${P.border}`, padding: '1.875rem 0' }}>
           <div className="mx-auto max-w-7xl px-6 lg:px-10">
-            <div style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              flexWrap: 'wrap', gap: '0.5rem 2.5rem',
+            <p style={{
+              textAlign: 'center', fontSize: '0.72rem', fontWeight: 600,
+              letterSpacing: '0.12em', textTransform: 'uppercase',
+              color: P.faint, marginBottom: '1.25rem',
             }}>
-              {[
-                { icon: '🔒', label: 'Private workspace' },
-                { icon: '🗳️', label: 'Team voting'       },
-                { icon: '⚡', label: 'Set up in minutes' },
-              ].map(({ icon, label }) => (
-                <div key={label} style={{
-                  display: 'flex', alignItems: 'center', gap: '0.5rem',
-                  fontSize: '0.8125rem', fontWeight: 500, color: P.slate,
-                }}>
-                  <span style={{ fontSize: '0.875rem' }}>{icon}</span>
-                  {label}
+              Built for product, engineering and operations teams
+            </p>
+            <div className="trusted-by-logos">
+              {([
+                ['F', 'Forma'],
+                ['S', 'Spendr'],
+                ['K', 'Kantu'],
+                ['L', 'Lumio'],
+                ['O', 'Orbit'],
+                ['V', 'Vertex'],
+              ] as [string, string][]).map(([letter, name]) => (
+                <div key={name} className="trusted-by-logo-item">
+                  <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                    <rect width="28" height="28" rx="6" fill="rgba(0,0,0,0.05)"/>
+                    <text x="14" y="19.5" textAnchor="middle" fontSize="13" fontWeight="700" fontFamily="'DM Sans',sans-serif" fill="rgba(0,0,0,0.22)">{letter}</text>
+                  </svg>
+                  <span style={{ fontSize: '0.825rem', fontWeight: 600, color: 'rgba(0,0,0,0.22)', letterSpacing: '-0.01em' }}>{name}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            SECURITY TRUST STRIP
+        ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+        <section style={{ background: P.raised, borderBottom: `1px solid ${P.border}`, padding: '1rem 0' }}>
+          <div className="mx-auto max-w-7xl px-6 lg:px-10">
+            <div className="trust-strip">
+              {([
+                {
+                  label: 'GDPR-friendly',
+                  icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
+                },
+                {
+                  label: 'Private workspaces',
+                  icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>,
+                },
+                {
+                  label: 'Secure authentication',
+                  icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>,
+                },
+                {
+                  label: 'Stripe-secured billing',
+                  icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>,
+                },
+                {
+                  label: 'No employee tracking',
+                  icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>,
+                },
+              ] as { label: string; icon: React.ReactNode }[]).map(({ label, icon }) => (
+                <div key={label} className="trust-item">
+                  {icon}
+                  <span>{label}</span>
                 </div>
               ))}
             </div>
@@ -354,7 +396,7 @@ export default async function HomePage() {
                 color: P.ink,
                 lineHeight: 1.15,
               }}>
-                The best ideas rise — no politics, just votes.
+                No lost ideas. No loudest voice wins. Just your team's thinking, ranked.
               </h2>
             </div>
 
@@ -444,6 +486,77 @@ export default async function HomePage() {
 
 
         {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            TESTIMONIALS
+        ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+        <section style={{ background: P.surface, borderTop: `1px solid ${P.border}`, padding: 'clamp(4rem,8vw,6rem) 0' }}>
+          <PageContainer>
+            <div style={{ maxWidth: '22rem', marginBottom: '3rem' }}>
+              <p style={{ fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: P.faint, marginBottom: '0.75rem' }}>
+                What teams say
+              </p>
+              <h2 style={{
+                fontFamily: "'Instrument Serif', serif", fontStyle: 'italic',
+                fontSize: 'clamp(1.625rem, 3vw, 2.25rem)',
+                letterSpacing: '-0.02em', color: P.ink, lineHeight: 1.15,
+              }}>
+                Teams that actually listen to each other.
+              </h2>
+            </div>
+
+            <div className="testimonials-grid">
+              {([
+                {
+                  quote: "IdeaFlow changed how we run retros. Ideas that used to get lost in Notion docs now bubble up through votes. Our team actually trusts the process now.",
+                  name: 'Sander T.',
+                  role: 'Head of Product',
+                  company: 'Forma',
+                },
+                {
+                  quote: "I was skeptical about another feedback tool. But the vote-ranking model is genuinely different — the best ideas win, not the loudest voices in the room. We ship better decisions for it.",
+                  name: 'Maya R.',
+                  role: 'Engineering Manager',
+                  company: 'Lumio',
+                },
+                {
+                  quote: "We run separate IdeaFlows for HR, engineering, and ops each quarter. It's become a real part of how we stay connected to what the team actually needs.",
+                  name: 'Lotte V.',
+                  role: 'Operations Lead',
+                  company: 'Kantu · 120 people',
+                },
+              ] as { quote: string; name: string; role: string; company: string }[]).map(({ quote, name, role, company }) => (
+                <div key={name} className="testimonial-card">
+                  <div style={{ marginBottom: '1.25rem' }}>
+                    {[0,1,2,3,4].map(i => (
+                      <svg key={i} width="12" height="12" viewBox="0 0 24 24" fill={P.accent} style={{ display: 'inline-block', marginRight: '2px' }}>
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                      </svg>
+                    ))}
+                  </div>
+                  <p style={{ fontSize: '0.9375rem', lineHeight: 1.7, color: P.slate, marginBottom: '1.5rem', fontStyle: 'italic' }}>
+                    &ldquo;{quote}&rdquo;
+                  </p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+                    <div style={{
+                      width: '2rem', height: '2rem', borderRadius: '50%',
+                      background: P.raised, border: `1px solid ${P.border}`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: '0.7rem', fontWeight: 700, color: P.slate,
+                      flexShrink: 0,
+                    }}>
+                      {name.charAt(0)}
+                    </div>
+                    <div>
+                      <p style={{ fontSize: '0.825rem', fontWeight: 700, color: P.ink, lineHeight: 1.2 }}>{name}</p>
+                      <p style={{ fontSize: '0.75rem', color: P.faint, lineHeight: 1.3 }}>{role} · {company}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </PageContainer>
+        </section>
+
+        {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
             PRICING
         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
         <section id="pricing" style={{ background: P.raised, borderTop: `1px solid ${P.border}`, padding: 'clamp(4.5rem,9vw,7rem) 0' }}>
@@ -462,17 +575,17 @@ export default async function HomePage() {
                 lineHeight: 1.15,
                 marginBottom: '0.625rem',
               }}>
-                Simple yearly pricing for small teams.
+                One flat rate. Your whole team, always included.
               </h2>
               <p style={{ fontSize: '0.9375rem', lineHeight: 1.7, color: P.slate }}>
-                Start free, upgrade when you&apos;re ready.
+                No per-seat pricing, no hidden fees. Start free and upgrade when you need more.
               </p>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem', maxWidth: '52rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1rem', maxWidth: '74rem' }}>
 
               {/* Free */}
-              <div style={{
+              <div className="pricing-card-interactive" style={{
                 background: P.surface,
                 border: `1px solid ${P.border}`,
                 borderRadius: '1rem',
@@ -523,8 +636,8 @@ export default async function HomePage() {
                 )}
               </div>
 
-              {/* Pro */}
-              <div style={{
+              {/* Standard */}
+              <div className="pricing-card-interactive" style={{
                 background: P.dark,
                 borderRadius: '1rem',
                 padding: '2rem',
@@ -541,7 +654,7 @@ export default async function HomePage() {
 
                 <div style={{ marginBottom: '1rem', position: 'relative' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '1rem' }}>
-                    <p style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.40)' }}>Pro</p>
+                    <p style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.40)' }}>Standard</p>
                     <span style={{
                       fontSize: '0.58rem', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase',
                       color: 'rgba(255,255,255,0.80)',
@@ -556,7 +669,7 @@ export default async function HomePage() {
                     <p style={{ fontSize: '2.5rem', fontWeight: 700, color: 'rgba(255,255,255,0.96)', letterSpacing: '-0.04em', lineHeight: 1 }}>€49</p>
                     <p style={{ fontSize: '0.875rem', fontWeight: 500, color: 'rgba(255,255,255,0.35)' }}>/year</p>
                   </div>
-                  <p style={{ fontSize: '0.825rem', color: 'rgba(255,255,255,0.35)' }}>Under €5/month · For your whole team</p>
+                  <p style={{ fontSize: '0.825rem', color: 'rgba(255,255,255,0.35)' }}>One flat yearly rate — the whole team, no limits</p>
                 </div>
 
                 <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: '1.5rem', marginBottom: '1.75rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', flex: 1, position: 'relative' }}>
@@ -565,8 +678,8 @@ export default async function HomePage() {
                     'Up to 50 workspace members',
                     'Unlimited IdeaFlows',
                     'Full analytics dashboard',
-                    'PDF report export',
-                    'Admin controls and roles',
+                    'Member management & roles',
+                    'Participation reports',
                     'Priority support',
                   ].map((item, i) => (
                     <div key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.625rem', fontSize: '0.875rem', color: i === 0 ? 'rgba(255,255,255,0.32)' : 'rgba(255,255,255,0.78)', fontStyle: i === 0 ? 'italic' : 'normal' }}>
@@ -587,23 +700,120 @@ export default async function HomePage() {
                     textDecoration: 'none',
                     transition: 'opacity 0.12s',
                   }}>
-                    Start free →
+                    Get started →
                   </Link>
-                ) : companyPlan === 'pro' ? (
+                ) : (companyPlan === 'standard' || companyPlan === 'pro' || companyPlan === 'pro_plus') ? (
                   <div style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
                     padding: '0.7rem 1rem', borderRadius: '0.5rem',
                     background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.13)',
                   }}>
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.65)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
-                    <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'rgba(255,255,255,0.65)' }}>You&apos;re on Pro</span>
+                    <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'rgba(255,255,255,0.65)' }}>
+                      {companyPlan === 'standard' ? "You’re on Standard" : "You’re on a higher plan"}
+                    </span>
                   </div>
                 ) : (
                   <UpgradeButton
+                    plan="standard"
                     style={{
                       display: 'block', width: '100%', textAlign: 'center',
                       padding: '0.7rem 1rem', fontSize: '0.875rem', borderRadius: '0.5rem',
                       background: '#ffffff', color: P.ink, fontWeight: 600,
+                    }}
+                    label="Upgrade to Standard →"
+                  />
+                )}
+              </div>
+
+              {/* Pro */}
+              <div className="pricing-card-interactive" style={{
+                background: 'linear-gradient(160deg, #1a2035 0%, #0f1726 100%)',
+                borderRadius: '1rem',
+                padding: '2rem',
+                display: 'flex', flexDirection: 'column',
+                position: 'relative', overflow: 'hidden',
+                border: '1px solid rgba(99,179,237,0.12)',
+                boxShadow: '0 4px 32px rgba(9,13,30,0.22)',
+              }}>
+                {/* Blue-teal glow */}
+                <div style={{
+                  position: 'absolute', top: 0, right: 0, width: '70%', height: '55%',
+                  background: 'radial-gradient(ellipse at top right, rgba(56,189,248,0.09) 0%, transparent 70%)',
+                  pointerEvents: 'none',
+                }} />
+
+                <div style={{ marginBottom: '1rem', position: 'relative' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '1rem' }}>
+                    <p style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.40)' }}>Pro</p>
+                    <span style={{
+                      fontSize: '0.58rem', fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase',
+                      color: 'rgba(249,115,22,0.95)',
+                      background: 'rgba(249,115,22,0.14)',
+                      borderRadius: '999px', padding: '0.15rem 0.5rem',
+                      border: '1px solid rgba(249,115,22,0.25)',
+                    }}>
+                      ✦ AI-powered
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.375rem', marginBottom: '0.25rem' }}>
+                    <p style={{ fontSize: '2.5rem', fontWeight: 700, color: 'rgba(255,255,255,0.96)', letterSpacing: '-0.04em', lineHeight: 1 }}>€99</p>
+                    <p style={{ fontSize: '0.875rem', fontWeight: 500, color: 'rgba(255,255,255,0.35)' }}>/year</p>
+                  </div>
+                  <p style={{ fontSize: '0.825rem', color: 'rgba(255,255,255,0.35)' }}>Everything in Standard, plus AI that turns raw feedback into clear priorities</p>
+                </div>
+
+                <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: '1.5rem', marginBottom: '1.75rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', flex: 1, position: 'relative' }}>
+                  {([
+                    { label: 'Everything in Standard',      ai: false },
+                    { label: 'AI workspace summaries',       ai: true  },
+                    { label: 'Executive AI reports',         ai: true  },
+                    { label: 'AI action recommendations',    ai: true  },
+                    { label: 'PDF executive exports',        ai: true  },
+                    { label: 'Workspace Pulse & trends',     ai: true  },
+                    { label: 'Up to 100 workspace members',  ai: false },
+                  ] as { label: string; ai: boolean }[]).map(({ label, ai }, i) => (
+                    <div key={label} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.625rem', fontSize: '0.875rem', color: i === 0 ? 'rgba(255,255,255,0.30)' : ai ? 'rgba(186,230,253,0.85)' : 'rgba(255,255,255,0.70)', fontStyle: i === 0 ? 'italic' : 'normal' }}>
+                      <span style={{ flexShrink: 0, marginTop: '0.15rem', fontSize: '0.8rem', color: ai ? 'rgba(249,115,22,0.7)' : i === 0 ? 'rgba(255,255,255,0.18)' : 'rgba(99,179,237,0.6)' }}>
+                        {ai ? '✦' : '✓'}
+                      </span>
+                      {label}
+                    </div>
+                  ))}
+                </div>
+
+                {!user ? (
+                  <Link href="/auth?mode=signup" style={{
+                    display: 'block', textAlign: 'center', padding: '0.7rem 1rem',
+                    borderRadius: '0.5rem',
+                    background: 'rgba(56,189,248,0.14)',
+                    border: '1px solid rgba(56,189,248,0.26)',
+                    color: 'rgba(186,230,253,0.95)',
+                    fontSize: '0.875rem', fontWeight: 600,
+                    textDecoration: 'none',
+                    transition: 'background 0.12s',
+                  }}>
+                    Get started →
+                  </Link>
+                ) : (companyPlan === 'pro' || companyPlan === 'pro_plus') ? (
+                  <div style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+                    padding: '0.7rem 1rem', borderRadius: '0.5rem',
+                    background: 'rgba(56,189,248,0.08)', border: '1px solid rgba(56,189,248,0.18)',
+                  }}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(186,230,253,0.65)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+                    <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'rgba(186,230,253,0.75)' }}>You&apos;re on Pro</span>
+                  </div>
+                ) : (
+                  <UpgradeButton
+                    plan="pro"
+                    style={{
+                      display: 'block', width: '100%', textAlign: 'center',
+                      padding: '0.7rem 1rem', fontSize: '0.875rem', borderRadius: '0.5rem',
+                      background: 'rgba(56,189,248,0.14)',
+                      border: '1px solid rgba(56,189,248,0.26)',
+                      color: 'rgba(186,230,253,0.95)', fontWeight: 600,
+                      boxShadow: 'none',
                     }}
                     label="Upgrade to Pro →"
                   />
@@ -623,87 +833,7 @@ export default async function HomePage() {
         </section>
 
 
-        {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-            FINAL CTA
-        ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-        <section className="cta-dark" style={{ padding: 'clamp(5rem,10vw,8rem) 0' }}>
-          <PageContainer style={{ position: 'relative', zIndex: 1 }}>
-            <div style={{ maxWidth: '34rem' }}>
-              <h2 style={{
-                fontFamily: "'Instrument Serif', serif",
-                fontStyle: 'italic',
-                fontSize: 'clamp(2rem, 4vw, 2.875rem)',
-                lineHeight: 1.1, letterSpacing: '-0.025em',
-                color: 'rgba(255,255,255,0.95)',
-                marginBottom: '1rem',
-              }}>
-                The best idea in your company is waiting to be heard.
-              </h2>
-              <p style={{ fontSize: '1rem', lineHeight: 1.75, color: 'rgba(255,255,255,0.38)', marginBottom: '2.25rem' }}>
-                Set up in under 10 minutes. Invite your team. See what they&apos;re actually thinking.
-              </p>
-              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-                {!user ? (
-                  <>
-                    <Link href="/auth?mode=signup" style={{
-                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                      height: '2.75rem', padding: '0 1.5rem',
-                      borderRadius: '0.5rem', fontSize: '0.9rem', fontWeight: 600,
-                      background: '#ffffff', color: P.ink, textDecoration: 'none',
-                    }}>
-                      Get started free →
-                    </Link>
-                    <Link href="/auth?mode=login" style={{
-                      display: 'inline-flex', alignItems: 'center',
-                      height: '2.75rem', padding: '0 1.5rem',
-                      fontSize: '0.9rem', fontWeight: 500,
-                      color: 'rgba(255,255,255,0.38)', textDecoration: 'none',
-                    }}>
-                      Sign in
-                    </Link>
-                  </>
-                ) : (
-                  <Link href="/dashboard" style={{
-                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                    height: '2.75rem', padding: '0 1.5rem',
-                    borderRadius: '0.5rem', fontSize: '0.9rem', fontWeight: 600,
-                    background: '#ffffff', color: P.ink, textDecoration: 'none',
-                  }}>
-                    Open dashboard →
-                  </Link>
-                )}
-              </div>
-            </div>
-          </PageContainer>
-        </section>
-
-
-        {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-            FOOTER
-        ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-        <footer style={{ background: P.dark, borderTop: '1px solid rgba(255,255,255,0.06)', padding: '2rem 0' }}>
-          <PageContainer style={{
-            display: 'flex', alignItems: 'center',
-            justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-              <IdeaFlowMark width={16} color="rgba(255,255,255,0.32)" />
-              <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'rgba(255,255,255,0.32)', letterSpacing: '-0.02em', fontFamily: "'DM Sans', sans-serif" }}>
-                IdeaFlow
-              </span>
-            </div>
-            <p style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.16)' }}>
-              © {new Date().getFullYear()} IdeaFlow. All rights reserved.
-            </p>
-            <div style={{ display: 'flex', gap: '1.75rem' }}>
-              {([['Features', '/features'], ['Pricing', '/#pricing'], ['Contact', '/contact']] as [string, string][]).map(([label, href]) => (
-                <a key={label} href={href} style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.28)', textDecoration: 'none', fontWeight: 500 }}>
-                  {label}
-                </a>
-              ))}
-            </div>
-          </PageContainer>
-        </footer>
+        <SiteFooter isLoggedIn={!!user} />
 
       </main>
     </>

@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import InnerPageHeader from '@/components/InnerPageHeader'
 import PageContainer from '@/components/PageContainer'
 import DeleteAccountButton from '@/components/DeleteAccountButton'
-import UpgradeButton from '@/components/UpgradeButton'
+import UpgradePlans from '@/components/UpgradePlans'
 
 interface Props {
   userId: string
@@ -117,6 +117,115 @@ export default function SettingsForm({
 
   return (
     <main style={{ minHeight: '100vh', background: 'var(--page-bg)', fontFamily: "'DM Sans', sans-serif" }}>
+      <style>{`
+        .settings-name-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 0.875rem;
+          margin-bottom: 0.875rem;
+        }
+        @media (max-width: 480px) {
+          .settings-name-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+        .settings-card {
+          background: #fff;
+          border-radius: 1.25rem;
+          border: 1px solid rgba(26,107,191,0.10);
+          padding: 2rem;
+          box-shadow: 0 2px 12px rgba(6,14,38,0.05);
+        }
+        @media (max-width: 480px) {
+          .settings-card {
+            padding: 1.25rem;
+            border-radius: 0.875rem;
+          }
+        }
+        .settings-save-row {
+          display: flex;
+          justify-content: flex-end;
+        }
+        @media (max-width: 480px) {
+          .settings-save-row {
+            justify-content: stretch;
+          }
+          .settings-save-row button {
+            width: 100%;
+          }
+        }
+        .settings-account-footer {
+          margin-top: 1.5rem;
+          padding-top: 1.5rem;
+          border-top: 1px solid rgba(26,107,191,0.08);
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          flex-wrap: wrap;
+          gap: 0.75rem;
+        }
+        /* Billing plan row — stacks on mobile */
+        .settings-plan-row {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 1rem;
+          flex-wrap: wrap;
+        }
+        .settings-plan-actions {
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
+          align-items: flex-end;
+          flex-shrink: 0;
+        }
+        @media (max-width: 560px) {
+          .settings-plan-actions {
+            align-items: stretch;
+            width: 100%;
+          }
+        }
+        /* Danger zone row */
+        .settings-danger-zone-row {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 1rem;
+          flex-wrap: wrap;
+        }
+        @media (max-width: 480px) {
+          .settings-danger-zone-row {
+            flex-direction: column;
+          }
+        }
+        /* Mobile sign-out — full width */
+        @media (max-width: 480px) {
+          .settings-account-footer {
+            flex-direction: column;
+            align-items: stretch;
+          }
+          .settings-account-footer button {
+            width: 100%;
+          }
+        }
+        /* Free plan upgrade — full width on mobile */
+        .settings-free-plan-row {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 1.5rem;
+          flex-wrap: wrap;
+        }
+        @media (max-width: 480px) {
+          .settings-free-plan-row {
+            flex-direction: column;
+          }
+          .settings-free-plan-row > div:last-child {
+            flex-shrink: unset;
+            width: 100%;
+          }
+        }
+      `}</style>
 
       {/* Toast */}
       {toast && (
@@ -154,7 +263,7 @@ export default function SettingsForm({
         <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
 
           {/* ── Profile card ── */}
-          <div style={{ background: '#fff', borderRadius: '1.25rem', border: '1px solid rgba(26,107,191,0.10)', padding: '2rem', boxShadow: '0 2px 12px rgba(6,14,38,0.05)' }}>
+          <div className="settings-card">
             <p style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#9ab0c8', marginBottom: '1.5rem' }}>Profile</p>
 
             {/* Avatar row */}
@@ -214,7 +323,7 @@ export default function SettingsForm({
             </div>
 
             {/* Name row */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem', marginBottom: '0.875rem' }}>
+            <div className="settings-name-grid">
               <label style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
                 <span style={{ fontSize: '0.78rem', fontWeight: 600, color: '#5a7fa8' }}>First name</span>
                 <input
@@ -251,7 +360,7 @@ export default function SettingsForm({
           </div>
 
           {/* ── Account card ── */}
-          <div style={{ background: '#fff', borderRadius: '1.25rem', border: '1px solid rgba(26,107,191,0.10)', padding: '2rem', boxShadow: '0 2px 12px rgba(6,14,38,0.05)' }}>
+          <div className="settings-card">
             <p style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#9ab0c8', marginBottom: '1.5rem' }}>Account</p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -268,7 +377,7 @@ export default function SettingsForm({
               <p style={{ fontSize: '0.75rem', color: '#9ab0c8' }}>Email address cannot be changed here.</p>
             </div>
 
-            <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid rgba(26,107,191,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
+            <div className="settings-account-footer">
               <div>
                 <p style={{ fontSize: '0.875rem', fontWeight: 600, color: '#0d1f35', marginBottom: '0.1rem' }}>Role</p>
                 <p style={{ fontSize: '0.78rem', color: '#9ab0c8', textTransform: 'capitalize' }}>{role}</p>
@@ -284,7 +393,7 @@ export default function SettingsForm({
           </div>
 
           {/* Save button */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <div className="settings-save-row">
             <button
               type="submit"
               className="btn-primary"
@@ -298,46 +407,68 @@ export default function SettingsForm({
         </form>
 
         {/* ── Plan & billing ── */}
-        <div style={{ background: '#fff', borderRadius: '1.25rem', border: '1px solid rgba(26,107,191,0.10)', padding: '2rem', boxShadow: '0 2px 12px rgba(6,14,38,0.05)' }}>
+        <div className="settings-card">
           <p style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#9ab0c8', marginBottom: '1.5rem' }}>
             Plan &amp; billing
           </p>
 
-          {companyPlan === 'pro' ? (
-            /* ── Pro plan state ─────────────────────────────────────── */
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+          {(companyPlan === 'standard' || companyPlan === 'pro' || companyPlan === 'pro_plus') ? (
+            /* ── Paid plan state ────────────────────────────────────── */
+            <div className="settings-plan-row">
               <div>
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.75rem' }}>
-                  <span style={{ fontSize: '1rem', fontWeight: 800, color: '#0d1f35' }}>Pro</span>
+                  <span style={{ fontSize: '1rem', fontWeight: 800, color: '#0d1f35' }}>
+                    {companyPlan === 'pro' || companyPlan === 'pro_plus' ? 'Pro' : 'Standard'}
+                  </span>
                   <span style={{ fontSize: '0.6rem', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', background: '#f97316', color: '#fff', borderRadius: '999px', padding: '2px 7px' }}>
                     Active
                   </span>
                 </div>
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                  {[
-                    'Up to 50 workspace members',
-                    'Unlimited IdeaFlows',
-                    'Full analytics dashboard',
-                    'PDF report export',
-                    'Admin controls & roles',
-                  ].map(item => (
-                    <li key={item} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.825rem', color: '#2c4a6e' }}>
-                      <svg width="12" height="12" viewBox="0 0 15 15" fill="none" style={{ flexShrink: 0, color: '#10b981' }}>
-                        <path d="M12.5 3.5L6 10 3 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                      {item}
+                  {((companyPlan === 'pro' || companyPlan === 'pro_plus') ? [
+                    { label: 'Up to 100 workspace members',  ai: false },
+                    { label: 'Unlimited IdeaFlows',          ai: false },
+                    { label: 'Full analytics dashboard',     ai: false },
+                    { label: 'AI workspace summaries',       ai: true  },
+                    { label: 'Executive AI reports',         ai: true  },
+                    { label: 'PDF executive exports',        ai: true  },
+                    { label: 'AI action recommendations',    ai: true  },
+                  ] : [
+                    { label: 'Up to 50 workspace members',   ai: false },
+                    { label: 'Unlimited IdeaFlows',          ai: false },
+                    { label: 'Full analytics dashboard',     ai: false },
+                    { label: 'Member management & roles',    ai: false },
+                    { label: 'Participation reports',        ai: false },
+                  ]).map(({ label, ai }: { label: string; ai: boolean }) => (
+                    <li key={label} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.825rem', color: ai ? '#1a6bbf' : '#2c4a6e' }}>
+                      <span style={{ flexShrink: 0, fontSize: '0.75rem', color: ai ? '#f97316' : '#10b981' }}>
+                        {ai ? '✦' : '✓'}
+                      </span>
+                      {label}
                     </li>
                   ))}
                 </ul>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.875rem', borderRadius: '0.625rem', background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)' }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
-                <span style={{ fontSize: '0.825rem', fontWeight: 700, color: '#065f46' }}>Pro plan active</span>
+              <div className="settings-plan-actions">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.875rem', borderRadius: '0.625rem', background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)' }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+                  <span style={{ fontSize: '0.825rem', fontWeight: 700, color: '#065f46' }}>
+                    {(companyPlan === 'pro' || companyPlan === 'pro_plus') ? 'Pro plan active' : 'Standard plan active'}
+                  </span>
+                </div>
+                {/* Offer Pro upgrade if on Standard */}
+                {companyPlan === 'standard' && role === 'admin' && (
+                  <UpgradePlans compact currentPlan={companyPlan} />
+                )}
+                {/* Manage billing via Stripe Customer Portal */}
+                {role === 'admin' && (
+                  <ManageBillingButton />
+                )}
               </div>
             </div>
           ) : (
             /* ── Free plan state ────────────────────────────────────── */
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1.5rem', flexWrap: 'wrap' }}>
+            <div className="settings-free-plan-row">
               <div>
                 <p style={{ fontSize: '1rem', fontWeight: 800, color: '#0d1f35', marginBottom: '0.5rem' }}>
                   Free plan
@@ -358,15 +489,12 @@ export default function SettingsForm({
                   ))}
                 </ul>
                 <p style={{ fontSize: '0.775rem', color: '#9ab0c8', lineHeight: 1.5 }}>
-                  Upgrade to Pro for up to 50 members, unlimited IdeaFlows, PDF exports, and full analytics.
+                  Upgrade to Standard (50 members) or Pro (100 members) for unlimited IdeaFlows, PDF exports, and full analytics.
                 </p>
               </div>
               {role === 'admin' && (
                 <div style={{ flexShrink: 0 }}>
-                  <p style={{ fontSize: '0.7rem', fontWeight: 700, color: '#0d1f35', marginBottom: '0.375rem' }}>
-                    Pro — €49<span style={{ fontWeight: 400, color: '#9ab0c8' }}>/year</span>
-                  </p>
-                  <UpgradeButton />
+                  <UpgradePlans currentPlan={companyPlan} />
                 </div>
               )}
             </div>
@@ -375,19 +503,16 @@ export default function SettingsForm({
 
         {/* ── Danger zone ── */}
         <div
+          className="settings-card"
           style={{
             marginTop: '2rem',
-            background: '#fff',
-            borderRadius: '1.25rem',
             border: '1px solid rgba(220,38,38,0.15)',
-            padding: '2rem',
-            boxShadow: '0 2px 12px rgba(6,14,38,0.05)',
           }}
         >
           <p style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#dc2626', marginBottom: '1rem' }}>
             Danger zone
           </p>
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+          <div className="settings-danger-zone-row">
             <div>
               <p style={{ fontSize: '0.875rem', fontWeight: 600, color: '#0d1f35', marginBottom: '0.2rem' }}>
                 Delete my account
@@ -402,5 +527,50 @@ export default function SettingsForm({
 
       </PageContainer>
     </main>
+  )
+}
+
+// ── Manage Billing button ──────────────────────────────────────────────────────
+
+function ManageBillingButton() {
+  const [loading, setLoading] = useState(false)
+  const [error, setError]     = useState<string | null>(null)
+
+  async function handleClick() {
+    setLoading(true)
+    setError(null)
+    try {
+      const res  = await fetch('/api/stripe/portal', { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Something went wrong')
+      window.location.href = data.url
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not open billing portal')
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div>
+      <button
+        onClick={handleClick}
+        disabled={loading}
+        style={{
+          display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
+          height: '2.25rem', padding: '0 1rem',
+          borderRadius: '0.5rem', fontSize: '0.825rem', fontWeight: 600,
+          background: 'transparent',
+          color: '#2c4a6e',
+          border: '1px solid rgba(44,74,110,0.25)',
+          cursor: loading ? 'not-allowed' : 'pointer',
+          opacity: loading ? 0.6 : 1,
+        }}
+      >
+        {loading ? 'Opening…' : 'Manage billing →'}
+      </button>
+      {error && (
+        <p style={{ marginTop: '0.35rem', fontSize: '0.75rem', color: '#dc2626' }}>{error}</p>
+      )}
+    </div>
   )
 }

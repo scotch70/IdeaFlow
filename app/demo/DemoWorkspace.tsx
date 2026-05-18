@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { DEMO_FLOWS, type DemoIdea } from './demoData'
-import VoteButton from '@/components/VoteButton'
 
 // ── Design tokens ────────────────────────────────────────────────────────────
 const C = {
@@ -17,8 +16,7 @@ const C = {
   orangeBorder: 'rgba(249,115,22,0.18)',
 }
 
-// ── Match real DashboardSidebar width exactly ─────────────────────────────────
-const SIDEBAR_W = 240
+const SIDEBAR_W = 200
 const DETAIL_W  = 300
 
 // ── Avatar ───────────────────────────────────────────────────────────────────
@@ -39,6 +37,62 @@ function Avatar({ initials, size = 26, seed = 0 }: { initials: string; size?: nu
   )
 }
 
+// ── Vote button ──────────────────────────────────────────────────────────────
+function VoteButton({ count, voted, onVote, size = 'md' }: {
+  count: number; voted: boolean; onVote: () => void; size?: 'sm' | 'md'
+}) {
+  const [floatKey, setFloatKey] = useState(0)
+  const [showFloat, setShowFloat] = useState(false)
+
+  function handleClick() {
+    if (voted) return
+    onVote()
+    setShowFloat(true)
+    setFloatKey(k => k + 1)
+    setTimeout(() => setShowFloat(false), 900)
+  }
+
+  const h  = size === 'sm' ? '1.75rem' : '2rem'
+  const fs = size === 'sm' ? '0.7rem'  : '0.76rem'
+
+  return (
+    <div style={{ position: 'relative', display: 'inline-flex' }}>
+      <button
+        onClick={handleClick}
+        style={{
+          display: 'flex', alignItems: 'center', gap: '0.3rem',
+          height: h, padding: '0 0.6rem',
+          background: voted ? C.orangeBg : 'transparent',
+          border: `1.5px solid ${voted ? C.orange : 'rgba(26,107,191,0.14)'}`,
+          borderRadius: '8px',
+          cursor: voted ? 'default' : 'pointer',
+          fontSize: fs, fontWeight: 700,
+          color: voted ? C.orange : C.slate,
+          transition: 'background 0.15s, border-color 0.15s, color 0.15s',
+        }}
+      >
+        <svg width={size === 'sm' ? 11 : 13} height={size === 'sm' ? 11 : 13} viewBox="0 0 24 24" fill={voted ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+        </svg>
+        {count}
+      </button>
+      {showFloat && (
+        <span
+          key={floatKey}
+          style={{
+            position: 'absolute', bottom: '100%', left: '50%',
+            transform: 'translateX(-50%)',
+            fontSize: '0.7rem', fontWeight: 800, color: C.orange,
+            pointerEvents: 'none',
+            animation: 'demoFloatUp 0.9s ease forwards',
+          }}
+        >
+          +1
+        </span>
+      )}
+    </div>
+  )
+}
 
 // ── Status badge ─────────────────────────────────────────────────────────────
 const STATUS: Record<string, { bg: string; color: string; border: string; label: string; dot: string }> = {
@@ -81,7 +135,7 @@ function IdeaRow({ idea, selected, onSelect, onVote, voted }: {
       }}
     >
       <div onClick={e => e.stopPropagation()} style={{ paddingTop: '0.1rem', flexShrink: 0 }}>
-        <VoteButton count={idea.votes} voted={voted} onVote={onVote} size="sm" animated disabled={voted} />
+        <VoteButton count={idea.votes} voted={voted} onVote={onVote} size="sm" />
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap', marginBottom: '0.15rem' }}>
@@ -159,8 +213,8 @@ function IdeaDetail({ idea, voted, onVote, onClose }: {
       <div style={{ flex: 1, overflowY: 'auto', padding: '0.875rem 1rem' }}>
         {/* Vote */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '0.875rem' }}>
-          <VoteButton count={idea.votes} voted={voted} onVote={onVote} animated disabled={voted} />
-          {voted && <span style={{ fontSize: '0.7rem', color: C.orange, fontWeight: 600 }}>Voted</span>}
+          <VoteButton count={idea.votes} voted={voted} onVote={onVote} />
+          {voted && <span style={{ fontSize: '0.7rem', color: C.orange, fontWeight: 600 }}>Liked</span>}
         </div>
 
         {/* Author */}
@@ -281,7 +335,11 @@ export default function DemoWorkspace() {
   return (
     <>
       <style>{`
-        .demo-flow-btn:hover { background: rgba(249,115,22,0.05) !important; }
+        @keyframes demoFloatUp {
+          0%   { opacity: 1; transform: translateX(-50%) translateY(0); }
+          100% { opacity: 0; transform: translateX(-50%) translateY(-18px); }
+        }
+        .demo-flow-btn:hover { background: rgba(249,115,22,0.04) !important; }
       `}</style>
 
       {/* ── Constrained container ───────────────────────────────────────── */}
@@ -298,201 +356,92 @@ export default function DemoWorkspace() {
           boxShadow: '0 4px 32px rgba(6,14,38,0.07), 0 1px 4px rgba(6,14,38,0.04)',
         }}>
 
-          {/* ── Sidebar — matches DashboardSidebar structure exactly ─────── */}
+          {/* ── Sidebar ─────────────────────────────────────────────────── */}
           <aside style={{
             width: SIDEBAR_W, flexShrink: 0,
             background: C.surface,
-            borderRight: `1px solid #e8ecf0`,
+            borderRight: `1px solid ${C.border}`,
             display: 'flex', flexDirection: 'column',
-            padding: '0.5rem 0.625rem 0.875rem',
-            overflowY: 'auto', overflowX: 'hidden',
+            overflowY: 'auto',
           }}>
-
-            {/* ── WORKSPACE section ─────────────────────────────────── */}
-            <p style={{
-              fontSize: '0.575rem', fontWeight: 700, letterSpacing: '0.1em',
-              textTransform: 'uppercase', color: '#94a3b8',
-              padding: '0 0.5rem', marginBottom: '0.25rem',
-            }}>Workspace</p>
-
-            <nav style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginBottom: '0.25rem' }}>
-
-              {/* Dashboard — inactive in demo */}
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: '0.5rem',
-                padding: '0.375rem 0.5rem',
-                borderRadius: '7px',
-                color: '#475569',
-                borderLeft: '2px solid transparent',
-                opacity: 0.55,
-                cursor: 'default',
-              }}>
-                <span style={{ color: '#94a3b8', display: 'flex', flexShrink: 0 }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z" />
-                  </svg>
-                </span>
-                <span style={{ fontSize: '0.775rem', fontWeight: 500, letterSpacing: '-0.01em' }}>Dashboard</span>
-              </div>
-
-              {/* IdeaFlows — active parent */}
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: '0.5rem',
-                paddingTop: '0.375rem', paddingBottom: '0.375rem',
-                paddingRight: '0.5rem', paddingLeft: 'calc(0.5rem - 2px)',
-                borderRadius: '7px',
-                background: 'rgba(249,115,22,0.09)',
-                color: '#c2540a',
-                borderLeft: '2px solid #f97316',
-                cursor: 'default',
-              }}>
-                <span style={{ color: '#ea580c', display: 'flex', flexShrink: 0 }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 12l10 5 10-5M2 17l10 5 10-5" />
-                  </svg>
-                </span>
-                <span style={{ fontSize: '0.775rem', fontWeight: 700, flex: 1, letterSpacing: '-0.01em' }}>IdeaFlows</span>
-                <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#f97316', flexShrink: 0 }} />
-              </div>
-
-              {/* Flow sub-items */}
-              <div style={{ paddingLeft: '0.875rem', display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                {flows.map(flow => {
-                  const active = flow.id === activeFlowId
-                  return (
-                    <button
-                      key={flow.id}
-                      className="demo-flow-btn"
-                      onClick={() => {
-                        setActiveFlowId(flow.id)
-                        setSelectedIdeaId(flow.ideas[0]?.id ?? null)
-                      }}
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: '0.4rem',
-                        width: '100%', textAlign: 'left',
-                        padding: '0.3rem 0.5rem',
-                        paddingLeft: active ? 'calc(0.5rem - 2px)' : '0.5rem',
-                        borderRadius: '7px', border: 'none',
-                        background: active ? 'rgba(249,115,22,0.07)' : 'transparent',
-                        color: active ? '#c2540a' : '#64748b',
-                        borderLeft: `2px solid ${active ? '#f97316' : 'transparent'}`,
-                        cursor: 'pointer', fontFamily: 'inherit',
-                        transition: 'background 0.12s, color 0.12s',
-                      }}
-                    >
-                      <span style={{ flex: 1, fontSize: '0.725rem', fontWeight: active ? 700 : 500, letterSpacing: '-0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {flow.name}
-                      </span>
-                      {flow.status === 'draft' && (
-                        <span style={{ fontSize: '0.52rem', fontWeight: 700, background: 'rgba(249,115,22,0.1)', color: '#c2540a', borderRadius: '999px', padding: '0.1rem 0.3rem', flexShrink: 0 }}>Draft</span>
-                      )}
-                      {active && (
-                        <span style={{ width: '4px', height: '4px', borderRadius: '50%', background: '#f97316', flexShrink: 0 }} />
-                      )}
-                    </button>
-                  )
-                })}
-              </div>
-
-              {/* Ideas — inactive */}
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: '0.5rem',
-                padding: '0.375rem 0.5rem',
-                borderRadius: '7px',
-                color: '#475569',
-                borderLeft: '2px solid transparent',
-                opacity: 0.55,
-                cursor: 'default',
-              }}>
-                <span style={{ color: '#94a3b8', display: 'flex', flexShrink: 0 }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z" />
-                    <path d="M9 21h6" />
-                  </svg>
-                </span>
-                <span style={{ fontSize: '0.775rem', fontWeight: 500, letterSpacing: '-0.01em' }}>Ideas</span>
-              </div>
-            </nav>
-
-            {/* ── divider ───────────────────────────────────────────── */}
-            <div style={{ height: '1px', background: '#e8ecf0', margin: '0.5rem 0' }} />
-
-            {/* ── TEAM section ──────────────────────────────────────── */}
-            <p style={{
-              fontSize: '0.575rem', fontWeight: 700, letterSpacing: '0.1em',
-              textTransform: 'uppercase', color: '#94a3b8',
-              padding: '0 0.5rem', marginBottom: '0.25rem',
-            }}>Team</p>
-            <nav style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-              {/* Members — inactive */}
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: '0.5rem',
-                padding: '0.375rem 0.5rem',
-                borderRadius: '7px',
-                color: '#475569',
-                borderLeft: '2px solid transparent',
-                opacity: 0.55,
-                cursor: 'default',
-              }}>
-                <span style={{ color: '#94a3b8', display: 'flex', flexShrink: 0 }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                    <path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm8 0c1.66 0 3-1.34 3-3s-1.34-3-3-3m3 13v-2a4 4 0 0 0-3-3.87" />
-                  </svg>
-                </span>
-                <span style={{ fontSize: '0.775rem', fontWeight: 500, letterSpacing: '-0.01em' }}>Members</span>
-              </div>
-            </nav>
-
-            {/* ── Spacer ────────────────────────────────────────────── */}
-            <div style={{ flex: 1 }} />
-
-            {/* ── Bottom ────────────────────────────────────────────── */}
-            <div>
-              <div style={{ height: '1px', background: '#e8ecf0', margin: '0.5rem 0' }} />
-
-              {/* Demo user card — matches real user card style */}
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: '0.5rem',
-                padding: '0.5rem',
-                borderRadius: '8px',
-                background: '#f8fafc',
-                border: '1px solid #e8ecf0',
-                marginBottom: '0.5rem',
-              }}>
+            {/* Workspace header */}
+            <div style={{ padding: '0.875rem 0.75rem 0.5rem', borderBottom: `1px solid ${C.border}` }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.15rem' }}>
                 <div style={{
-                  width: '1.75rem', height: '1.75rem', borderRadius: '50%',
+                  width: '1.375rem', height: '1.375rem', borderRadius: '5px',
                   background: 'linear-gradient(135deg, #f97316, #ea580c)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  flexShrink: 0, fontSize: '0.6rem', fontWeight: 800, color: '#fff',
-                }}>AC</div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontSize: '0.7rem', fontWeight: 700, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    Alex
-                  </p>
-                  <p style={{ fontSize: '0.575rem', color: '#94a3b8' }}>Admin · demo</p>
-                </div>
+                  fontSize: '0.6rem', fontWeight: 800, color: '#fff', flexShrink: 0,
+                }}>M</div>
+                <p style={{ fontSize: '0.775rem', fontWeight: 800, color: C.ink, letterSpacing: '-0.01em' }}>Meridian Labs</p>
               </div>
+              <p style={{ fontSize: '0.6rem', color: C.muted, paddingLeft: '1.875rem' }}>Demo workspace</p>
+            </div>
 
-              {/* CTA button — styled like a nav action */}
+            {/* Flow nav */}
+            <div style={{ padding: '0.5rem 0.5rem', flex: 1 }}>
+              <p style={{
+                fontSize: '0.55rem', fontWeight: 700, letterSpacing: '0.1em',
+                textTransform: 'uppercase', color: C.muted,
+                padding: '0.25rem 0.375rem', marginBottom: '0.2rem',
+              }}>IdeaFlows</p>
+
+              {flows.map(flow => {
+                const active = flow.id === activeFlowId
+                return (
+                  <button
+                    key={flow.id}
+                    className="demo-flow-btn"
+                    onClick={() => {
+                      setActiveFlowId(flow.id)
+                      setSelectedIdeaId(flow.ideas[0]?.id ?? null)
+                    }}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '0.4rem',
+                      width: '100%', textAlign: 'left',
+                      padding: '0.35rem 0.5rem',
+                      paddingLeft: active ? 'calc(0.5rem - 2px)' : '0.5rem',
+                      borderRadius: '7px', border: 'none',
+                      background: active ? C.orangeBg : 'transparent',
+                      color: active ? '#c2540a' : C.slate,
+                      borderLeft: `2px solid ${active ? C.orange : 'transparent'}`,
+                      cursor: 'pointer', fontFamily: 'inherit',
+                      transition: 'background 0.12s, color 0.12s',
+                    }}
+                  >
+                    <span style={{ flex: 1, fontSize: '0.75rem', fontWeight: active ? 700 : 500, letterSpacing: '-0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {flow.name}
+                    </span>
+                    {flow.status === 'draft' && (
+                      <span style={{ fontSize: '0.53rem', fontWeight: 700, background: 'rgba(249,115,22,0.1)', color: '#c2540a', borderRadius: '999px', padding: '0.1rem 0.3rem', flexShrink: 0 }}>Draft</span>
+                    )}
+                    {active && (
+                      <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: C.orange, flexShrink: 0 }} />
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+
+            {/* CTA */}
+            <div style={{ padding: '0.75rem', borderTop: `1px solid ${C.border}` }}>
               <a
                 href="/auth?mode=signup"
                 onMouseEnter={() => setCtaHover(true)}
                 onMouseLeave={() => setCtaHover(false)}
                 style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  width: '100%', padding: '0.45rem 0.5rem',
+                  width: '100%', padding: '0.5rem',
                   background: ctaHover ? '#1a2844' : '#1f2330',
                   color: '#fff', borderRadius: '7px',
                   fontSize: '0.7rem', fontWeight: 700,
                   textDecoration: 'none', textAlign: 'center',
                   transition: 'background 0.15s',
-                  boxSizing: 'border-box',
                 }}
               >
                 Create your workspace →
               </a>
-              <p style={{ fontSize: '0.575rem', color: '#94a3b8', textAlign: 'center', marginTop: '0.3rem' }}>
+              <p style={{ fontSize: '0.58rem', color: C.muted, textAlign: 'center', marginTop: '0.35rem' }}>
                 Free · no credit card
               </p>
             </div>

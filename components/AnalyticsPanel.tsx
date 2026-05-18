@@ -39,19 +39,21 @@ function StatCard({
     <div
       style={{
         background: '#ffffff',
-        border: '1px solid var(--tint-border)',
+        border: '1px solid rgba(0,0,0,0.06)',
         borderRadius: '1rem',
-        padding: '1.1rem 1.25rem',
+        padding: '1.25rem 1.375rem',
         display: 'flex',
         flexDirection: 'column',
-        gap: '0.625rem',
+        gap: '0.75rem',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)',
+        transition: 'box-shadow 0.15s ease',
       }}
     >
       <div
         style={{
-          width: '2rem',
-          height: '2rem',
-          borderRadius: '0.5rem',
+          width: '2.125rem',
+          height: '2.125rem',
+          borderRadius: '0.625rem',
           background: 'rgba(249,115,22,0.07)',
           border: '1px solid rgba(249,115,22,0.13)',
           display: 'flex',
@@ -65,11 +67,11 @@ function StatCard({
       <div>
         <p
           style={{
-            fontSize: '1.5rem',
+            fontSize: '1.625rem',
             fontWeight: 800,
             color: '#0d1f35',
             lineHeight: 1,
-            letterSpacing: '-0.03em',
+            letterSpacing: '-0.04em',
             fontVariantNumeric: 'tabular-nums',
           }}
         >
@@ -77,16 +79,16 @@ function StatCard({
         </p>
         <p
           style={{
-            fontSize: '0.75rem',
-            fontWeight: 500,
+            fontSize: '0.76rem',
+            fontWeight: 600,
             color: '#5a7fa8',
-            marginTop: '0.2rem',
+            marginTop: '0.275rem',
           }}
         >
           {label}
         </p>
         {sub && (
-          <p style={{ fontSize: '0.68rem', color: 'var(--ink-light)', marginTop: '0.15rem' }}>
+          <p style={{ fontSize: '0.68rem', color: '#b0bac8', marginTop: '0.15rem', lineHeight: 1.4 }}>
             {sub}
           </p>
         )}
@@ -112,13 +114,22 @@ export default function AnalyticsPanel({
   return (
     <div>
       {heading && (
-        <div style={{ marginBottom: '1.25rem' }}>
-          <p style={{ fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--ink-light)', marginBottom: '0.2rem' }}>
-            Analytics
-          </p>
-          <h2 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--ink)' }}>
+        <div style={{ marginBottom: '1.5rem' }}>
+          <h2
+            style={{
+              fontSize: '1.125rem',
+              fontWeight: 800,
+              color: '#0d1f35',
+              letterSpacing: '-0.025em',
+              lineHeight: 1.2,
+              marginBottom: '0.2rem',
+            }}
+          >
             {heading}
           </h2>
+          <p style={{ fontSize: '0.775rem', color: '#8b96a8', fontWeight: 400 }}>
+            Activity and engagement across your current IdeaFlow
+          </p>
         </div>
       )}
 
@@ -184,9 +195,10 @@ export default function AnalyticsPanel({
         <div
           style={{
             background: '#ffffff',
-            border: '1px solid var(--tint-border)',
+            border: '1px solid rgba(0,0,0,0.06)',
             borderRadius: '1rem',
-            padding: '1.25rem',
+            padding: '1.375rem',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)',
           }}
         >
           <p
@@ -236,7 +248,7 @@ export default function AnalyticsPanel({
                       ? 'var(--orange)'
                       : day.count > 0
                       ? 'rgba(249,115,22,0.35)'
-                      : 'var(--tint-bg)',
+                      : 'rgba(0,0,0,0.05)',
                     borderRadius: '3px 3px 0 0',
                     transition: 'height 0.25s ease',
                   }}
@@ -260,9 +272,10 @@ export default function AnalyticsPanel({
         <div
           style={{
             background: '#ffffff',
-            border: '1px solid var(--tint-border)',
+            border: '1px solid rgba(0,0,0,0.06)',
             borderRadius: '1rem',
-            padding: '1.25rem',
+            padding: '1.375rem',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)',
           }}
         >
           <p style={{ fontSize: '0.8rem', fontWeight: 700, color: '#0d1f35', marginBottom: '0.2rem' }}>
@@ -309,7 +322,7 @@ export default function AnalyticsPanel({
                   <div
                     style={{
                       height: '4px',
-                      background: 'var(--tint-bg)',
+                      background: 'rgba(0,0,0,0.05)',
                       borderRadius: '9999px',
                       overflow: 'hidden',
                     }}
@@ -341,9 +354,10 @@ export default function AnalyticsPanel({
               background: '#ffffff',
               border: '1px solid rgba(249,115,22,0.14)',
               borderRadius: '1rem',
-              padding: '1.25rem',
+              padding: '1.375rem',
               position: 'relative',
               overflow: 'hidden',
+              boxShadow: '0 1px 3px rgba(249,115,22,0.06), 0 1px 2px rgba(0,0,0,0.02)',
             }}
           >
             <div

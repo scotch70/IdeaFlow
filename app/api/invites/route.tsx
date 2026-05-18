@@ -97,8 +97,10 @@ if (!canAddMembers({ plan: company.plan, memberCount: memberCount || 0 })) {
     {
       error:
         company.plan === 'pro'
-          ? 'Pro plan workspace limit reached (50 members).'
-          : 'Free plan is limited to 10 members. Upgrade to Pro to invite more.',
+          ? 'Pro plan workspace limit reached (100 members).'
+          : company.plan === 'standard'
+            ? 'Standard plan workspace limit reached (50 members). Upgrade to Pro to invite more.'
+            : 'Free plan is limited to 10 members. Upgrade to Standard or Pro to invite more.',
     },
     { status: 403 },
   )
