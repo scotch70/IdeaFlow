@@ -2,7 +2,6 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import PageContainer from '@/components/PageContainer'
 import SiteHeader from '@/components/SiteHeader'
-import SiteFooter from '@/components/SiteFooter'
 
 export const metadata = {
   title: 'Features — IdeaFlow',
@@ -370,7 +369,6 @@ export default async function FeaturesPage() {
 
 
     </main>
-    <SiteFooter isLoggedIn={!!user} />
     </>
   )
 }

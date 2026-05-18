@@ -2,7 +2,6 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import SiteHeader from '@/components/SiteHeader'
 import PageContainer from '@/components/PageContainer'
-import SiteFooter from '@/components/SiteFooter'
 
 export const metadata: Metadata = {
   title: 'Cookie Policy',
@@ -13,7 +12,6 @@ const LAST_UPDATED = 'May 2025'
 
 export default function CookiesPage() {
   return (
-    <>
     <div style={{ minHeight: '100vh', background: 'var(--page-bg)', fontFamily: "'DM Sans', sans-serif" }}>
       <SiteHeader />
 
@@ -146,7 +144,5 @@ export default function CookiesPage() {
         </div>
       </PageContainer>
     </div>
-    <SiteFooter />
-    </>
   )
 }

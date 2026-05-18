@@ -2,7 +2,6 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import SiteHeader from '@/components/SiteHeader'
 import PageContainer from '@/components/PageContainer'
-import SiteFooter from '@/components/SiteFooter'
 
 export const metadata: Metadata = {
   title: 'Privacy Policy',
@@ -14,7 +13,6 @@ const CONTACT_EMAIL = 'privacy@useideaflow.com'
 
 export default function PrivacyPage() {
   return (
-    <>
     <div style={{ minHeight: '100vh', background: 'var(--page-bg)', fontFamily: "'DM Sans', sans-serif" }}>
       <SiteHeader />
 
@@ -171,8 +169,6 @@ export default function PrivacyPage() {
         </div>
       </PageContainer>
     </div>
-    <SiteFooter />
-    </>
   )
 }
 

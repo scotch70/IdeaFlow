@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import AnalyticsProvider from '@/components/AnalyticsProvider'
+import SiteFooter from '@/components/SiteFooter'
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://app.useideaflow.com'
 const SITE_URL = 'https://useideaflow.com'
@@ -79,8 +80,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
-      <body className="antialiased" style={{ background: 'var(--page-bg)', color: 'var(--ink)' }}>
+      <body
+        className="antialiased"
+        style={{
+          background: 'var(--page-bg)',
+          color: 'var(--ink)',
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: '100vh',
+        }}
+      >
         {children}
+        <SiteFooter />
         <AnalyticsProvider />
       </body>
     </html>

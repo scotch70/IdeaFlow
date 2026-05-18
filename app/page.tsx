@@ -6,7 +6,6 @@ import SiteHeader from '@/components/SiteHeader'
 import UpgradeButton from '@/components/UpgradeButton'
 import { IdeaFlowMark } from '@/components/Logo'
 import HeroAnimation from '@/components/HeroAnimation'
-import SiteFooter from '@/components/SiteFooter'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Palette constants (warm ivory system)
@@ -833,7 +832,6 @@ export default async function HomePage() {
         </section>
 
 
-        <SiteFooter isLoggedIn={!!user} />
 
       </main>
     </>

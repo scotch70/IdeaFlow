@@ -1,118 +1,22 @@
-import Link from 'next/link'
 import { IdeaFlowMark } from '@/components/Logo'
 
 /**
  * SiteFooter
  *
- * Reusable dark-background footer for all public / marketing pages.
- * Contains:
- *   1. CTA section — headline, subtitle, primary button
- *   2. Footer bottom — logo, brand description, Product & Legal nav, copyright
+ * Global site footer — rendered once in app/layout.tsx so it appears
+ * on every route automatically. No props needed.
  *
- * Usage:
- *   <SiteFooter />                   — shows "Get started free →" (guest)
- *   <SiteFooter isLoggedIn={true} /> — shows "Open dashboard →"
+ * Contains: logo + tagline + email, Product nav, Legal nav, copyright.
+ * Marketing CTAs belong on individual pages, not here.
  */
-
-interface SiteFooterProps {
-  /** When true, CTA button reads "Open dashboard →" instead of "Get started free →" */
-  isLoggedIn?: boolean
-}
 
 const DARK = '#13162a'
 
-export default function SiteFooter({ isLoggedIn = false }: SiteFooterProps) {
+export default function SiteFooter() {
   return (
     <footer style={{ background: DARK, fontFamily: "'DM Sans', sans-serif" }}>
 
-      {/* ── CTA section ─────────────────────────────────────────────────────── */}
-      <div
-        className="cta-dark"
-        style={{
-          borderBottom: '1px solid rgba(255,255,255,0.06)',
-          padding: 'clamp(4rem,8vw,7rem) 0',
-        }}
-      >
-        <div
-          style={{
-            maxWidth: '80rem',
-            margin: '0 auto',
-            padding: '0 clamp(1.25rem, 5vw, 2.5rem)',
-            position: 'relative',
-            zIndex: 1,
-          }}
-        >
-          <div style={{ maxWidth: '36rem' }}>
-            <h2
-              style={{
-                fontFamily: "'Instrument Serif', serif",
-                fontStyle: 'italic',
-                fontSize: 'clamp(1.875rem, 4vw, 2.875rem)',
-                lineHeight: 1.1,
-                letterSpacing: '-0.025em',
-                color: 'rgba(255,255,255,0.95)',
-                marginBottom: '1rem',
-              }}
-            >
-              The best idea in your company is waiting to be heard.
-            </h2>
-            <p
-              style={{
-                fontSize: '1rem',
-                lineHeight: 1.75,
-                color: 'rgba(255,255,255,0.38)',
-                marginBottom: '2.25rem',
-              }}
-            >
-              Set up in under 10 minutes. Invite your team. See what they&apos;re actually thinking.
-            </p>
-            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
-              {isLoggedIn ? (
-                <Link
-                  href="/dashboard"
-                  style={{
-                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                    height: '2.75rem', padding: '0 1.5rem',
-                    borderRadius: '0.5rem', fontSize: '0.9rem', fontWeight: 600,
-                    background: '#ffffff', color: '#1f2330', textDecoration: 'none',
-                    letterSpacing: '-0.01em',
-                  }}
-                >
-                  Open dashboard →
-                </Link>
-              ) : (
-                <>
-                  <Link
-                    href="/auth?mode=signup"
-                    style={{
-                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                      height: '2.75rem', padding: '0 1.5rem',
-                      borderRadius: '0.5rem', fontSize: '0.9rem', fontWeight: 600,
-                      background: '#ffffff', color: '#1f2330', textDecoration: 'none',
-                      letterSpacing: '-0.01em',
-                    }}
-                  >
-                    Get started free →
-                  </Link>
-                  <Link
-                    href="/auth?mode=login"
-                    style={{
-                      display: 'inline-flex', alignItems: 'center',
-                      height: '2.75rem', padding: '0 1rem',
-                      fontSize: '0.9rem', fontWeight: 500,
-                      color: 'rgba(255,255,255,0.38)', textDecoration: 'none',
-                    }}
-                  >
-                    Sign in
-                  </Link>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Footer bottom ────────────────────────────────────────────────────── */}
+      {/* ── Footer ────────────────────────────────────────────────────── */}
       <div style={{ padding: '2.5rem 0' }}>
         <div
           style={{

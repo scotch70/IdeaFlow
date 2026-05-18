@@ -2,7 +2,6 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import SiteHeader from '@/components/SiteHeader'
 import PageContainer from '@/components/PageContainer'
-import SiteFooter from '@/components/SiteFooter'
 
 export const metadata: Metadata = {
   title: 'Terms of Service',
@@ -14,7 +13,6 @@ const CONTACT_EMAIL = 'legal@useideaflow.com'
 
 export default function TermsPage() {
   return (
-    <>
     <div style={{ minHeight: '100vh', background: 'var(--page-bg)', fontFamily: "'DM Sans', sans-serif" }}>
       <SiteHeader />
 
@@ -142,8 +140,6 @@ export default function TermsPage() {
         </div>
       </PageContainer>
     </div>
-    <SiteFooter />
-    </>
   )
 }
 
