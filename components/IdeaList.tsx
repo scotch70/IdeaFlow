@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { startTransition, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import IdeaCard from './IdeaCard'
@@ -27,8 +27,39 @@ export default function IdeaList({
   companyId,
   isAdmin,
 }: IdeaListProps) {
-  const router = useRouter()
+  const router       = useRouter()
   const [activeFilter, setActiveFilter] = useState<FilterKey>('all')
+
+  /**
+   * Local copy of ideas so like-count updates are instant and don't depend on
+   * a server round-trip. Synced with the prop whenever a background router.refresh()
+   * returns fresh server data (e.g. when another user posts or an admin changes status).
+   */
+  const [localIdeas, setLocalIdeas] = useState<Idea[]>(ideas)
+
+  // Keep localIdeas in sync when server data arrives (background refresh).
+  useEffect(() => {
+    setLocalIdeas(ideas)
+  }, [ideas])
+
+  /**
+   * Suppress the next realtime-triggered router.refresh() when the change was
+   * caused by the current user's own like (the DB trigger fires back at us).
+   * We track this with a short-lived timestamp.
+   */
+  const selfLikeTs = useRef(0)
+
+  /**
+   * Called by IdeaCard after a successful like/unlike API call.
+   * Updates localIdeas immediately so the list reflects the correct count
+   * without waiting for a server round-trip.
+   */
+  function handleLikeChange(ideaId: string, liked: boolean, count: number) {
+    selfLikeTs.current = Date.now()
+    setLocalIdeas(prev =>
+      prev.map(i => i.id === ideaId ? { ...i, liked_by_user: liked, likes_count: count } : i)
+    )
+  }
 
   useEffect(() => {
     const supabase = createClient()
@@ -44,7 +75,15 @@ export default function IdeaList({
           filter: `company_id=eq.${companyId}`,
         },
         () => {
-          router.refresh()
+          // Skip the refresh if it was triggered by the current user's own like
+          // (the likes_count trigger fires an ideas UPDATE back to us within ~500 ms).
+          // For all other changes (new idea, status update, delete) we do refresh.
+          const msSinceSelfLike = Date.now() - selfLikeTs.current
+          if (msSinceSelfLike < 1500) return
+
+          // Use startTransition so this background refresh doesn't block
+          // any in-progress interactions (typing, filtering, etc.).
+          startTransition(() => router.refresh())
         }
       )
       .subscribe()
@@ -55,14 +94,14 @@ export default function IdeaList({
   }, [companyId, router])
 
   const filtered = activeFilter === 'all'
-    ? ideas
-    : ideas.filter(idea => (idea.status ?? 'open') === activeFilter)
+    ? localIdeas
+    : localIdeas.filter(idea => (idea.status ?? 'open') === activeFilter)
 
   // Only show tabs that have at least one idea (plus All), to avoid clutter
   const countsPerFilter = FILTERS.reduce<Record<FilterKey, number>>((acc, f) => {
     acc[f.key] = f.key === 'all'
-      ? ideas.length
-      : ideas.filter(idea => (idea.status ?? 'open') === f.key).length
+      ? localIdeas.length
+      : localIdeas.filter(idea => (idea.status ?? 'open') === f.key).length
     return acc
   }, {} as Record<FilterKey, number>)
 
@@ -76,15 +115,15 @@ export default function IdeaList({
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <h2 style={{ fontSize: '0.775rem', fontWeight: 500, color: 'var(--ink-light)', margin: 0, letterSpacing: '-0.01em' }}>
-            {ideas.length === 1 ? '1 idea' : `${ideas.length} ideas`} · sorted by most liked
+            {localIdeas.length === 1 ? '1 idea' : `${localIdeas.length} ideas`} · sorted by most liked
           </h2>
           <span style={{ fontSize: '0.72rem', color: '#b8c0ce', fontVariantNumeric: 'tabular-nums' }}>
-            {filtered.length}{activeFilter !== 'all' ? ` / ${ideas.length}` : ''} total
+            {filtered.length}{activeFilter !== 'all' ? ` / ${localIdeas.length}` : ''} total
           </span>
         </div>
 
         {/* Filter tabs — only rendered when there are ideas */}
-        {ideas.length > 0 && visibleFilters.length > 1 && (
+        {localIdeas.length > 0 && visibleFilters.length > 1 && (
           <div style={{ display: 'flex', gap: '0.375rem', flexWrap: 'wrap' }}>
             {visibleFilters.map(f => {
               const active = activeFilter === f.key
@@ -120,7 +159,7 @@ export default function IdeaList({
         )}
       </div>
 
-      {ideas.length === 0 ? (
+      {localIdeas.length === 0 ? (
         <div style={{
           border: '1.5px dashed rgba(26,107,191,0.20)',
           borderRadius: '1rem',
@@ -157,6 +196,7 @@ export default function IdeaList({
             idea={idea}
             currentUserId={currentUserId}
             isAdmin={isAdmin}
+            onLikeChange={handleLikeChange}
           />
         ))
       )}

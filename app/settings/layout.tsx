@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import DashboardSidebar from '@/components/DashboardSidebar'
+import MobileDashboardHeader from '@/components/MobileDashboardHeader'
 import SiteHeader from '@/components/SiteHeader'
 
 const HEADER_HEIGHT = '3.625rem'
@@ -27,22 +28,45 @@ export default async function SettingsLayout({
     data: { full_name: string | null; role: string } | null
   }
 
+  const userName  = profile?.full_name ?? ''
+  const userEmail = user.email         ?? ''
+  const userRole  = profile?.role      ?? 'member'
+
   return (
     <>
-      <SiteHeader />
+      {/* Desktop nav — hidden on mobile */}
+      <div className="hidden md:block">
+        <SiteHeader />
+      </div>
 
-      {/* Identical shell to dashboard/layout.tsx — fixed height, scrollable content column */}
+      {/* Mobile sticky header — logo + hamburger drawer, hidden on desktop */}
+      <div className="md:hidden sticky top-0 z-40">
+        <MobileDashboardHeader
+          userName={userName}
+          userEmail={userEmail}
+          userRole={userRole}
+        />
+      </div>
+
+      {/* Shell — identical pattern to dashboard/layout.tsx */}
       <div
-        className="mx-auto flex max-w-7xl px-6 lg:px-10"
+        className="mx-auto flex max-w-7xl"
         style={{ height: `calc(100vh - ${HEADER_HEIGHT})` }}
       >
-        <DashboardSidebar
-          userName={profile?.full_name ?? ''}
-          userEmail={user.email ?? ''}
-          userRole={profile?.role ?? 'member'}
-        />
+        {/* Sidebar — hidden on mobile */}
+        <div className="hidden md:flex" style={{ flexShrink: 0 }}>
+          <DashboardSidebar
+            userName={userName}
+            userEmail={userEmail}
+            userRole={userRole}
+          />
+        </div>
 
-        <div style={{ flex: 1, minWidth: 0, overflowY: 'auto' }}>
+        {/* Scrollable content column — full width on mobile */}
+        <div
+          className="px-4 sm:px-6 lg:px-10"
+          style={{ flex: 1, minWidth: 0, overflowY: 'auto' }}
+        >
           {children}
         </div>
       </div>

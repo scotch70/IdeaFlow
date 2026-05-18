@@ -116,7 +116,7 @@ export default function SettingsForm({
   const displayName = [firstName, lastName].filter(Boolean).join(' ') || email
 
   return (
-    <main style={{ minHeight: '100vh', background: 'var(--page-bg)', fontFamily: "'DM Sans', sans-serif" }}>
+    <main style={{ background: 'var(--page-bg)', fontFamily: "'DM Sans', sans-serif" }}>
       <style>{`
         .settings-name-grid {
           display: grid;

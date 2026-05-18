@@ -17,7 +17,7 @@
  * existing IdeaCard / IdeaComments components.
  */
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import IdeaComments from '@/components/IdeaComments'
 import StatusBadge from '@/components/StatusBadge'
@@ -150,34 +150,58 @@ function IdeaRow({ idea, selected, onClick }: {
 }
 
 // ── Idea detail panel (right column) ─────────────────────────────────────────
-function IdeaDetailPanel({ idea, userId, isAdmin, onClose, isMobileOverlay }: {
+function IdeaDetailPanel({ idea, userId, isAdmin, onClose, isMobileOverlay, onLikeChange }: {
   idea: Idea
   userId: string
   isAdmin: boolean
   onClose: () => void
   isMobileOverlay: boolean
+  /** Notifies parent so IdeaRow count updates instantly — no reload needed. */
+  onLikeChange: (ideaId: string, liked: boolean, count: number) => void
 }) {
-  const [liked, setLiked]           = useState(idea.liked_by_user ?? false)
-  const [likesCount, setLikesCount] = useState(idea.likes_count ?? 0)
+  const [liked, setLiked]             = useState(idea.liked_by_user ?? false)
+  const [likesCount, setLikesCount]   = useState(idea.likes_count ?? 0)
   const [likeLoading, setLikeLoading] = useState(false)
+  const [likeError, setLikeError]     = useState('')
   const authorName = idea.profiles?.full_name ?? 'Anonymous'
+
+  // Sync local state if parent swaps to a different idea (key change would also
+  // reset, but defensive sync is cheap and explicit).
+  useEffect(() => {
+    setLiked(idea.liked_by_user ?? false)
+    setLikesCount(idea.likes_count ?? 0)
+    setLikeError('')
+  }, [idea.id, idea.liked_by_user, idea.likes_count])
 
   async function toggleLike() {
     if (likeLoading) return
     setLikeLoading(true)
-    const newLiked = !liked
+    setLikeError('')
+
+    const previousLiked = liked
+    const previousCount = likesCount
+    const newLiked      = !liked
+    const newCount      = newLiked ? previousCount + 1 : Math.max(0, previousCount - 1)
+
+    // Optimistic update — instant
     setLiked(newLiked)
-    setLikesCount(c => newLiked ? c + 1 : Math.max(0, c - 1))
+    setLikesCount(newCount)
+
     try {
-      await fetch('/api/likes', {
-        method: 'POST',
+      const res  = await fetch('/api/likes', {
+        method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ideaId: idea.id, liked: newLiked }),
+        body:    JSON.stringify({ ideaId: idea.id, liked: newLiked }),
       })
-    } catch {
-      // Revert on failure
-      setLiked(!newLiked)
-      setLikesCount(c => newLiked ? Math.max(0, c - 1) : c + 1)
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to update like')
+      // Notify parent so the IdeaRow pill reflects the new count immediately.
+      onLikeChange(idea.id, newLiked, newCount)
+    } catch (err) {
+      // Revert optimistic update on failure
+      setLiked(previousLiked)
+      setLikesCount(previousCount)
+      setLikeError(err instanceof Error ? err.message : 'Failed to update like')
     } finally {
       setLikeLoading(false)
     }
@@ -264,6 +288,11 @@ function IdeaDetailPanel({ idea, userId, isAdmin, onClose, isMobileOverlay }: {
             </button>
             {liked && <span style={{ fontSize: '0.7rem', color: C.orange, fontWeight: 600 }}>Liked</span>}
           </div>
+          {likeError && (
+            <p style={{ fontSize: '0.72rem', color: '#dc2626', marginBottom: '0.5rem', marginTop: '-0.5rem' }}>
+              {likeError}
+            </p>
+          )}
 
           {/* Author + time */}
           <p style={{ fontSize: '0.7rem', color: C.muted, marginBottom: '0.875rem' }}>
@@ -318,14 +347,29 @@ export default function FlowWorkspaceClient({
   newIdeaForm,
 }: Props) {
   const [selectedIdeaId, setSelectedIdeaId] = useState<string | null>(null)
-  const [isMobile, setIsMobile]             = useState(false)
 
-  // Detect mobile after hydration to avoid SSR mismatch
-  if (typeof window !== 'undefined' && !isMobile && window.innerWidth < 768) {
-    // noop on first render; we use CSS media query approach instead
+  /**
+   * Local copy of ideas so IdeaRow like-count pills stay current after the
+   * user likes in the detail panel — no page refresh needed.
+   */
+  const [localIdeas, setLocalIdeas] = useState<Idea[]>(ideas)
+
+  // Keep localIdeas in sync if the server ever pushes fresh props (e.g. router.refresh).
+  useEffect(() => {
+    setLocalIdeas(ideas)
+  }, [ideas])
+
+  /**
+   * Called by IdeaDetailPanel after a confirmed like/unlike.
+   * Patches the relevant idea in localIdeas so IdeaRow reflects the new count.
+   */
+  function handleLikeChange(ideaId: string, liked: boolean, count: number) {
+    setLocalIdeas(prev =>
+      prev.map(i => i.id === ideaId ? { ...i, liked_by_user: liked, likes_count: count } : i)
+    )
   }
 
-  const selectedIdea = ideas.find(i => i.id === selectedIdeaId) ?? null
+  const selectedIdea = localIdeas.find(i => i.id === selectedIdeaId) ?? null
 
   function handleSelectIdea(id: string) {
     setSelectedIdeaId(prev => (prev === id ? null : id))
@@ -418,7 +462,7 @@ export default function FlowWorkspaceClient({
 
           {/* Ideas */}
           {effectiveStatus === 'active' ? (
-            ideas.length === 0 ? (
+            localIdeas.length === 0 ? (
               <div style={{ padding: '3rem 1.5rem', textAlign: 'center' }}>
                 <p style={{ fontSize: '0.875rem', color: C.muted }}>
                   No ideas yet. Be the first to share one.
@@ -426,7 +470,7 @@ export default function FlowWorkspaceClient({
               </div>
             ) : (
               <div>
-                {ideas.map(idea => (
+                {localIdeas.map(idea => (
                   <IdeaRow
                     key={idea.id}
                     idea={idea}
@@ -459,6 +503,7 @@ export default function FlowWorkspaceClient({
               isAdmin={isAdmin}
               onClose={() => setSelectedIdeaId(null)}
               isMobileOverlay={false}
+              onLikeChange={handleLikeChange}
             />
           </div>
         )}
@@ -472,6 +517,7 @@ export default function FlowWorkspaceClient({
               isAdmin={isAdmin}
               onClose={() => setSelectedIdeaId(null)}
               isMobileOverlay={true}
+              onLikeChange={handleLikeChange}
             />
           </div>
         )}

@@ -9,6 +9,8 @@ interface IdeaCardProps {
   idea: Idea
   currentUserId: string
   isAdmin: boolean
+  /** Called after a successful like toggle so parents can update their local copy. */
+  onLikeChange?: (ideaId: string, liked: boolean, count: number) => void
 }
 
 function timeAgo(dateStr: string) {
@@ -39,7 +41,7 @@ function HeartIcon({ filled }: { filled: boolean }) {
   )
 }
 
-export default function IdeaCard({ idea, currentUserId, isAdmin }: IdeaCardProps) {
+export default function IdeaCard({ idea, currentUserId, isAdmin, onLikeChange }: IdeaCardProps) {
   const [liked, setLiked]           = useState(idea.liked_by_user ?? false)
   const [likesCount, setLikesCount] = useState(idea.likes_count)
   const [loading, setLoading]       = useState(false)
@@ -60,24 +62,29 @@ export default function IdeaCard({ idea, currentUserId, isAdmin }: IdeaCardProps
   async function toggleLike() {
     if (loading || deleting || editing || saving) return
     setLoading(true)
+    setActionError('')
 
     const previousLiked = liked
     const previousCount = likesCount
-    const newLiked = !liked
+    const newLiked      = !liked
+    const newCount      = newLiked ? previousCount + 1 : Math.max(0, previousCount - 1)
 
+    // Optimistic update — instant, no network wait
     setLiked(newLiked)
-    setLikesCount(newLiked ? previousCount + 1 : Math.max(0, previousCount - 1))
+    setLikesCount(newCount)
 
     try {
-      const res = await fetch('/api/likes', {
-        method: 'POST',
+      const res  = await fetch('/api/likes', {
+        method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ideaId: idea.id, liked: newLiked }),
+        body:    JSON.stringify({ ideaId: idea.id, liked: newLiked }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Failed to update like')
-      window.location.reload()
+      // No reload — optimistic state is already correct. Notify parent if needed.
+      onLikeChange?.(idea.id, newLiked, newCount)
     } catch (error) {
+      // Revert optimistic update on failure
       setLiked(previousLiked)
       setLikesCount(previousCount)
       setActionError(error instanceof Error ? error.message : 'Failed to update like')
