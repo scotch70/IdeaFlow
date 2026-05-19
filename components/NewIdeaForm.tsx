@@ -31,6 +31,13 @@ interface NewIdeaFormProps {
    * company-level current_idea_round_id pointer (legacy path).
    */
   roundId?: string | null
+  /**
+   * When true, suppresses the large prompt heading (used on the flow detail page
+   * where the QUESTION card already displays the prompt). A subtle "Add your idea"
+   * label is shown instead above the collapsed trigger so the form still has a
+   * visual anchor without repeating the full question.
+   */
+  hideHeading?: boolean
 }
 
 export default function NewIdeaForm({
@@ -43,6 +50,7 @@ export default function NewIdeaForm({
   defaultOpen = false,
   roundIsDraft = false,
   roundId = null,
+  hideHeading = false,
 }: NewIdeaFormProps) {
   const [open, setOpen]             = useState(defaultOpen)
   const [title, setTitle]           = useState('')
@@ -93,8 +101,13 @@ export default function NewIdeaForm({
     }
   }
 
-  // ── Shared heading block ───────────────────────────────────────────────────
-  const headingBlock = (
+  // ── Heading / subtle label ────────────────────────────────────────────────
+  // Full heading: shown when the page has no other context for the question
+  // (e.g. dashboard home, ideas page).
+  // hideHeading=true: the flow detail page already shows a QUESTION card, so
+  // we skip the big h2 entirely. A tiny muted label ("Add your idea") is shown
+  // only in the collapsed trigger state so the form still has a visual anchor.
+  const headingBlock = hideHeading ? null : (
     <div style={{ marginBottom: '0.875rem' }}>
       <h2 style={{
         fontSize: '0.9375rem',
@@ -107,6 +120,19 @@ export default function NewIdeaForm({
       </h2>
     </div>
   )
+
+  const subtleLabel = hideHeading ? (
+    <p style={{
+      fontSize: '0.72rem',
+      fontWeight: 600,
+      letterSpacing: '0.09em',
+      textTransform: 'uppercase',
+      color: '#b0bac8',
+      margin: '0 0 0.5rem',
+    }}>
+      Add your idea
+    </p>
+  ) : null
 
   // ── Round locked state ────────────────────────────────────────────────────
   if (!roundActive) {
@@ -147,7 +173,8 @@ export default function NewIdeaForm({
   if (!open) {
     return (
       <div>
-        {headingBlock}
+        {/* Full heading on dashboard home; subtle label on flow detail page */}
+        {headingBlock ?? subtleLabel}
         <button
           onClick={() => setOpen(true)}
           className="new-idea-trigger"

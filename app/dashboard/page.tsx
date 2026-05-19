@@ -40,11 +40,6 @@ type CompanyResult = Pick<
   'plan' | 'trial_ends_at'
 >
 
-// Round data — only present after the add_idea_round migration has been applied.
-type RoundDataResult = Pick<
-  Database['public']['Tables']['companies']['Row'],
-  'idea_round_name' | 'idea_round_status' | 'idea_round_starts_at' | 'idea_round_ends_at' | 'idea_round_manual_override' | 'current_idea_round_id'
->
 
 export const dynamic = 'force-dynamic'
 
@@ -92,11 +87,10 @@ export default async function DashboardPage({
     redirect(isWorkspaceCreator ? '/api/onboard' : '/join-workspace')
   }
 
-  // Parallelise the three independent company-scoped queries.
+  // Parallelise the two independent company-scoped queries.
   const [
     { data: members },
     { data: company },
-    { data: roundData },
   ] = await Promise.all([
     supabase
       .from('profiles')
@@ -111,56 +105,67 @@ export default async function DashboardPage({
       .select('plan, trial_ends_at')
       .eq('id', profile.company_id)
       .single() as unknown as Promise<{ data: CompanyResult | null }>,
-    // Round query — falls back to null gracefully if columns don't exist yet.
-    supabase
-      .from('companies')
-      .select('idea_round_name, idea_round_status, idea_round_starts_at, idea_round_ends_at, idea_round_manual_override, current_idea_round_id')
-      .eq('id', profile.company_id)
-      .single() as unknown as Promise<{ data: RoundDataResult | null }>,
   ])
 
-  // ── Idea round logic ──────────────────────────────────────────────────────
-  // manual_override always wins; null raw_status (not configured) → 'draft'
-  // (locked by default — admin must open IdeaFlow for members to submit)
-  const roundStatus         = roundData?.idea_round_status          ?? null
-  const roundEndsAt         = roundData?.idea_round_ends_at         ?? null
-  const roundManualOverride = roundData?.idea_round_manual_override ?? null
-  const currentRoundId = roundData?.current_idea_round_id ?? null
-
-  const effectiveStatus = getEffectiveRoundStatus({
-    raw_status:      roundStatus,
-    manual_override: roundManualOverride,
-    opens_at:        roundData?.idea_round_starts_at ?? null,
-    closes_at:       roundEndsAt,
-  })
-
-  // ── Fetch prompt + count accessible active flows ─────────────────────────
-  // The flow count drives the "Switch IdeaFlow" card: if the member can access
-  // more than one active flow, we surface a switcher so they can navigate easily.
   const adminClient = createAdminClient()
 
-  let roundPrompt: string | null = null
-  if (currentRoundId) {
-    const { data: roundRow } = await (adminClient as any)
-      .from('idea_rounds')
-      .select('prompt')
-      .eq('id', currentRoundId)
-      .single() as { data: { prompt: string | null } | null }
-    roundPrompt = roundRow?.prompt ?? null
+  // ── Select the best current IdeaFlow ─────────────────────────────────────
+  // Query idea_rounds directly so the dashboard always reflects the newest
+  // state — the old companies.current_idea_round_id pointer is NOT updated
+  // when a new flow is created, so relying on it caused stale data.
+  //
+  // Priority:
+  //   1. The most recently created round that is *effectively* active
+  //      (manual_override / schedule applied)
+  //   2. Fall back to the most recently created round of any status
+  const { data: allRoundsForDash } = await (adminClient as any)
+    .from('idea_rounds')
+    .select('id, name, status, prompt, manual_override, starts_at, ends_at')
+    .eq('company_id', profile.company_id)
+    .order('created_at', { ascending: false }) as {
+    data: Array<{
+      id: string; name: string | null; status: string | null;
+      prompt: string | null; manual_override: string | null;
+      starts_at: string | null; ends_at: string | null;
+    }> | null
   }
 
-  // Count active flows this user can see:
-  //   (a) active rounds with zero round_members rows  → open to all workspace members
-  //   (b) active rounds where a round_members row exists for this user
+  const rankedRound = (() => {
+    const rounds = allRoundsForDash ?? []
+    const activeRound = rounds.find(r =>
+      getEffectiveRoundStatus({
+        raw_status:      (r.status           ?? null) as 'draft' | 'active' | 'closed' | null,
+        manual_override: (r.manual_override  ?? null) as 'open'  | 'closed' | null,
+        opens_at:        r.starts_at ?? null,
+        closes_at:       r.ends_at   ?? null,
+      }) === 'active'
+    )
+    return activeRound ?? rounds[0] ?? null
+  })()
+
+  // ── Vars derived from the selected round ─────────────────────────────────
+  const currentRoundId      = rankedRound?.id              ?? null
+  const roundPrompt         = rankedRound?.prompt          ?? null
+  const roundName           = rankedRound?.name            ?? null
+  const roundEndsAt         = rankedRound?.ends_at         ?? null
+  const roundManualOverride = rankedRound?.manual_override ?? null
+
+  const effectiveStatus = rankedRound
+    ? getEffectiveRoundStatus({
+        raw_status:      (rankedRound.status          ?? null) as 'draft' | 'active' | 'closed' | null,
+        manual_override: (rankedRound.manual_override ?? null) as 'open'  | 'closed' | null,
+        opens_at:        rankedRound.starts_at ?? null,
+        closes_at:       rankedRound.ends_at   ?? null,
+      })
+    : null
+
+  // ── Count accessible active flows ────────────────────────────────────────
+  // Drives the "Switch IdeaFlow" card when the user can access > 1 active flow.
+  // Reuses allRoundsForDash (already fetched) to avoid an extra DB round-trip.
   let accessibleActiveFlowCount = 0
   {
-    const { data: activeRoundRows } = await (adminClient as any)
-      .from('idea_rounds')
-      .select('id, manual_override, starts_at, ends_at')
-      .eq('company_id', profile.company_id)
-      .eq('status', 'active')
-
-    const activeIds: string[] = (activeRoundRows ?? []).map((r: any) => r.id)
+    const activeRoundRows = (allRoundsForDash ?? []).filter(r => r.status === 'active')
+    const activeIds: string[] = activeRoundRows.map(r => r.id)
     if (activeIds.length > 0) {
       const { data: memberRows } = await (adminClient as any)
         .from('round_members')
@@ -173,11 +178,10 @@ export default async function DashboardPage({
         memberSetMap[row.round_id].push(row.user_id)
       }
 
-      accessibleActiveFlowCount = (activeRoundRows ?? []).filter((r: any) => {
-        // Respect manual_override / schedule to get the effective status
+      accessibleActiveFlowCount = activeRoundRows.filter(r => {
         const eff = getEffectiveRoundStatus({
           raw_status:      'active',
-          manual_override: r.manual_override ?? null,
+          manual_override: (r.manual_override ?? null) as 'open' | 'closed' | null,
           opens_at:        r.starts_at ?? null,
           closes_at:       r.ends_at   ?? null,
         })
@@ -284,7 +288,7 @@ export default async function DashboardPage({
         }
       : null
 
-  const showRoundBanner = roundStatus !== null
+  const showRoundBanner = rankedRound !== null
 
   // ── Derived metrics for participation + AI cards ────────────────────────────
   const participationRate = Math.round((activeMembers / Math.max(memberCount, 1)) * 100)
@@ -467,12 +471,12 @@ export default async function DashboardPage({
         {/* ── Idea round banner (all users: active / closed / expired / draft) ── */}
         {showRoundBanner && (
           <IdeaRoundBanner
-            name={roundData?.idea_round_name ?? null}
+            name={roundName}
             status={effectiveStatus ?? 'active'}
             endsAt={roundEndsAt}
             isAdmin={profile.role === 'admin'}
             companyId={profile.company_id}
-            manualOverride={roundManualOverride}
+            manualOverride={(roundManualOverride as 'open' | 'closed' | null) ?? undefined}
             ideaCount={ideasWithLikeStatus.length}
             memberCount={memberCount}
           />
@@ -558,7 +562,7 @@ export default async function DashboardPage({
                   isAdmin={profile.role === 'admin'}
                   roundPrompt={roundPrompt}
                   roundActive={true}
-                  roundName={roundData?.idea_round_name ?? null}
+                  roundName={roundName}
                   defaultOpen={ideasWithLikeStatus.length === 0}
                   roundIsDraft={false}
                 />
@@ -576,7 +580,7 @@ export default async function DashboardPage({
                 <AISummaryCard
                   ideas={ideasWithLikeStatus}
                   isProPlan={isProPlan}
-                  roundName={roundData?.idea_round_name ?? null}
+                  roundName={roundName}
                   participationRate={participationRate}
                   memberCount={memberCount}
                   activeMembers={activeMembers}
@@ -590,7 +594,7 @@ export default async function DashboardPage({
                 memberCount={memberCount}
                 activeMembers={activeMembers}
                 ideasThisWeek={ideasThisWeek}
-                roundName={roundData?.idea_round_name ?? null}
+                roundName={roundName}
                 isProPlan={isProPlan}
               />
 
@@ -601,21 +605,23 @@ export default async function DashboardPage({
                 memberCount={memberCount}
                 activeMembers={activeMembers}
                 isProPlan={isProPlan}
-                roundName={roundData?.idea_round_name ?? null}
+                roundName={roundName}
               />
 
             </>
           ) : (
             /* ── Gate card + optional template picker when round is not active ── */
             <>
-              <RoundGateCard
-                status={effectiveStatus}
-                isAdmin={profile.role === 'admin'}
-                companyId={profile.company_id}
-                roundName={roundData?.idea_round_name ?? null}
-              />
+              {rankedRound && effectiveStatus && (
+                <RoundGateCard
+                  status={effectiveStatus}
+                  isAdmin={profile.role === 'admin'}
+                  companyId={profile.company_id}
+                  roundName={roundName}
+                />
+              )}
               {/* Show template launcher when admin has no flow configured at all */}
-              {profile.role === 'admin' && roundStatus === null && (
+              {profile.role === 'admin' && !rankedRound && (
                 <FlowTemplates companyId={profile.company_id} />
               )}
             </>

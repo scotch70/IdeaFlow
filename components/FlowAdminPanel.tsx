@@ -686,33 +686,158 @@ export default function FlowAdminPanel({
         </div>
       </div>
 
-      {/* ── Delete ────────────────────────────────────────────────────────── */}
-      <div style={{ marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid rgba(0,0,0,0.06)' }}>
-        {confirmDelete ? (
+      {/* ── Danger zone ───────────────────────────────────────────────────── */}
+      <div style={{
+        marginTop: '2rem',
+        paddingTop: '1.25rem',
+        borderTop: '1px solid rgba(220,38,38,0.15)',
+      }}>
+        {/* Section label */}
+        <p style={{
+          fontSize: '0.6rem',
+          fontWeight: 700,
+          letterSpacing: '0.12em',
+          textTransform: 'uppercase',
+          color: '#f87171',
+          marginBottom: '0.625rem',
+        }}>
+          Danger zone
+        </p>
+
+        {!confirmDelete ? (
+          /* ── Idle: description + delete trigger ─────────────────────── */
           <div>
-            <p style={{ fontSize: '0.825rem', color: '#7f1d1d', fontWeight: 600, marginBottom: '0.25rem' }}>
-              Delete this IdeaFlow?
+            <p style={{
+              fontSize: '0.775rem',
+              fontWeight: 600,
+              color: '#0d1f35',
+              marginBottom: '0.2rem',
+            }}>
+              Delete IdeaFlow
             </p>
-            <p style={{ fontSize: '0.775rem', color: '#991b1b', lineHeight: 1.5, marginBottom: '0.75rem' }}>
-              Permanently removes all ideas, likes, and comments. Cannot be undone.
+            <p style={{
+              fontSize: '0.72rem',
+              color: '#8b96a8',
+              lineHeight: 1.55,
+              marginBottom: '0.875rem',
+            }}>
+              Permanently deletes this IdeaFlow, including all its ideas and
+              comments. This action cannot be undone.
             </p>
-            {deleteError && (
-              <p style={{ fontSize: '0.775rem', color: '#dc2626', marginBottom: '0.5rem' }}>{deleteError}</p>
-            )}
-            <div style={{ display: 'flex', gap: '1rem' }}>
-              <TextBtn onClick={() => { setConfirmDelete(false); setDeleteError('') }} color="#64748b">
-                Cancel
-              </TextBtn>
-              <TextBtn onClick={handleDelete} disabled={deleting} color="#dc2626">
-                {deleting ? 'Deleting…' : 'Yes, delete'}
-              </TextBtn>
-            </div>
+
+            <button
+              type="button"
+              className="danger-delete-btn"
+              onClick={() => setConfirmDelete(true)}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                height: '2.125rem',
+                padding: '0 1rem',
+                borderRadius: '0.45rem',
+                border: '1px solid #dc2626',
+                background: '#dc2626',
+                color: '#ffffff',
+                fontSize: '0.775rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'background 0.13s ease, border-color 0.13s ease',
+              }}
+            >
+              <span style={{ fontSize: '0.8rem', lineHeight: 1 }}>🗑</span>
+              Delete IdeaFlow
+            </button>
           </div>
         ) : (
-          <TextBtn onClick={() => setConfirmDelete(true)} color="#94a3b8">
-            Delete IdeaFlow
-          </TextBtn>
+          /* ── Confirm: inline warning + final action ─────────────────── */
+          <div style={{
+            borderRadius: '0.625rem',
+            border: '1px solid rgba(220,38,38,0.22)',
+            background: 'rgba(220,38,38,0.03)',
+            padding: '0.875rem',
+          }}>
+            <p style={{
+              fontSize: '0.8rem',
+              fontWeight: 700,
+              color: '#991b1b',
+              marginBottom: '0.2rem',
+            }}>
+              Are you sure?
+            </p>
+            <p style={{
+              fontSize: '0.72rem',
+              color: '#7f1d1d',
+              lineHeight: 1.55,
+              marginBottom: '0.75rem',
+            }}>
+              Delete this IdeaFlow permanently? This will remove its ideas and
+              comments and cannot be undone.
+            </p>
+
+            {deleteError && (
+              <p style={{
+                fontSize: '0.72rem',
+                color: '#dc2626',
+                marginBottom: '0.5rem',
+              }}>
+                {deleteError}
+              </p>
+            )}
+
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                onClick={() => { setConfirmDelete(false); setDeleteError('') }}
+                style={{
+                  height: '1.875rem',
+                  padding: '0 0.75rem',
+                  borderRadius: '0.4rem',
+                  border: '1px solid rgba(0,0,0,0.12)',
+                  background: '#fff',
+                  color: '#64748b',
+                  fontSize: '0.775rem',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="danger-confirm-btn"
+                onClick={handleDelete}
+                disabled={deleting}
+                style={{
+                  height: '1.875rem',
+                  padding: '0 0.75rem',
+                  borderRadius: '0.4rem',
+                  border: '1px solid rgba(220,38,38,0.6)',
+                  background: '#dc2626',
+                  color: '#fff',
+                  fontSize: '0.775rem',
+                  fontWeight: 600,
+                  cursor: deleting ? 'not-allowed' : 'pointer',
+                  opacity: deleting ? 0.65 : 1,
+                  transition: 'background 0.13s ease',
+                }}
+              >
+                {deleting ? 'Deleting…' : 'Yes, delete IdeaFlow'}
+              </button>
+            </div>
+          </div>
         )}
+
+        {/* Hover styles for the danger buttons */}
+        <style>{`
+          .danger-delete-btn:hover {
+            background: #b91c1c !important;
+            border-color: #b91c1c !important;
+          }
+          .danger-confirm-btn:not(:disabled):hover {
+            background: #b91c1c !important;
+          }
+        `}</style>
       </div>
 
     </div>

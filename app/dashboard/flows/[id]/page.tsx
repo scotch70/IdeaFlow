@@ -183,6 +183,8 @@ export default async function FlowDetailPage({
   const sm = STATUS_META[effectiveStatus] ?? STATUS_META.closed
 
   // ── New idea form (reused in both views) ─────────────────────────────────
+  // hideHeading=true: the QUESTION card above already displays round.prompt,
+  // so we suppress the duplicate <h2> inside NewIdeaForm.
   const newIdeaForm = (
     <NewIdeaForm
       userId={user.id}
@@ -194,6 +196,7 @@ export default async function FlowDetailPage({
       defaultOpen={ideasWithLikeStatus.length === 0}
       roundIsDraft={effectiveStatus === 'draft'}
       roundId={roundId}
+      hideHeading
     />
   )
 
