@@ -6,18 +6,10 @@ import NewIdeaForm from '@/components/NewIdeaForm'
 import type { Database, Idea } from '@/types/database'
 import AnalyticsPanel from '@/components/AnalyticsPanel'
 import type { DailyPoint, Contributor } from '@/components/AnalyticsPanel'
-import UpgradePlans from '@/components/UpgradePlans'
 import PageContainer from '@/components/PageContainer'
 import IdeaRoundBanner from '@/components/IdeaRoundBanner'
 import RoundGateCard from '@/components/RoundGateCard'
-import WorkspaceMetrics from '@/components/WorkspaceMetrics'
-import AISummaryCard from '@/components/AISummaryCard'
-import WorkspacePulse from '@/components/WorkspacePulse'
-import ActionRecommendations from '@/components/ActionRecommendations'
-import OnboardingChecklist from '@/components/OnboardingChecklist'
 import FlowTemplates from '@/components/FlowTemplates'
-import ExecutiveReport from '@/components/ExecutiveReport'
-import UpgradeCheckout from '@/components/UpgradeCheckout'
 import { getEffectiveRoundStatus } from '@/lib/rounds/getEffectiveRoundStatus'
 
 type ProfileResult = Pick<
@@ -43,13 +35,7 @@ type CompanyResult = Pick<
 
 export const dynamic = 'force-dynamic'
 
-export default async function DashboardPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ upgraded?: string }>
-}) {
-  const { upgraded } = await searchParams
-  const justUpgraded = upgraded === 'true'
+export default async function DashboardPage() {
   const supabase = await createClient()
 
   const {
@@ -227,7 +213,6 @@ export default async function DashboardPage({
     liked_by_user: likedIds.has(idea.id),
   }))
 
-  const firstName = profile.full_name?.split(' ')[0] ?? 'there'
   const memberCount = members?.length ?? 0
   const totalLikes = ideasWithLikeStatus.reduce(
     (sum, idea) => sum + (idea.likes_count ?? 0),
@@ -290,185 +275,11 @@ export default async function DashboardPage({
 
   const showRoundBanner = rankedRound !== null
 
-  // ── Derived metrics for participation + AI cards ────────────────────────────
-  const participationRate = Math.round((activeMembers / Math.max(memberCount, 1)) * 100)
-  const avgLikesPerIdea =
-    ideasWithLikeStatus.length > 0
-      ? parseFloat((totalLikes / ideasWithLikeStatus.length).toFixed(1))
-      : 0
-  const isPaidPlan = company?.plan === 'standard' || company?.plan === 'pro' || company?.plan === 'pro_plus'
-  const isProPlan  = company?.plan === 'pro'      || company?.plan === 'pro_plus'
-
   return (
     <main className="page-content-enter">
-      <PageContainer className="dashboard-content-container">
+      <PageContainer>
 
-        {/* ── Welcome header ── */}
-        <div className="stagger-fade-1" style={{ marginBottom: 'clamp(1.75rem, 4vw, 2.75rem)', paddingTop: '0.5rem' }}>
-          <h1
-            style={{
-              fontSize:      'clamp(1.5rem, 4vw, 2rem)',
-              fontWeight:    800,
-              color:         '#0d1f35',
-              letterSpacing: '-0.03em',
-              lineHeight:    1.1,
-              marginBottom:  '0.4rem',
-              fontFamily:    "'DM Sans', sans-serif",
-            }}
-          >
-            Welcome back, {firstName}
-          </h1>
-          <p style={{ fontSize: '0.875rem', color: '#8b96a8', fontWeight: 400, lineHeight: 1.5 }}>
-            Here&apos;s what&apos;s happening in your workspace
-            {isProPlan ? <span style={{ color: '#c2540a', fontWeight: 600 }}> · Pro AI</span> : isPaidPlan ? <span style={{ color: '#f97316', fontWeight: 600 }}> · Standard</span> : null}.
-          </p>
-        </div>
-
-        {/* ── Onboarding checklist (admin, fresh workspace) ── */}
-        {profile.role === 'admin' && (memberCount <= 1 || effectiveStatus !== 'active' || ideasWithLikeStatus.length < 3) && (
-          <OnboardingChecklist
-            memberCount={memberCount}
-            hasActiveFlow={effectiveStatus === 'active'}
-            ideaCount={ideasWithLikeStatus.length}
-            companyId={profile.company_id}
-          />
-        )}
-
-        {/* ── Workspace participation metrics strip ── */}
-        {ideasWithLikeStatus.length > 0 && (
-          <WorkspaceMetrics
-            participationRate={participationRate}
-            ideasThisWeek={ideasThisWeek}
-            totalIdeas={ideasWithLikeStatus.length}
-            memberCount={memberCount}
-            activeMembers={activeMembers}
-            avgLikesPerIdea={avgLikesPerIdea}
-          />
-        )}
-
-        {/* ── Workspace pulse (Pro-only live intelligence strip) ── */}
-        <WorkspacePulse
-          ideas={ideasWithLikeStatus}
-          ideasThisWeek={ideasThisWeek}
-          activeMembers={activeMembers}
-          memberCount={memberCount}
-          isProPlan={isProPlan}
-        />
-
-        {/* ── Just upgraded ── */}
-        {justUpgraded && (company?.plan === 'pro' || company?.plan === 'standard') && (
-          <div
-            style={{
-              marginBottom: '1.5rem',
-              borderRadius: '0.875rem',
-              padding: '1rem 1.25rem',
-              background: 'linear-gradient(135deg, #f0fdf4, #dcfce7)',
-              border: '1px solid rgba(16,185,129,0.25)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.75rem',
-            }}
-          >
-            <span style={{ fontSize: '1.25rem' }}>🎉</span>
-            <div>
-              <p style={{ fontWeight: 700, fontSize: '0.9rem', color: '#065f46' }}>
-                You&apos;re on IdeaFlow {company.plan === 'standard' ? 'Standard' : 'Pro'}!
-              </p>
-              <p style={{ fontSize: '0.8rem', color: '#047857' }}>
-                {company.plan === 'standard'
-                  ? 'Up to 50 members · unlimited IdeaFlows · full analytics.'
-                  : 'Up to 100 members · AI summaries · executive reports · PDF exports.'}
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* ── Free plan upgrade banner (premium redesign) ── */}
-        {company?.plan === 'free' && (
-          <div className="free-plan-banner stagger-fade-2">
-            {/* Left: headline + feature bullets */}
-            <div className="free-plan-banner__left">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                <span style={{
-                  fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.1em',
-                  textTransform: 'uppercase', color: '#b0bac8',
-                  background: 'rgba(0,0,0,0.04)', borderRadius: '999px',
-                  padding: '0.2rem 0.6rem', border: '1px solid rgba(0,0,0,0.07)',
-                }}>
-                  Free plan · {memberCount} / 10 members
-                </span>
-              </div>
-              <p style={{
-                fontSize: 'clamp(0.9375rem, 2vw, 1.0625rem)',
-                fontWeight: 800, color: '#0d1f35', letterSpacing: '-0.02em',
-                lineHeight: 1.2, marginBottom: '0.4rem',
-              }}>
-                Unlock AI-powered team insights
-              </p>
-              <p style={{ fontSize: '0.8125rem', color: '#5d667a', lineHeight: 1.6, marginBottom: '0.75rem', maxWidth: '26rem' }}>
-                Generate executive summaries, trend analysis, PDF reports, and smart recommendations.
-              </p>
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexWrap: 'wrap', gap: '0.3rem 0.75rem' }}>
-                {['AI summaries', 'Executive PDF exports', 'Trend detection', 'Participation analytics'].map(f => (
-                  <li key={f} style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.75rem', color: '#8b96a8' }}>
-                    <span style={{ color: '#f97316', fontSize: '0.6rem' }}>✦</span> {f}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Right: plan buttons — client component (onClick needs hydration) */}
-            <UpgradeCheckout memberCount={memberCount} />
-          </div>
-        )}
-
-        {/* ── Multi-flow switcher ── */}
-        {accessibleActiveFlowCount > 1 && (
-          <div
-            style={{
-              marginBottom: '1.5rem',
-              borderRadius: '0.875rem',
-              padding: '0.875rem 1.125rem',
-              background: 'rgba(26,107,191,0.03)',
-              border: '1px solid rgba(26,107,191,0.10)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: '1rem',
-              flexWrap: 'wrap',
-            }}
-          >
-            <div>
-              <p style={{ fontSize: '0.8rem', fontWeight: 600, color: '#0d1f35', marginBottom: '0.1rem' }}>
-                You have access to {accessibleActiveFlowCount} active IdeaFlows
-              </p>
-              <p style={{ fontSize: '0.75rem', color: '#8b96a8' }}>
-                This page shows one flow. Switch to see all of them.
-              </p>
-            </div>
-            <a
-              href="/dashboard/flows"
-              style={{
-                flexShrink: 0,
-                display: 'inline-flex',
-                alignItems: 'center',
-                height: '2rem',
-                padding: '0 0.875rem',
-                borderRadius: '0.45rem',
-                border: '1px solid rgba(26,107,191,0.18)',
-                background: '#fff',
-                fontSize: '0.775rem',
-                fontWeight: 600,
-                color: '#1a6bbf',
-                textDecoration: 'none',
-              }}
-            >
-              Switch IdeaFlow →
-            </a>
-          </div>
-        )}
-
-        {/* ── Idea round banner (all users: active / closed / expired / draft) ── */}
+        {/* ── IdeaFlow status banner ── */}
         {showRoundBanner && (
           <IdeaRoundBanner
             name={roundName}
@@ -482,71 +293,25 @@ export default async function DashboardPage({
           />
         )}
 
-        <section className="stagger-fade-2" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+        {/* ── Multiple flows: subtle nav hint ── */}
+        {accessibleActiveFlowCount > 1 && (
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.5rem' }}>
+            <a
+              href="/dashboard/flows"
+              style={{ fontSize: '0.775rem', fontWeight: 600, color: '#1a6bbf', textDecoration: 'none' }}
+            >
+              {accessibleActiveFlowCount} active IdeaFlows · Switch →
+            </a>
+          </div>
+        )}
+
+        {/* ── Core: centered idea feed ── */}
+        <div style={{ maxWidth: '700px', margin: '0 auto', paddingTop: showRoundBanner ? '0' : '1rem' }}>
 
           {effectiveStatus === 'active' ? (
-            <>
-              {/* ── Onboarding empty state ── */}
-              {ideasWithLikeStatus.length === 0 && (
-                <div
-                  style={{
-                    background: '#ffffff',
-                    border: '1px solid rgba(0,0,0,0.06)',
-                    borderRadius: '1rem',
-                    padding: '2.5rem 2rem',
-                    textAlign: 'center',
-                  }}
-                >
-                  <div
-                    style={{
-                      width: '2.75rem',
-                      height: '2.75rem',
-                      borderRadius: '0.875rem',
-                      background: 'rgba(249,115,22,0.07)',
-                      border: '1px solid rgba(249,115,22,0.12)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      margin: '0 auto 1.25rem',
-                      fontSize: '1.25rem',
-                    }}
-                  >
-                    💡
-                  </div>
-                  <h2
-                    style={{
-                      fontSize: '1rem',
-                      fontWeight: 700,
-                      color: '#0d1f35',
-                      letterSpacing: '-0.02em',
-                      marginBottom: '0.4rem',
-                    }}
-                  >
-                    No ideas yet
-                  </h2>
-                  <p
-                    style={{
-                      fontSize: '0.875rem',
-                      color: '#8b96a8',
-                      lineHeight: 1.65,
-                      maxWidth: '22rem',
-                      margin: '0 auto 1.75rem',
-                    }}
-                  >
-                    The best ideas come from the people doing the work. Be the first to share one.
-                  </p>
-                  <div style={{ display: 'flex', gap: '0.625rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-                    <a
-                      href="#new-idea-form"
-                      className="btn-primary"
-                      style={{ fontSize: '0.85rem', padding: '0.55rem 1.25rem', textDecoration: 'none' }}
-                    >
-                      Post your first idea →
-                    </a>
-                  </div>
-                </div>
-              )}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
 
+              {/* New idea form */}
               <div
                 id="new-idea-form"
                 style={{
@@ -568,6 +333,7 @@ export default async function DashboardPage({
                 />
               </div>
 
+              {/* Idea list */}
               <IdeaList
                 ideas={ideasWithLikeStatus}
                 currentUserId={user.id}
@@ -575,43 +341,10 @@ export default async function DashboardPage({
                 isAdmin={profile.role === 'admin'}
               />
 
-              {/* ── AI Workspace Insights (Pro gate — teaser shown for Free/Standard) ── */}
-              {ideasWithLikeStatus.length > 0 && (
-                <AISummaryCard
-                  ideas={ideasWithLikeStatus}
-                  isProPlan={isProPlan}
-                  roundName={roundName}
-                  participationRate={participationRate}
-                  memberCount={memberCount}
-                  activeMembers={activeMembers}
-                />
-              )}
-
-              {/* ── Executive insight report (Pro + 5+ ideas) ── */}
-              <ExecutiveReport
-                ideas={ideasWithLikeStatus}
-                participationRate={participationRate}
-                memberCount={memberCount}
-                activeMembers={activeMembers}
-                ideasThisWeek={ideasThisWeek}
-                roundName={roundName}
-                isProPlan={isProPlan}
-              />
-
-              {/* ── Action recommendations (Pro only) ── */}
-              <ActionRecommendations
-                ideas={ideasWithLikeStatus}
-                participationRate={participationRate}
-                memberCount={memberCount}
-                activeMembers={activeMembers}
-                isProPlan={isProPlan}
-                roundName={roundName}
-              />
-
-            </>
+            </div>
           ) : (
-            /* ── Gate card + optional template picker when round is not active ── */
-            <>
+            /* ── Inactive: gate card or template launcher ── */
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {rankedRound && effectiveStatus && (
                 <RoundGateCard
                   status={effectiveStatus}
@@ -620,35 +353,71 @@ export default async function DashboardPage({
                   roundName={roundName}
                 />
               )}
-              {/* Show template launcher when admin has no flow configured at all */}
               {profile.role === 'admin' && !rankedRound && (
                 <FlowTemplates companyId={profile.company_id} />
               )}
-            </>
+            </div>
           )}
-        </section>
 
-        {/* id=analytics — sidebar "Analytics" link scrolls here */}
-        <div
-          className="stagger-fade-4"
-          id="analytics"
+        </div>
+
+        {/* ── Analytics (collapsible) ── */}
+        <details
           style={{
             marginTop: '2.5rem',
-            paddingTop: '2rem',
             borderTop: '1px solid rgba(0,0,0,0.06)',
           }}
         >
-          <AnalyticsPanel
-            totalIdeas={ideasWithLikeStatus.length}
-            totalLikes={totalLikes}
-            ideasThisWeek={ideasThisWeek}
-            activeMembers={activeMembers}
-            topContributors={topContributors}
-            dailyActivity={dailyActivity}
-            topIdea={topIdea}
-            heading="Workspace insights"
-          />
-        </div>
+          <summary
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              padding: '1rem 0',
+              cursor: 'pointer',
+              userSelect: 'none',
+              listStyle: 'none',
+              WebkitAppearance: 'none',
+            }}
+          >
+            <span style={{
+              fontSize: '0.6rem',
+              color: '#94a3b8',
+              display: 'inline-block',
+              transition: 'transform 0.15s ease',
+            }}>▶</span>
+            <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748b' }}>
+              Analytics overview
+            </span>
+            <a
+              href="/dashboard/analytics"
+              onClick={e => e.stopPropagation()}
+              style={{
+                marginLeft: 'auto',
+                fontSize: '0.75rem',
+                fontWeight: 500,
+                color: '#1a6bbf',
+                textDecoration: 'none',
+              }}
+            >
+              Full analytics →
+            </a>
+          </summary>
+
+          <div style={{ paddingBottom: '2rem' }}>
+            <AnalyticsPanel
+              totalIdeas={ideasWithLikeStatus.length}
+              totalLikes={totalLikes}
+              ideasThisWeek={ideasThisWeek}
+              activeMembers={activeMembers}
+              topContributors={topContributors}
+              dailyActivity={dailyActivity}
+              topIdea={topIdea}
+              heading=""
+            />
+          </div>
+        </details>
+
       </PageContainer>
     </main>
   )
