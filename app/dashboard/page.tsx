@@ -92,32 +92,32 @@ export default async function DashboardPage({
     redirect(isWorkspaceCreator ? '/api/onboard' : '/join-workspace')
   }
 
-  const { data: members } = (await supabase
-    .from('profiles')
-    .select('id, full_name, role')
-    .eq('company_id', profile.company_id)
-    .order('created_at', { ascending: true })) as unknown as {
-    data: { id: string; full_name: string | null; role: string }[] | null
-  }
-
-  // Billing query — always reliable; never includes optional migrated columns.
-  const { data: company } = (await supabase
-    .from('companies')
-    .select('plan, trial_ends_at')
-    .eq('id', profile.company_id)
-    .single()) as unknown as {
-    data: CompanyResult | null
-  }
-
-  // Round query — fetched BEFORE the ideas query so we can scope ideas to the
-  // current round. Falls back to null gracefully if columns don't exist yet.
-  const { data: roundData } = (await supabase
-    .from('companies')
-    .select('idea_round_name, idea_round_status, idea_round_starts_at, idea_round_ends_at, idea_round_manual_override, current_idea_round_id')
-    .eq('id', profile.company_id)
-    .single()) as unknown as {
-    data: RoundDataResult | null
-  }
+  // Parallelise the three independent company-scoped queries.
+  const [
+    { data: members },
+    { data: company },
+    { data: roundData },
+  ] = await Promise.all([
+    supabase
+      .from('profiles')
+      .select('id, full_name, role')
+      .eq('company_id', profile.company_id)
+      .order('created_at', { ascending: true }) as unknown as Promise<{
+      data: { id: string; full_name: string | null; role: string }[] | null
+    }>,
+    // Billing query — always reliable; never includes optional migrated columns.
+    supabase
+      .from('companies')
+      .select('plan, trial_ends_at')
+      .eq('id', profile.company_id)
+      .single() as unknown as Promise<{ data: CompanyResult | null }>,
+    // Round query — falls back to null gracefully if columns don't exist yet.
+    supabase
+      .from('companies')
+      .select('idea_round_name, idea_round_status, idea_round_starts_at, idea_round_ends_at, idea_round_manual_override, current_idea_round_id')
+      .eq('id', profile.company_id)
+      .single() as unknown as Promise<{ data: RoundDataResult | null }>,
+  ])
 
   // ── Idea round logic ──────────────────────────────────────────────────────
   // manual_override always wins; null raw_status (not configured) → 'draft'
@@ -296,7 +296,7 @@ export default async function DashboardPage({
   const isProPlan  = company?.plan === 'pro'      || company?.plan === 'pro_plus'
 
   return (
-    <main>
+    <main className="page-content-enter">
       <PageContainer className="dashboard-content-container">
 
         {/* ── Welcome header ── */}

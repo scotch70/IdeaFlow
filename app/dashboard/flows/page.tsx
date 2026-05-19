@@ -94,7 +94,7 @@ export default async function FlowsPage() {
   const closedFlows = flows.filter(f => f.effectiveStatus === 'closed')
 
   return (
-    <div>
+    <div className="page-content-enter">
       {/* ── Sticky header ── */}
       <div style={{
         background: '#ffffff',

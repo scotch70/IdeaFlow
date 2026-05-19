@@ -105,7 +105,7 @@ export default async function IdeasPage() {
   const totalIdeas = ideasWithLikeStatus.length
 
   return (
-    <div>
+    <div className="page-content-enter">
       {/* ── Sticky page header ── */}
       <div
         style={{

@@ -198,7 +198,7 @@ export default async function FlowDetailPage({
   )
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <div className="page-content-enter" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* ── Sticky header ───────────────────────────────────────────────── */}
       <div style={{
         background: '#ffffff',
