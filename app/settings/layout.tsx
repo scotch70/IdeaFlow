@@ -63,8 +63,11 @@ export default async function SettingsLayout({
         </div>
 
         {/* Scrollable content column — full remaining width; PageContainer handles padding */}
+        {/* .dash-content-inner constrains to 80rem and centers on very wide screens.      */}
         <div style={{ flex: 1, minWidth: 0, overflowY: 'auto' }}>
-          {children}
+          <div className="dash-content-inner">
+            {children}
+          </div>
         </div>
       </div>
     </>

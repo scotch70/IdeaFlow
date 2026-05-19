@@ -84,8 +84,12 @@ export default async function DashboardLayout({
         </div>
 
         {/* ── Scrollable content column — full remaining width ─────────── */}
+        {/*   .dash-content-inner inside caps content at 80rem and centers  */}
+        {/*   it on very wide screens (>1519px). No mobile effect.           */}
         <div style={{ flex: 1, minWidth: 0, overflowY: 'auto' }}>
-          {children}
+          <div className="dash-content-inner">
+            {children}
+          </div>
         </div>
       </div>
     </>
