@@ -58,20 +58,20 @@ export default async function DashboardLayout({
 
       {/*
         ── Dashboard shell ───────────────────────────────────────────────────
-        Full-viewport-width flex shell. No outer max-width so content fills
-        the screen at every breakpoint (1280px, 1440px, 1728px+).
+        Constrained to max-w-7xl (80rem / 1280px) and centred with mx-auto so
+        the entire shell — sidebar + content — sits inside the same horizontal
+        bounds as SiteHeader's inner container.
 
-        The sidebar is 240px fixed. The content column takes the rest (flex:1).
-        PageContainer inside each page provides its own max-width + padding so
-        there is intentionally NO outer padding here — that was the source of
-        double-padding on desktop (40px outer + 40px inner = 80px wasted each side).
+        At 1440px: shell = 1280px, centred with 80px margin each side.
+          Sidebar 240px | Content column flex-1 (1040px) → matches logo/avatar
+        At 1728px+: shell stays 1280px, margins grow — never edge-to-edge.
+        Mobile (<md): max-w-7xl > any phone screen → no constraint, full width.
 
-        On mobile (< md): sidebar hidden, content = full viewport width.
-        PageContainer's px-6 handles mobile padding. The safe-area override in
-        globals.css adds env(safe-area-inset-*) for notch/home-indicator devices.
+        No outer padding on the content column — PageContainer inside each
+        page is the single padding source (px-6 lg:px-10). No double-padding.
       */}
       <div
-        className="flex"
+        className="mx-auto flex w-full max-w-7xl"
         style={{ height: `calc(100vh - ${HEADER_HEIGHT})` }}
       >
         {/* ── Sidebar — hidden on mobile ───────────────────────────────── */}
@@ -83,13 +83,9 @@ export default async function DashboardLayout({
           />
         </div>
 
-        {/* ── Scrollable content column — full remaining width ─────────── */}
-        {/*   .dash-content-inner inside caps content at 80rem and centers  */}
-        {/*   it on very wide screens (>1519px). No mobile effect.           */}
+        {/* ── Scrollable content column ────────────────────────────────── */}
         <div style={{ flex: 1, minWidth: 0, overflowY: 'auto' }}>
-          <div className="dash-content-inner">
-            {children}
-          </div>
+          {children}
         </div>
       </div>
     </>

@@ -1460,16 +1460,12 @@ button, a {
   animation: page-content-enter 0.22s ease forwards;
 }
 
-/* ── Dashboard content centering wrapper ────────────────────────────────── *
- * Constrains the scrollable content column to max 80rem (1280 px) and       *
- * centers it within the remaining space beside the sidebar. Only has a      *
- * visual effect on viewports wider than 1519 px (sidebar 240 + 1280).      *
- * Mobile screens are well below 80rem so this has zero mobile impact.       */
+/* ── .dash-content-inner — superseded ───────────────────────────────────── *
+ * The shell in dashboard/layout.tsx and settings/layout.tsx now carries     *
+ * max-w-7xl mx-auto directly, so this helper class is no longer applied.    *
+ * Kept here to avoid any stale-reference errors; it is a no-op.             */
 .dash-content-inner {
   width: 100%;
-  max-width: 80rem; /* mirrors PageContainer size="wide" */
-  margin-left:  auto;
-  margin-right: auto;
 }
 
 /* ── Spinner — tiny elegant rotating ring ───────────────────────────────── */

@@ -48,9 +48,9 @@ export default async function SettingsLayout({
         />
       </div>
 
-      {/* Shell — identical pattern to dashboard/layout.tsx: full-width, no outer max-w */}
+      {/* Shell — max-w-7xl mx-auto: matches SiteHeader bounds exactly */}
       <div
-        className="flex"
+        className="mx-auto flex w-full max-w-7xl"
         style={{ height: `calc(100vh - ${HEADER_HEIGHT})` }}
       >
         {/* Sidebar — hidden on mobile */}
@@ -62,12 +62,9 @@ export default async function SettingsLayout({
           />
         </div>
 
-        {/* Scrollable content column — full remaining width; PageContainer handles padding */}
-        {/* .dash-content-inner constrains to 80rem and centers on very wide screens.      */}
+        {/* Scrollable content column — PageContainer inside handles padding */}
         <div style={{ flex: 1, minWidth: 0, overflowY: 'auto' }}>
-          <div className="dash-content-inner">
-            {children}
-          </div>
+          {children}
         </div>
       </div>
     </>
