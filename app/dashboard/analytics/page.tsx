@@ -1,9 +1,11 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import AnalyticsPanel from '@/components/AnalyticsPanel'
 import type { DailyPoint, Contributor } from '@/components/AnalyticsPanel'
 import PageContainer from '@/components/PageContainer'
 import DownloadReportButton from '@/components/DownloadReportButton'
+import { getEffectiveRoundStatus } from '@/lib/rounds/getEffectiveRoundStatus'
 
 export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Analytics — IdeaFlow' }
@@ -30,16 +32,45 @@ export default async function AnalyticsPage() {
 
   if (!profile || profile.role !== 'admin') redirect('/dashboard')
 
-  // Fetch plan + current_idea_round_id together so the ideas query can be
-  // scoped to the current round — matching exactly what the dashboard shows.
+  // Fetch plan — no longer read current_idea_round_id from companies (stale pointer).
   const { data: company } = (await supabase
     .from('companies')
-    .select('plan, current_idea_round_id')
+    .select('plan')
     .eq('id', profile.company_id!)
-    .single()) as unknown as { data: { plan: string; current_idea_round_id: string | null } | null }
+    .single()) as unknown as { data: { plan: string } | null }
 
   const isPro = company?.plan === 'pro'
-  const currentRoundId = company?.current_idea_round_id ?? null
+
+  // ── Resolve the current round the same way the dashboard does ─────────────
+  // Query idea_rounds directly so we always see the freshest state.
+  const admin = createAdminClient()
+
+  const { data: allRounds } = await (admin as any)
+    .from('idea_rounds')
+    .select('id, status, manual_override, starts_at, ends_at')
+    .eq('company_id', profile.company_id!)
+    .order('created_at', { ascending: false }) as {
+    data: Array<{
+      id: string; status: string | null;
+      manual_override: string | null;
+      starts_at: string | null; ends_at: string | null;
+    }> | null
+  }
+
+  const rankedRound = (() => {
+    const rounds = allRounds ?? []
+    const activeRound = rounds.find(r =>
+      getEffectiveRoundStatus({
+        raw_status:      (r.status           ?? null) as 'draft' | 'active' | 'closed' | null,
+        manual_override: (r.manual_override  ?? null) as 'open'  | 'closed' | null,
+        opens_at:        r.starts_at ?? null,
+        closes_at:       r.ends_at   ?? null,
+      }) === 'active'
+    )
+    return activeRound ?? rounds[0] ?? null
+  })()
+
+  const currentRoundId = rankedRound?.id ?? null
 
   // Scope ideas to the current round only — never include orphaned or old-round rows.
   const ideasQuery = supabase

@@ -332,7 +332,7 @@ export default function FlowAdminPanel({
         const d = await res.json()
         throw new Error(d.error ?? 'Failed to delete')
       }
-      router.push('/dashboard/idea-flow')
+      router.push('/dashboard/flows')
       router.refresh()
     } catch (err: unknown) {
       setDeleteError(err instanceof Error ? err.message : 'Something went wrong')
@@ -721,8 +721,8 @@ export default function FlowAdminPanel({
               lineHeight: 1.55,
               marginBottom: '0.875rem',
             }}>
-              Permanently deletes this IdeaFlow, including all its ideas and
-              comments. This action cannot be undone.
+              Deleting this IdeaFlow will remove its ideas, comments, and assigned
+              members from this flow. User accounts will not be deleted.
             </p>
 
             <button
@@ -771,8 +771,9 @@ export default function FlowAdminPanel({
               lineHeight: 1.55,
               marginBottom: '0.75rem',
             }}>
-              Delete this IdeaFlow permanently? This will remove its ideas and
-              comments and cannot be undone.
+              Deleting this IdeaFlow will remove its ideas, comments, and assigned
+              members from this flow. User accounts will not be deleted. This
+              action cannot be undone.
             </p>
 
             {deleteError && (

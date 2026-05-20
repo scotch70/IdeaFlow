@@ -23,6 +23,8 @@ interface IdeaRoundBannerProps {
   /** Whether the current user is an admin (shows open/close button). */
   isAdmin?:       boolean
   companyId?:     string
+  /** Round ID — used to call PATCH /api/rounds/[id] for open/close overrides. */
+  roundId?:       string
   manualOverride?: ManualOverride
   /** Number of ideas in the current round (for the metadata row). */
   ideaCount?:     number
@@ -36,6 +38,7 @@ export default function IdeaRoundBanner({
   endsAt,
   isAdmin       = false,
   companyId,
+  roundId,
   manualOverride: initialOverride = null,
   ideaCount,
   memberCount,
@@ -55,15 +58,15 @@ export default function IdeaRoundBanner({
   const displayName = name?.trim() || null
 
   async function applyOverride(action: 'open' | 'close') {
-    if (!companyId || saving) return
-    const optimistic: ManualOverride = action === 'open' ? 'open' : 'closed'
+    if (!roundId || saving) return
+    const override: ManualOverride = action === 'open' ? 'open' : 'closed'
     setSaving(true)
-    setManualOverride(optimistic)
+    setManualOverride(override)
     try {
-      const res = await fetch('/api/company/round-status', {
+      const res = await fetch(`/api/rounds/${roundId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action }),
+        body: JSON.stringify({ manual_override: override }),
       })
       if (!res.ok) throw new Error('Failed')
       router.refresh()
@@ -94,7 +97,7 @@ export default function IdeaRoundBanner({
             Your admin is setting up an idea round — submissions will open soon.
           </p>
         </div>
-        {isAdmin && companyId && (
+        {isAdmin && roundId && (
           <button
             disabled={saving}
             onClick={() => applyOverride('open')}
@@ -137,7 +140,7 @@ export default function IdeaRoundBanner({
             )}
           </p>
         </div>
-        {isAdmin && companyId && (
+        {isAdmin && roundId && (
           <button
             disabled={saving}
             onClick={() => applyOverride('open')}
@@ -210,7 +213,7 @@ export default function IdeaRoundBanner({
       </div>
 
       {/* Admin close button */}
-      {isAdmin && companyId && (
+      {isAdmin && roundId && (
         <button
           disabled={saving}
           onClick={() => applyOverride('close')}

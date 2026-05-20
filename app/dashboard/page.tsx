@@ -287,6 +287,7 @@ export default async function DashboardPage() {
             endsAt={roundEndsAt}
             isAdmin={profile.role === 'admin'}
             companyId={profile.company_id}
+            roundId={currentRoundId ?? undefined}
             manualOverride={(roundManualOverride as 'open' | 'closed' | null) ?? undefined}
             ideaCount={ideasWithLikeStatus.length}
             memberCount={memberCount}

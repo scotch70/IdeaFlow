@@ -256,6 +256,9 @@ export async function DELETE(_request: NextRequest, { params }: Params) {
 
     await (admin as any).from('round_members').delete().eq('round_id', id)
 
+    // Delete flow-scoped invites so orphaned invite codes can't be used after deletion
+    await (admin as any).from('invites').delete().eq('idea_round_id', id)
+
     const { error: delError } = await (admin as any)
       .from('idea_rounds')
       .delete()
