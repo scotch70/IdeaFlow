@@ -1,21 +1,26 @@
 'use client'
 
 // ─────────────────────────────────────────────────────────────────────────────
-// FlowTemplates — shown when there is no active IdeaFlow and the user is admin.
+// FlowTemplates — first-launch experience for empty workspaces.
 //
-// Presents 7 curated IdeaFlow templates. Clicking one immediately launches a
-// new IdeaFlow by calling POST /api/company/update-round with:
-//   { companyId, name, prompt, status: 'active', newRound: true }
-//
-// A plain "Start blank" button launches an untitled flow with no prompt.
+// Shown ONLY when the workspace has zero IdeaFlows. Picking a template hits
+// the canonical POST /api/rounds endpoint to create a real idea_rounds row
+// (with audience_mode = 'workspace' by default), then navigates the admin
+// straight to the new flow page. We deliberately do NOT call
+// window.location.reload() — a soft router.push avoids a flash of the empty
+// dashboard between request completion and re-render, and guarantees the
+// admin lands on the right place even if some other listing cache is stale.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
 interface FlowTemplatesProps {
-  companyId: string
-  /** Called after a flow is successfully created, so the parent can re-fetch */
-  onCreated?: () => void
+  // Reserved for parity with existing call sites that already pass companyId.
+  // The API derives the company from the caller's session, so we don't send it.
+  companyId?: string
+  /** Called after a flow is successfully created, in case the parent wants to react. */
+  onCreated?: (roundId: string) => void
 }
 
 interface Template {
@@ -86,7 +91,8 @@ const TEMPLATES: Template[] = [
   },
 ]
 
-export default function FlowTemplates({ companyId, onCreated }: FlowTemplatesProps) {
+export default function FlowTemplates({ onCreated }: FlowTemplatesProps) {
+  const router = useRouter()
   const [launching, setLaunching] = useState<string | null>(null)
   const [error,     setError]     = useState<string | null>(null)
 
@@ -95,29 +101,45 @@ export default function FlowTemplates({ companyId, onCreated }: FlowTemplatesPro
     try {
       setLaunching(id)
       setError(null)
+
       const body: Record<string, unknown> = {
-        companyId,
-        status:   'active',
-        newRound: true,
+        // /api/rounds defaults to 'draft'; templates are an explicit
+        // "launch now" action so we pass 'active'.
+        status: 'active',
       }
       if (template) {
         body.name   = template.name
         body.prompt = template.prompt
+      } else {
+        body.name   = 'New IdeaFlow'
       }
-      const res = await fetch('/api/company/update-round', {
+
+      const res = await fetch('/api/rounds', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify(body),
       })
+
       const text = await res.text()
       const data = text ? JSON.parse(text) : null
-      if (!res.ok) throw new Error(data?.error || 'Failed to launch flow')
-      onCreated?.()
-      // Reload to pick up the new active round
-      window.location.reload()
+
+      if (!res.ok) {
+        throw new Error(data?.error || 'Failed to launch flow')
+      }
+
+      const roundId: string | null = (data && typeof data.id === 'string') ? data.id : null
+      if (!roundId) {
+        throw new Error('Flow created but no id returned')
+      }
+
+      onCreated?.(roundId)
+
+      // Land on the new flow's page. router.push is enough — server components
+      // along /dashboard/flows/[id] are force-dynamic and will fetch fresh.
+      router.push(`/dashboard/flows/${roundId}`)
+      router.refresh()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong')
-    } finally {
       setLaunching(null)
     }
   }

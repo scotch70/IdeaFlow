@@ -119,9 +119,18 @@ export default async function DashboardPage() {
     }> | null
   }
 
+  // ── Round selection ──────────────────────────────────────────────────────
+  // `allRoundsForDash` is already ordered by created_at DESC.
+  //
+  //   1. Newest *effectively* active round (manual_override / schedule applied).
+  //   2. Otherwise the newest round of any status (draft or closed).
+  //   3. Otherwise null — workspace has no rounds at all.
+  const allRounds = allRoundsForDash ?? []
+  const hasAnyRounds = allRounds.length > 0
+
   const rankedRound = (() => {
-    const rounds = allRoundsForDash ?? []
-    const activeRound = rounds.find(r =>
+    if (!hasAnyRounds) return null
+    const activeRound = allRounds.find(r =>
       getEffectiveRoundStatus({
         raw_status:      (r.status           ?? null) as 'draft' | 'active' | 'closed' | null,
         manual_override: (r.manual_override  ?? null) as 'open'  | 'closed' | null,
@@ -129,7 +138,7 @@ export default async function DashboardPage() {
         closes_at:       r.ends_at   ?? null,
       }) === 'active'
     )
-    return activeRound ?? rounds[0] ?? null
+    return activeRound ?? allRounds[0] ?? null
   })()
 
   // ── Vars derived from the selected round ─────────────────────────────────
@@ -352,7 +361,12 @@ export default async function DashboardPage() {
 
             </div>
           ) : (
-            /* ── Inactive: gate card or template launcher ── */
+            /* ── Inactive ── */
+            /* If at least one round exists (draft / closed / inactive) show the
+             * gate card explaining the current state. The template launcher is
+             * ONLY shown when the workspace has zero rounds at all — driven by
+             * `hasAnyRounds` above so the condition is explicit and matches the
+             * audit (no longer relying on the truthiness of rankedRound alone). */
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {rankedRound && effectiveStatus && (
                 <RoundGateCard
@@ -362,7 +376,7 @@ export default async function DashboardPage() {
                   roundName={roundName}
                 />
               )}
-              {profile.role === 'admin' && !rankedRound && (
+              {profile.role === 'admin' && !hasAnyRounds && (
                 <FlowTemplates companyId={profile.company_id} />
               )}
             </div>
