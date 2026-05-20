@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient }      from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getEffectiveRoundStatus } from '@/lib/rounds/getEffectiveRoundStatus'
+import { isRoundAccessible } from '@/lib/auth/guards'
 import { checkRateLimit } from '@/lib/ratelimit'
 import { canCreateFlow }   from '@/lib/billing'
 import { logEvent, logError } from '@/lib/monitoring/events'
@@ -76,15 +77,16 @@ export async function GET(_request: NextRequest) {
       memberSetMap[row.round_id].push(row.user_id)
     }
 
-    // Filter: members only see rounds they're assigned to (or open-to-all rounds)
+    // Filter: members only see rounds they're allowed to access.
+    // Honours audience_mode when present, falls back to legacy "empty = open".
     const isAdmin = profile.role === 'admin'
     const enriched = allRounds
-      .filter((round: any) => {
-        if (isAdmin) return true
-        const assigned = memberSetMap[round.id] ?? []
-        // If no members assigned → all company members can access
-        return assigned.length === 0 || assigned.includes(user.id)
-      })
+      .filter((round: any) => isRoundAccessible({
+        userId: user.id,
+        isAdmin,
+        round: { id: round.id, audience_mode: round.audience_mode ?? null },
+        assignedUserIds: memberSetMap[round.id] ?? [],
+      }))
       .map((round: any) => ({
         ...round,
         effectiveStatus: getEffectiveRoundStatus({
@@ -178,13 +180,15 @@ export async function POST(request: NextRequest) {
     const { data: round, error: insertError } = await (admin as any)
       .from('idea_rounds')
       .insert({
-        company_id:  profile.company_id,
+        company_id:    profile.company_id,
         name,
         prompt,
         status,
-        created_by:  user.id,
-        starts_at:   toDate(body.starts_at),
-        ends_at:     toDate(body.ends_at),
+        created_by:    user.id,
+        owner_id:      user.id,
+        starts_at:     toDate(body.starts_at),
+        ends_at:       toDate(body.ends_at),
+        audience_mode: 'workspace',   // safe default; admin can restrict later
       })
       .select('*')
       .single()

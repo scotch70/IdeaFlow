@@ -8,10 +8,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient }      from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getEffectiveRoundStatus } from '@/lib/rounds/getEffectiveRoundStatus'
 import { canCreateFlow } from '@/lib/billing'
+import { requireSignedIn, requireWorkspaceAdmin, canAccessRound } from '@/lib/auth/guards'
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -21,17 +21,9 @@ export async function GET(_request: NextRequest, { params }: Params) {
   try {
     const { id } = await params
 
-    const supabase = await createClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    const { data: profile } = (await supabase
-      .from('profiles')
-      .select('company_id, role')
-      .eq('id', user.id)
-      .single()) as unknown as { data: { company_id: string | null; role: string } | null }
-
-    if (!profile?.company_id) return NextResponse.json({ error: 'No workspace' }, { status: 403 })
+    const caller = await requireSignedIn()
+    if (!caller.ok) return NextResponse.json({ error: caller.error }, { status: caller.status })
+    const { userId, profile } = caller.value
 
     const admin = createAdminClient()
 
@@ -44,23 +36,18 @@ export async function GET(_request: NextRequest, { params }: Params) {
 
     if (roundError || !round) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-    // Access check for non-admins: member must be assigned (or round is open-to-all)
-    if (profile.role !== 'admin') {
-      const { data: memberRows } = await (admin as any)
-        .from('round_members')
-        .select('user_id')
-        .eq('round_id', id)
-
-      const assigned: string[] = (memberRows ?? []).map((r: any) => r.user_id)
-      if (assigned.length > 0 && !assigned.includes(user.id)) {
-        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-      }
-    }
+    // Access check — handles audience_mode + legacy fallback in one place.
+    const allowed = await canAccessRound({
+      userId,
+      isAdmin: profile.role === 'admin',
+      round,
+    })
+    if (!allowed) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
     // Fetch assigned members (for admin view)
     const { data: memberRows } = await (admin as any)
       .from('round_members')
-      .select('user_id, added_by, created_at, profiles(full_name)')
+      .select('user_id, added_by, created_at, role, last_active_at, profiles(full_name)')
       .eq('round_id', id)
 
     const effectiveStatus = getEffectiveRoundStatus({
@@ -87,28 +74,19 @@ export async function PATCH(request: NextRequest, { params }: Params) {
   try {
     const { id } = await params
 
-    const supabase = await createClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    const { data: profile } = (await supabase
-      .from('profiles')
-      .select('company_id, role')
-      .eq('id', user.id)
-      .single()) as unknown as { data: { company_id: string | null; role: string } | null }
-
-    if (!profile?.company_id) return NextResponse.json({ error: 'No workspace' }, { status: 403 })
-    if (profile.role !== 'admin') return NextResponse.json({ error: 'Admins only' }, { status: 403 })
+    const auth = await requireWorkspaceAdmin()
+    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
+    const { profile } = auth.value
 
     const admin = createAdminClient()
 
     // Verify round belongs to this company
     const { data: existing } = await (admin as any)
       .from('idea_rounds')
-      .select('id, status')
+      .select('id, status, audience_mode')
       .eq('id', id)
       .eq('company_id', profile.company_id)
-      .single()
+      .single() as { data: { id: string; status: string | null; audience_mode: 'workspace' | 'restricted' | null } | null }
 
     if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
@@ -165,6 +143,32 @@ export async function PATCH(request: NextRequest, { params }: Params) {
       patch.manual_override = body.manual_override ?? null
     }
 
+    // ── Audience mode ────────────────────────────────────────────────────────
+    // workspace  → everyone in the workspace can access
+    // restricted → only round_members rows can access
+    if (body.audience_mode !== undefined) {
+      const next = body.audience_mode
+      if (next !== 'workspace' && next !== 'restricted') {
+        return NextResponse.json({ error: 'Invalid audience_mode' }, { status: 400 })
+      }
+      // Flipping workspace → restricted with zero members would lock everyone
+      // (except workspace admins) out immediately. Reject with a clear error so
+      // the UI can prompt the admin to add at least one member first.
+      if (next === 'restricted' && existing.audience_mode !== 'restricted') {
+        const { count } = await (admin as any)
+          .from('round_members')
+          .select('*', { count: 'exact', head: true })
+          .eq('round_id', id)
+        if ((count ?? 0) === 0) {
+          return NextResponse.json(
+            { error: 'Add at least one member before switching to restricted access.' },
+            { status: 400 },
+          )
+        }
+      }
+      patch.audience_mode = next
+    }
+
     const toDate = (v: unknown): string | null | undefined => {
       if (v === null || v === '') return null
       if (v === undefined) return undefined
@@ -215,18 +219,9 @@ export async function DELETE(_request: NextRequest, { params }: Params) {
   try {
     const { id } = await params
 
-    const supabase = await createClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    const { data: profile } = (await supabase
-      .from('profiles')
-      .select('company_id, role')
-      .eq('id', user.id)
-      .single()) as unknown as { data: { company_id: string | null; role: string } | null }
-
-    if (!profile?.company_id) return NextResponse.json({ error: 'No workspace' }, { status: 403 })
-    if (profile.role !== 'admin') return NextResponse.json({ error: 'Admins only' }, { status: 403 })
+    const auth = await requireWorkspaceAdmin()
+    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
+    const { profile } = auth.value
 
     const admin = createAdminClient()
 

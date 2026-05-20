@@ -12,6 +12,7 @@ import RoundGateCard from '@/components/RoundGateCard'
 import FlowTemplates from '@/components/FlowTemplates'
 import AnalyticsSummaryLink from '@/components/AnalyticsSummaryLink'
 import { getEffectiveRoundStatus } from '@/lib/rounds/getEffectiveRoundStatus'
+import { isRoundAccessible } from '@/lib/auth/guards'
 
 type ProfileResult = Pick<
   Database['public']['Tables']['profiles']['Row'],
@@ -107,13 +108,14 @@ export default async function DashboardPage() {
   //   2. Fall back to the most recently created round of any status
   const { data: allRoundsForDash } = await (adminClient as any)
     .from('idea_rounds')
-    .select('id, name, status, prompt, manual_override, starts_at, ends_at')
+    .select('id, name, status, prompt, manual_override, starts_at, ends_at, audience_mode')
     .eq('company_id', profile.company_id)
     .order('created_at', { ascending: false }) as {
     data: Array<{
       id: string; name: string | null; status: string | null;
       prompt: string | null; manual_override: string | null;
       starts_at: string | null; ends_at: string | null;
+      audience_mode: 'workspace' | 'restricted' | null;
     }> | null
   }
 
@@ -165,6 +167,7 @@ export default async function DashboardPage() {
         memberSetMap[row.round_id].push(row.user_id)
       }
 
+      const isCallerAdmin = profile.role === 'admin'
       accessibleActiveFlowCount = activeRoundRows.filter(r => {
         const eff = getEffectiveRoundStatus({
           raw_status:      'active',
@@ -173,8 +176,12 @@ export default async function DashboardPage() {
           closes_at:       r.ends_at   ?? null,
         })
         if (eff !== 'active') return false
-        const assigned = memberSetMap[r.id] ?? []
-        return assigned.length === 0 || assigned.includes(user.id)
+        return isRoundAccessible({
+          userId: user.id,
+          isAdmin: isCallerAdmin,
+          round: { id: r.id, audience_mode: r.audience_mode ?? null },
+          assignedUserIds: memberSetMap[r.id] ?? [],
+        })
       }).length
     }
   }

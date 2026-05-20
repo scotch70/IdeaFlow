@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getEffectiveRoundStatus } from '@/lib/rounds/getEffectiveRoundStatus'
+import { isRoundAccessible } from '@/lib/auth/guards'
 import { checkRateLimit, getClientIp } from '@/lib/ratelimit'
 import { logEvent, logError } from '@/lib/monitoring/events'
 
@@ -67,7 +68,7 @@ export async function POST(request: NextRequest) {
         // Validate the round exists, belongs to this company, and is active.
         const { data: explicitRound } = await (adminClient as any)
           .from('idea_rounds')
-          .select('id, status, company_id, manual_override, starts_at, ends_at')
+          .select('id, status, company_id, manual_override, starts_at, ends_at, audience_mode')
           .eq('id', bodyRoundId)
           .eq('company_id', profile.company_id)
           .single()
@@ -93,14 +94,21 @@ export async function POST(request: NextRequest) {
           )
         }
 
-        // Check member access: if round has assigned members, user must be one
+        // Access check via centralised guard (honours audience_mode + legacy)
+        const isCallerAdmin = profile.role === 'admin'
         const { data: memberRows } = await (adminClient as any)
           .from('round_members')
           .select('user_id')
           .eq('round_id', bodyRoundId)
 
         const assigned: string[] = (memberRows ?? []).map((r: { user_id: string }) => r.user_id)
-        if (assigned.length > 0 && !assigned.includes(user.id)) {
+        const allowed = isRoundAccessible({
+          userId: user.id,
+          isAdmin: isCallerAdmin,
+          round: { id: bodyRoundId, audience_mode: explicitRound.audience_mode ?? null },
+          assignedUserIds: assigned,
+        })
+        if (!allowed) {
           return NextResponse.json(
             { error: 'You are not assigned to this IdeaFlow.' },
             { status: 403 },

@@ -77,6 +77,9 @@ export interface Database {
           // added by icon-color migration
           icon: string | null   // emoji, e.g. '💡'
           color: string | null  // hex accent, e.g. '#f97316'
+          // added by members-redesign migration
+          audience_mode: 'workspace' | 'restricted'
+          owner_id: string | null
         }
         Insert: {
           id?: string
@@ -92,6 +95,8 @@ export interface Database {
           manual_override?: 'open' | 'closed' | null
           icon?: string | null
           color?: string | null
+          audience_mode?: 'workspace' | 'restricted'
+          owner_id?: string | null
         }
         Update: {
           id?: string
@@ -107,6 +112,8 @@ export interface Database {
           manual_override?: 'open' | 'closed' | null
           icon?: string | null
           color?: string | null
+          audience_mode?: 'workspace' | 'restricted'
+          owner_id?: string | null
         }
       }
 
@@ -118,6 +125,10 @@ export interface Database {
           company_id: string
           added_by: string | null
           created_at: string
+          // added by members-redesign migration
+          role: 'owner' | 'admin' | 'member' | 'viewer'
+          last_active_at: string | null
+          invited_by: string | null
         }
         Insert: {
           id?: string
@@ -126,6 +137,9 @@ export interface Database {
           company_id: string
           added_by?: string | null
           created_at?: string
+          role?: 'owner' | 'admin' | 'member' | 'viewer'
+          last_active_at?: string | null
+          invited_by?: string | null
         }
         Update: {
           id?: string
@@ -134,6 +148,9 @@ export interface Database {
           company_id?: string
           added_by?: string | null
           created_at?: string
+          role?: 'owner' | 'admin' | 'member' | 'viewer'
+          last_active_at?: string | null
+          invited_by?: string | null
         }
       }
 
@@ -147,6 +164,8 @@ export interface Database {
           avatar_url: string | null
           created_at: string
           role: string
+          // added by members-redesign migration
+          last_active_at: string | null
         }
         Insert: {
           id: string
@@ -157,6 +176,7 @@ export interface Database {
           avatar_url?: string | null
           created_at?: string
           role?: string
+          last_active_at?: string | null
         }
         Update: {
           id?: string
@@ -167,6 +187,7 @@ export interface Database {
           avatar_url?: string | null
           created_at?: string
           role?: string
+          last_active_at?: string | null
         }
       }
 
@@ -373,4 +394,35 @@ export type Invite = Database['public']['Tables']['invites']['Row']
 
 export type Comment = Database['public']['Tables']['comments']['Row'] & {
   profiles?: { full_name: string | null }
+}
+
+// ── Members redesign ──────────────────────────────────────────────────────────
+
+/** Per-flow role. 'member' is the default; the others are reserved for RBAC V2. */
+export type FlowRole = 'owner' | 'admin' | 'member' | 'viewer'
+
+/** Explicit audience scope for an IdeaFlow. */
+export type AudienceMode = 'workspace' | 'restricted'
+
+/** A flow as seen from one member's perspective on the Members page. */
+export type FlowSummary = {
+  id: string
+  name: string
+  status: 'draft' | 'active' | 'closed'
+  /** When the user explicitly joined this flow. Null = workspace-inherited. */
+  joinedAt: string | null
+  /** Per-flow role from round_members, or null if access is workspace-inherited. */
+  role: FlowRole | null
+  audienceMode: AudienceMode
+}
+
+/** A workspace member with the set of flows they participate in. */
+export type WorkspaceMemberWithFlows = {
+  id: string
+  fullName: string | null
+  /** Workspace role: 'admin' | 'member'. */
+  workspaceRole: string
+  lastActiveAt: string | null
+  /** Flows the user has access to. Empty array means orphaned/inactive. */
+  flows: FlowSummary[]
 }

@@ -13,9 +13,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient }      from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { checkRateLimit }    from '@/lib/ratelimit'
+import { requireRoundAdmin } from '@/lib/auth/guards'
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -33,34 +33,15 @@ export async function POST(_request: NextRequest, { params }: Params) {
   try {
     const { id: roundId } = await params
 
-    const supabase = await createClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    const { data: profile } = (await supabase
-      .from('profiles')
-      .select('company_id, role')
-      .eq('id', user.id)
-      .single()) as unknown as { data: { company_id: string | null; role: string } | null }
-
-    if (!profile?.company_id) return NextResponse.json({ error: 'No workspace' }, { status: 403 })
-    if (profile.role !== 'admin') return NextResponse.json({ error: 'Admins only' }, { status: 403 })
+    const auth = await requireRoundAdmin(roundId)
+    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
+    const { userId, profile } = auth.value
 
     // Rate limit: 10 flow invite generations per admin per minute
-    const allowed = await checkRateLimit(`flow-invite:${user.id}`, 60, 10)
+    const allowed = await checkRateLimit(`flow-invite:${userId}`, 60, 10)
     if (!allowed) return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
 
     const admin = createAdminClient()
-
-    // Verify round belongs to this company
-    const { data: round } = await (admin as any)
-      .from('idea_rounds')
-      .select('id')
-      .eq('id', roundId)
-      .eq('company_id', profile.company_id)
-      .single()
-
-    if (!round) return NextResponse.json({ error: 'IdeaFlow not found' }, { status: 404 })
 
     // Generate a unique code (retry on collision — astronomically rare but safe)
     let code = generateCode()
@@ -78,7 +59,7 @@ export async function POST(_request: NextRequest, { params }: Params) {
       .from('invites')
       .insert({
         company_id:    profile.company_id,
-        created_by:    user.id,
+        created_by:    userId,
         invite_code:   code,
         role:          'member',      // workspace role if used as workspace invite
         idea_round_id: roundId,

@@ -13,6 +13,7 @@ import PageContainer     from '@/components/PageContainer'
 import FlowCard          from '@/components/FlowCard'
 import CreateFlowButton  from '@/components/CreateFlowButton'
 import { getEffectiveRoundStatus } from '@/lib/rounds/getEffectiveRoundStatus'
+import { isRoundAccessible } from '@/lib/auth/guards'
 import type { IdeaRoundWithStatus } from '@/types/database'
 
 export const dynamic = 'force-dynamic'
@@ -71,11 +72,12 @@ export default async function FlowsPage() {
 
   // Build enriched list, filtering for member access
   const flows: IdeaRoundWithStatus[] = allRounds
-    .filter((round: any) => {
-      if (isAdmin) return true
-      const assigned = memberSetMap[round.id] ?? []
-      return assigned.length === 0 || assigned.includes(user.id)
-    })
+    .filter((round: any) => isRoundAccessible({
+      userId: user.id,
+      isAdmin,
+      round: { id: round.id, audience_mode: round.audience_mode ?? null },
+      assignedUserIds: memberSetMap[round.id] ?? [],
+    }))
     .map((round: any): IdeaRoundWithStatus => ({
       ...round,
       effectiveStatus: getEffectiveRoundStatus({

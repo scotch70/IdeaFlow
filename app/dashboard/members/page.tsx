@@ -1,16 +1,11 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import TeamMembers from '@/components/TeamMembers'
 import PageContainer from '@/components/PageContainer'
+import MembersRelationshipList from '@/components/MembersRelationshipList'
+import { getWorkspaceMembersWithFlows } from '@/lib/members/getWorkspaceMembersWithFlows'
 
 export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Members — IdeaFlow' }
-
-type MemberResult = {
-  id: string
-  full_name: string | null
-  role: string
-}
 
 export default async function MembersPage() {
   const supabase = await createClient()
@@ -26,16 +21,16 @@ export default async function MembersPage() {
 
   if (!profile?.company_id) redirect('/dashboard')
 
-  const { data: members } = (await supabase
-    .from('profiles')
-    .select('id, full_name, role')
-    .eq('company_id', profile.company_id)
-    .order('created_at', { ascending: true })) as unknown as { data: MemberResult[] | null }
+  // Server-side join: members × IdeaFlows. Honours audience_mode + the legacy
+  // empty-round_members fallback. Closed and deleted flows are excluded.
+  const members = await getWorkspaceMembersWithFlows(profile.company_id)
 
-  const memberCount = members?.length ?? 0
+  const totalMembers   = members.length
+  const activeMembers  = members.filter(m => m.flows.length > 0).length
 
   return (
     <div>
+      {/* ── Sticky header ───────────────────────────────────────────────── */}
       <div
         style={{
           background: '#ffffff',
@@ -48,7 +43,10 @@ export default async function MembersPage() {
         <PageContainer style={{ paddingTop: '1.125rem', paddingBottom: '1.125rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
             <div>
-              <p style={{ fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#9ab0c8', marginBottom: '0.2rem' }}>
+              <p style={{
+                fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.16em',
+                textTransform: 'uppercase', color: '#9ab0c8', marginBottom: '0.2rem',
+              }}>
                 Team
               </p>
               <h1 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0d1f35', letterSpacing: '-0.02em' }}>
@@ -56,44 +54,26 @@ export default async function MembersPage() {
               </h1>
             </div>
             <p style={{ fontSize: '0.825rem', color: '#9ab0c8', fontWeight: 500 }}>
-              {memberCount} member{memberCount !== 1 ? 's' : ''}
+              {activeMembers} active · {totalMembers} total
             </p>
           </div>
         </PageContainer>
       </div>
-      <main>
-        <PageContainer style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
-          <div style={{ maxWidth: '40rem' }}>
-            {/* Card wrapper for member list */}
-            <div
-              style={{
-                background: '#ffffff',
-                borderRadius: '1.25rem',
-                border: '1px solid rgba(26,107,191,0.10)',
-                padding: '1.5rem',
-                boxShadow: '0 2px 12px rgba(6,14,38,0.05)',
-              }}
-            >
-              <div style={{ marginBottom: '1.25rem' }}>
-                <p style={{ fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#9ab0c8', marginBottom: '0.2rem' }}>
-                  Team members
-                </p>
-                <h2 style={{ fontSize: '1rem', fontWeight: 700, color: '#0d1f35' }}>
-                  People in your workspace
-                </h2>
-              </div>
-              <TeamMembers
-                members={members ?? []}
-                currentUserId={user.id}
-                currentUserRole={profile.role}
-              />
-            </div>
 
-            {/* Invite CTA for admins */}
+      <main>
+        <PageContainer style={{ paddingTop: '1.5rem', paddingBottom: '2rem' }}>
+          <div style={{ maxWidth: '44rem' }}>
+            <MembersRelationshipList
+              members={members}
+              currentUserId={user.id}
+              currentUserRole={profile.role}
+            />
+
+            {/* ── Invite CTA for admins ──────────────────────────────────── */}
             {profile.role === 'admin' && (
               <div
                 style={{
-                  marginTop: '1rem',
+                  marginTop: '1.25rem',
                   borderRadius: '1rem',
                   border: '1px solid rgba(249,115,22,0.18)',
                   background: 'rgba(249,115,22,0.04)',
@@ -110,7 +90,7 @@ export default async function MembersPage() {
                     Add team members
                   </p>
                   <p style={{ fontSize: '0.78rem', color: '#9ab0c8', lineHeight: 1.4 }}>
-                    Send an invite link to give someone access to the workspace.
+                    Members join the workspace through an IdeaFlow invite — start from any flow.
                   </p>
                 </div>
                 <a

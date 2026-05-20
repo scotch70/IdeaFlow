@@ -19,6 +19,7 @@ import type { FlowInvite } from '@/components/FlowAdminPanel'
 import FlowWorkspaceClient from '@/components/FlowWorkspaceClient'
 import type { AccessibleFlow } from '@/components/FlowWorkspaceClient'
 import { getEffectiveRoundStatus } from '@/lib/rounds/getEffectiveRoundStatus'
+import { isRoundAccessible } from '@/lib/auth/guards'
 import type { Database, Idea } from '@/types/database'
 import type { SlimProfile } from '@/types/database'
 import Link from 'next/link'
@@ -64,7 +65,7 @@ export default async function FlowDetailPage({
 
   if (roundError || !round) redirect('/dashboard/flows')
 
-  // ── Access check for non-admins ──────────────────────────────────────────
+  // ── Access check for non-admins (honours audience_mode + legacy fallback) ─
   if (!isAdmin) {
     const { data: members } = await (admin as any)
       .from('round_members')
@@ -72,9 +73,13 @@ export default async function FlowDetailPage({
       .eq('round_id', roundId)
 
     const memberList: { user_id: string }[] = members ?? []
-    if (memberList.length > 0 && !memberList.some(m => m.user_id === user.id)) {
-      redirect('/dashboard/flows')
-    }
+    const allowed = isRoundAccessible({
+      userId: user.id,
+      isAdmin: false,
+      round: { id: roundId, audience_mode: round.audience_mode ?? null },
+      assignedUserIds: memberList.map(m => m.user_id),
+    })
+    if (!allowed) redirect('/dashboard/flows')
   }
 
   // ── Effective status ─────────────────────────────────────────────────────
@@ -358,6 +363,12 @@ export default async function FlowDetailPage({
                   initialStartsAt={round.starts_at ?? null}
                   initialEndsAt={round.ends_at ?? null}
                   initialManualOverride={round.manual_override ?? null}
+                  initialAudienceMode={
+                    // Honour the explicit column when present; legacy rows
+                    // without audience_mode use the assignedUserIds fallback.
+                    (round.audience_mode as 'workspace' | 'restricted' | null)
+                      ?? (assignedUserIds.length > 0 ? 'restricted' : 'workspace')
+                  }
                   effectiveStatus={effectiveStatus}
                   companyMembers={companyMembers}
                   assignedUserIds={assignedUserIds}

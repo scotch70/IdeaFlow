@@ -1,56 +1,32 @@
 /**
  * GET    /api/rounds/[id]/members   — list members assigned to this round
- * POST   /api/rounds/[id]/members   — assign a member  { userId }
+ * POST   /api/rounds/[id]/members   — assign a member  { userId, role? }
  * DELETE /api/rounds/[id]/members   — remove a member  { userId }
  *
  * Admin only.
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient }      from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { requireRoundAdmin } from '@/lib/auth/guards'
+import type { FlowRole } from '@/types/database'
 
 type Params = { params: Promise<{ id: string }> }
 
-async function authorize(supabase: Awaited<ReturnType<typeof createClient>>, roundId: string) {
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
-  if (authError || !user) return { error: 'Unauthorized', status: 401, user: null, profile: null }
-
-  const { data: profile } = (await supabase
-    .from('profiles')
-    .select('company_id, role')
-    .eq('id', user.id)
-    .single()) as unknown as { data: { company_id: string | null; role: string } | null }
-
-  if (!profile?.company_id) return { error: 'No workspace', status: 403, user: null, profile: null }
-  if (profile.role !== 'admin') return { error: 'Admins only', status: 403, user: null, profile: null }
-
-  const admin = createAdminClient()
-  const { data: round } = await (admin as any)
-    .from('idea_rounds')
-    .select('id, company_id')
-    .eq('id', roundId)
-    .eq('company_id', profile.company_id)
-    .single()
-
-  if (!round) return { error: 'Round not found', status: 404, user: null, profile: null }
-
-  return { error: null, status: 200, user, profile }
-}
+const VALID_ROLES: FlowRole[] = ['owner', 'admin', 'member', 'viewer']
 
 // ── GET ────────────────────────────────────────────────────────────────────────
 
 export async function GET(_request: NextRequest, { params }: Params) {
   try {
     const { id } = await params
-    const supabase = await createClient()
-    const auth = await authorize(supabase, id)
-    if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status })
+    const auth = await requireRoundAdmin(id)
+    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
     const admin = createAdminClient()
     const { data: rows, error } = await (admin as any)
       .from('round_members')
-      .select('id, user_id, added_by, created_at, profiles(full_name, role)')
+      .select('id, user_id, added_by, created_at, role, last_active_at, profiles(full_name, role)')
       .eq('round_id', id)
       .order('created_at', { ascending: true })
 
@@ -68,25 +44,28 @@ export async function GET(_request: NextRequest, { params }: Params) {
 export async function POST(request: NextRequest, { params }: Params) {
   try {
     const { id } = await params
-    const supabase = await createClient()
-    const auth = await authorize(supabase, id)
-    if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status })
+    const auth = await requireRoundAdmin(id)
+    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
-    const { userId } = (await request.json()) as { userId: unknown }
-    if (typeof userId !== 'string' || !userId) {
+    const body = (await request.json()) as { userId?: unknown; role?: unknown }
+    if (typeof body.userId !== 'string' || !body.userId) {
       return NextResponse.json({ error: 'userId is required' }, { status: 400 })
     }
 
+    const role: FlowRole = (typeof body.role === 'string' && VALID_ROLES.includes(body.role as FlowRole))
+      ? (body.role as FlowRole)
+      : 'member'
+
     const admin = createAdminClient()
 
-    // Verify the target user is in the same company
+    // Verify the target user is in the same workspace
     const { data: targetProfile } = await (admin as any)
       .from('profiles')
       .select('company_id')
-      .eq('id', userId)
-      .single()
+      .eq('id', body.userId)
+      .single() as { data: { company_id: string | null } | null }
 
-    if (!targetProfile || targetProfile.company_id !== auth.profile!.company_id) {
+    if (!targetProfile || targetProfile.company_id !== auth.value.profile.company_id) {
       return NextResponse.json({ error: 'User not in this workspace' }, { status: 403 })
     }
 
@@ -94,11 +73,13 @@ export async function POST(request: NextRequest, { params }: Params) {
       .from('round_members')
       .insert({
         round_id:   id,
-        user_id:    userId,
-        company_id: auth.profile!.company_id,
-        added_by:   auth.user!.id,
+        user_id:    body.userId,
+        company_id: auth.value.profile.company_id,
+        added_by:   auth.value.userId,
+        invited_by: auth.value.userId,
+        role,
       })
-      .select('id, user_id, added_by, created_at')
+      .select('id, user_id, added_by, created_at, role')
       .single()
 
     if (insertError) {
@@ -120,12 +101,11 @@ export async function POST(request: NextRequest, { params }: Params) {
 export async function DELETE(request: NextRequest, { params }: Params) {
   try {
     const { id } = await params
-    const supabase = await createClient()
-    const auth = await authorize(supabase, id)
-    if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status })
+    const auth = await requireRoundAdmin(id)
+    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
-    const { userId } = (await request.json()) as { userId: unknown }
-    if (typeof userId !== 'string' || !userId) {
+    const body = (await request.json()) as { userId?: unknown }
+    if (typeof body.userId !== 'string' || !body.userId) {
       return NextResponse.json({ error: 'userId is required' }, { status: 400 })
     }
 
@@ -135,7 +115,7 @@ export async function DELETE(request: NextRequest, { params }: Params) {
       .from('round_members')
       .delete()
       .eq('round_id', id)
-      .eq('user_id', userId)
+      .eq('user_id', body.userId)
 
     if (delError) {
       console.error('[DELETE /api/rounds/[id]/members]', delError)

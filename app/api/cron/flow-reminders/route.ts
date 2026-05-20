@@ -71,21 +71,26 @@ async function getRecipients(
   supabase:  ReturnType<typeof createAdminClient>,
   roundId:   string,
   companyId: string,
+  audienceMode: 'workspace' | 'restricted' | null,
   emailMap:  Map<string, string>,  // userId → email
 ): Promise<Recipient[]> {
-  // Check if this flow has explicitly assigned members
+  // Resolve the recipient set based on audience_mode, falling back to the
+  // legacy "empty round_members = workspace" convention so this cron stays
+  // correct on rows that pre-date the migration.
   const { data: members } = await (supabase as any)
     .from('round_members')
     .select('user_id')
     .eq('round_id', roundId)
 
+  const assigned: string[] = (members ?? []).map((m: { user_id: string }) => m.user_id)
   let userIds: string[]
 
-  if (members && members.length > 0) {
-    // Flow-scoped: only the assigned members
-    userIds = members.map((m: { user_id: string }) => m.user_id)
+  const effectiveMode = audienceMode
+    ?? (assigned.length > 0 ? 'restricted' : 'workspace')
+
+  if (effectiveMode === 'restricted') {
+    userIds = assigned
   } else {
-    // Company-wide: everyone in the company
     const { data: profiles } = await (supabase as any)
       .from('profiles')
       .select('id')
@@ -155,7 +160,7 @@ export async function GET(request: NextRequest) {
   // check below handles manual_override and date-window logic.
   const { data: candidates, error: fetchError } = await (supabase as any)
     .from('idea_rounds')
-    .select('id, company_id, name, status, manual_override, starts_at, ends_at')
+    .select('id, company_id, name, status, manual_override, starts_at, ends_at, audience_mode')
     .not('ends_at', 'is', null)
     .neq('status', 'closed')
 
@@ -222,7 +227,13 @@ export async function GET(request: NextRequest) {
       // Get recipients
       let recipients: Recipient[] = []
       try {
-        recipients = await getRecipients(supabase, round.id, round.company_id, emailMap)
+        recipients = await getRecipients(
+          supabase,
+          round.id,
+          round.company_id,
+          (round as { audience_mode?: 'workspace' | 'restricted' | null }).audience_mode ?? null,
+          emailMap,
+        )
       } catch (err) {
         console.error(`[flow-reminders] Failed to resolve recipients for ${round.id}:`, err)
         results.push({
