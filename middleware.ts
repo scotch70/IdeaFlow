@@ -36,7 +36,15 @@ export async function middleware(request: NextRequest) {
   const isAuthPage  = path.startsWith('/auth') && path !== '/auth/callback'
 
   if (!user && isDashboard) {
-    return NextResponse.redirect(new URL('/auth', request.url))
+    // Preserve the user's intended destination so AuthForm can send them back
+    // there after a successful sign-in. Land directly on the login view
+    // (mode=login) rather than the choose-path screen.
+    const loginUrl = new URL('/auth', request.url)
+    loginUrl.searchParams.set('mode', 'login')
+    const dest = request.nextUrl.pathname + (request.nextUrl.search || '')
+    if (dest && dest !== '/dashboard') loginUrl.searchParams.set('next', dest)
+    else                                loginUrl.searchParams.set('next', '/dashboard')
+    return NextResponse.redirect(loginUrl)
   }
 
   if (user && isAuthPage) {

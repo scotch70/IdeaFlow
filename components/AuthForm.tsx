@@ -25,10 +25,23 @@ export default function AuthForm() {
   )
 }
 
+/**
+ * Only accept root-relative internal paths so the `?next=` param can't be
+ * weaponised into an open redirect to an external origin.
+ */
+function safeInternalPath(raw: string | null | undefined): string {
+  if (!raw) return '/dashboard'
+  // Must start with a single slash, must NOT start with `//` (protocol-relative)
+  // and must NOT contain a scheme. Reject anything else.
+  if (!raw.startsWith('/') || raw.startsWith('//')) return '/dashboard'
+  if (/^\/[a-z][a-z0-9+.-]*:/i.test(raw)) return '/dashboard'
+  return raw
+}
+
 function AuthFormInner() {
   const router = useRouter()
   const params = useSearchParams()
-  const nextUrl = params.get('next') || '/dashboard'
+  const nextUrl = safeInternalPath(params.get('next'))
   const supabase = createClient()
 
   const ERROR_PARAM_MESSAGES: Record<string, string> = {
@@ -87,6 +100,7 @@ function AuthFormInner() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (loading) return
     setError('')
     setLoading(true)
     try {
@@ -104,19 +118,35 @@ function AuthFormInner() {
         })
         if (signUpError) throw signUpError
         if (!signUpData.session) {
+          // Email confirmation required — show the inbox prompt and stop.
           setConfirmEmail(email)
           setShowConfirm(true)
+          setLoading(false)
           return
         }
       } else {
-        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
+        const { data: signInData, error: signInError } =
+          await supabase.auth.signInWithPassword({ email, password })
         if (signInError) throw signInError
+        // Defensive: signInWithPassword should always return a session on success,
+        // but if it doesn't (e.g. unexpected provider state) we should not silently
+        // claim success and redirect.
+        if (!signInData?.session) {
+          throw new Error('Sign-in did not return a session. Please try again.')
+        }
       }
-      router.push(nextUrl)
-      router.refresh()
+      // ── Critical: full document navigation, NOT router.push ──────────────────
+      // signInWithPassword on @supabase/ssr writes the session into document.cookie
+      // (chunked across multiple cookies). A soft router.push fires the next RSC
+      // fetch before those cookie writes are reliably committed, which causes the
+      // server to see no session and the middleware to bounce the user back to
+      // /auth — the exact redirect loop we are fixing.
+      //
+      // window.location.assign forces a real document navigation, which flushes
+      // pending cookies before the server receives the request.
+      window.location.assign(nextUrl)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Something went wrong')
-    } finally {
       setLoading(false)
     }
   }
