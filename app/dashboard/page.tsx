@@ -10,6 +10,7 @@ import PageContainer from '@/components/PageContainer'
 import IdeaRoundBanner from '@/components/IdeaRoundBanner'
 import RoundGateCard from '@/components/RoundGateCard'
 import FlowTemplates from '@/components/FlowTemplates'
+import AnalyticsSummaryLink from '@/components/AnalyticsSummaryLink'
 import { getEffectiveRoundStatus } from '@/lib/rounds/getEffectiveRoundStatus'
 
 type ProfileResult = Pick<
@@ -390,19 +391,7 @@ export default async function DashboardPage() {
             <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748b' }}>
               Analytics overview
             </span>
-            <a
-              href="/dashboard/analytics"
-              onClick={e => e.stopPropagation()}
-              style={{
-                marginLeft: 'auto',
-                fontSize: '0.75rem',
-                fontWeight: 500,
-                color: '#1a6bbf',
-                textDecoration: 'none',
-              }}
-            >
-              Full analytics →
-            </a>
+            <AnalyticsSummaryLink />
           </summary>
 
           <div style={{ paddingBottom: '2rem' }}>
