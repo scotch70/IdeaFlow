@@ -44,10 +44,11 @@ export async function GET(_request: NextRequest, { params }: Params) {
     })
     if (!allowed) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
-    // Fetch assigned members (for admin view)
+    // Fetch assigned members (for admin view). select('*') keeps this
+    // working before the members-redesign migration adds role/last_active_at.
     const { data: memberRows } = await (admin as any)
       .from('round_members')
-      .select('user_id, added_by, created_at, role, last_active_at, profiles(full_name)')
+      .select('*, profiles(full_name)')
       .eq('round_id', id)
 
     const effectiveStatus = getEffectiveRoundStatus({

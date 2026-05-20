@@ -23,25 +23,29 @@ import type {
   WorkspaceMemberWithFlows,
 } from '@/types/database'
 
+// Every "members-redesign" column is marked optional in these row types so
+// the helper keeps working before the migration has been applied — at which
+// point those columns simply come back as undefined / null and the legacy
+// "empty round_members = workspace" fallback below kicks in.
 type RoundRow = {
   id: string
   name: string | null
   status: 'draft' | 'active' | 'closed' | null
-  audience_mode: AudienceMode | null
+  audience_mode?: AudienceMode | null
 }
 
 type RoundMemberRow = {
   round_id: string
   user_id: string
   created_at: string | null
-  role: FlowRole | null
+  role?: FlowRole | null
 }
 
 type ProfileRow = {
   id: string
   full_name: string | null
   role: string
-  last_active_at: string | null
+  last_active_at?: string | null
 }
 
 export async function getWorkspaceMembersWithFlows(
@@ -49,10 +53,15 @@ export async function getWorkspaceMembersWithFlows(
 ): Promise<WorkspaceMemberWithFlows[]> {
   const admin = createAdminClient()
 
+  // All three queries use select('*') so they survive a pre-migration DB
+  // that doesn't yet have the new members-redesign columns. PostgREST simply
+  // returns whatever exists; the row types above mark the new columns as
+  // optional so TypeScript stays happy.
+
   // ── 1. All profiles in the workspace ────────────────────────────────────
   const { data: profileRows } = await (admin as any)
     .from('profiles')
-    .select('id, full_name, role, last_active_at')
+    .select('*')
     .eq('company_id', companyId)
     .order('full_name', { ascending: true }) as { data: ProfileRow[] | null }
 
@@ -62,18 +71,17 @@ export async function getWorkspaceMembersWithFlows(
   // ── 2. Every round in the workspace (we filter closed below) ────────────
   const { data: roundRows } = await (admin as any)
     .from('idea_rounds')
-    .select('id, name, status, audience_mode')
+    .select('*')
     .eq('company_id', companyId) as { data: RoundRow[] | null }
 
   const rounds: RoundRow[] = (roundRows ?? []).filter(r => r.status !== 'closed')
-  const roundById = new Map(rounds.map(r => [r.id, r]))
 
   // ── 3. All round_members rows scoped to the visible rounds ──────────────
   let memberRows: RoundMemberRow[] = []
   if (rounds.length > 0) {
     const { data } = await (admin as any)
       .from('round_members')
-      .select('round_id, user_id, created_at, role')
+      .select('*')
       .in('round_id', rounds.map(r => r.id)) as { data: RoundMemberRow[] | null }
     memberRows = data ?? []
   }
@@ -138,7 +146,7 @@ export async function getWorkspaceMembersWithFlows(
       id:            profile.id,
       fullName:      profile.full_name,
       workspaceRole: profile.role,
-      lastActiveAt:  profile.last_active_at,
+      lastActiveAt:  profile.last_active_at ?? null,
       flows,
     }
   })

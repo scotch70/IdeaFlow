@@ -177,18 +177,20 @@ export async function POST(request: NextRequest) {
     }
     // ─────────────────────────────────────────────────────────────────────────
 
+    // Pre-migration safety: do NOT include the new members-redesign columns
+    // (audience_mode, owner_id) in the insert. Their DB defaults handle
+    // them once the migration is applied; omitting them lets the insert
+    // succeed against a database that doesn't yet have those columns.
     const { data: round, error: insertError } = await (admin as any)
       .from('idea_rounds')
       .insert({
-        company_id:    profile.company_id,
+        company_id: profile.company_id,
         name,
         prompt,
         status,
-        created_by:    user.id,
-        owner_id:      user.id,
-        starts_at:     toDate(body.starts_at),
-        ends_at:       toDate(body.ends_at),
-        audience_mode: 'workspace',   // safe default; admin can restrict later
+        created_by: user.id,
+        starts_at:  toDate(body.starts_at),
+        ends_at:    toDate(body.ends_at),
       })
       .select('*')
       .single()

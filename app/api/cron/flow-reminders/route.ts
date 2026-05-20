@@ -158,9 +158,11 @@ export async function GET(request: NextRequest) {
   // ── Fetch active-or-pending flows with an ends_at ─────────────────────────
   // We pull all flows that are not yet forcibly closed. The effective-status
   // check below handles manual_override and date-window logic.
+  // select('*') so the cron survives even before the members-redesign
+  // migration has added audience_mode.
   const { data: candidates, error: fetchError } = await (supabase as any)
     .from('idea_rounds')
-    .select('id, company_id, name, status, manual_override, starts_at, ends_at, audience_mode')
+    .select('*')
     .not('ends_at', 'is', null)
     .neq('status', 'closed')
 

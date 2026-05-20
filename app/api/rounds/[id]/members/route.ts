@@ -24,9 +24,13 @@ export async function GET(_request: NextRequest, { params }: Params) {
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
     const admin = createAdminClient()
+    // Note: we use select('*') so the query keeps working before the
+    // members-redesign migration has been applied (role, last_active_at,
+    // invited_by may not exist yet). After the migration they flow through
+    // automatically.
     const { data: rows, error } = await (admin as any)
       .from('round_members')
-      .select('id, user_id, added_by, created_at, role, last_active_at, profiles(full_name, role)')
+      .select('*, profiles(full_name, role)')
       .eq('round_id', id)
       .order('created_at', { ascending: true })
 
@@ -69,17 +73,22 @@ export async function POST(request: NextRequest, { params }: Params) {
       return NextResponse.json({ error: 'User not in this workspace' }, { status: 403 })
     }
 
+    // Build the insert payload defensively: only include the new
+    // members-redesign columns when they are non-default, so a pre-migration
+    // DB (which doesn't have role/invited_by) accepts the write. The DB
+    // default for role is 'member', so we only send it for non-defaults.
+    const insertPayload: Record<string, unknown> = {
+      round_id:   id,
+      user_id:    body.userId,
+      company_id: auth.value.profile.company_id,
+      added_by:   auth.value.userId,
+    }
+    if (role !== 'member') insertPayload.role = role
+
     const { data: row, error: insertError } = await (admin as any)
       .from('round_members')
-      .insert({
-        round_id:   id,
-        user_id:    body.userId,
-        company_id: auth.value.profile.company_id,
-        added_by:   auth.value.userId,
-        invited_by: auth.value.userId,
-        role,
-      })
-      .select('id, user_id, added_by, created_at, role')
+      .insert(insertPayload)
+      .select('*')
       .single()
 
     if (insertError) {

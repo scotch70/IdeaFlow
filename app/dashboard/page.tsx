@@ -106,16 +106,19 @@ export default async function DashboardPage() {
   //   1. The most recently created round that is *effectively* active
   //      (manual_override / schedule applied)
   //   2. Fall back to the most recently created round of any status
+  // Use select('*') so missing post-migration columns (audience_mode etc.)
+  // don't cause PostgREST to error out, which would null the entire result
+  // and incorrectly trip the empty-state launcher.
   const { data: allRoundsForDash } = await (adminClient as any)
     .from('idea_rounds')
-    .select('id, name, status, prompt, manual_override, starts_at, ends_at, audience_mode')
+    .select('*')
     .eq('company_id', profile.company_id)
     .order('created_at', { ascending: false }) as {
     data: Array<{
       id: string; name: string | null; status: string | null;
       prompt: string | null; manual_override: string | null;
       starts_at: string | null; ends_at: string | null;
-      audience_mode: 'workspace' | 'restricted' | null;
+      audience_mode?: 'workspace' | 'restricted' | null;
     }> | null
   }
 
