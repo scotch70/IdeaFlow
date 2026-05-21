@@ -177,23 +177,39 @@ export async function POST(request: NextRequest) {
     }
     // ─────────────────────────────────────────────────────────────────────────
 
-    // Pre-migration safety: do NOT include the new members-redesign columns
-    // (audience_mode, owner_id) in the insert. Their DB defaults handle
-    // them once the migration is applied; omitting them lets the insert
-    // succeed against a database that doesn't yet have those columns.
-    const { data: round, error: insertError } = await (admin as any)
+    // Product rule: every new IdeaFlow is restricted by default. Admins
+    // explicitly add members afterwards.
+    //
+    // Pre-migration safety: the audience_mode column may not exist yet, so
+    // first attempt the insert with it; if Postgres rejects on the column,
+    // retry without it (the column default will apply once the migration
+    // is run). owner_id is treated the same way.
+    const basePayload: Record<string, unknown> = {
+      company_id: profile.company_id,
+      name,
+      prompt,
+      status,
+      created_by: user.id,
+      starts_at:  toDate(body.starts_at),
+      ends_at:    toDate(body.ends_at),
+    }
+
+    let { data: round, error: insertError } = await (admin as any)
       .from('idea_rounds')
-      .insert({
-        company_id: profile.company_id,
-        name,
-        prompt,
-        status,
-        created_by: user.id,
-        starts_at:  toDate(body.starts_at),
-        ends_at:    toDate(body.ends_at),
-      })
+      .insert({ ...basePayload, audience_mode: 'restricted', owner_id: user.id })
       .select('*')
       .single()
+
+    if (insertError && /audience_mode|owner_id/i.test(insertError.message ?? '')) {
+      // Pre-migration DB: retry without the new columns.
+      const retry = await (admin as any)
+        .from('idea_rounds')
+        .insert(basePayload)
+        .select('*')
+        .single()
+      round = retry.data
+      insertError = retry.error
+    }
 
     if (insertError) {
       console.error('[POST /api/rounds] insert:', insertError)

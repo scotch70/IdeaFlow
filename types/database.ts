@@ -388,6 +388,12 @@ export type SlimProfile = {
 export type Idea = Database['public']['Tables']['ideas']['Row'] & {
   profiles?: { full_name: string | null }
   liked_by_user?: boolean
+  /**
+   * Number of comments on this idea. Populated by the IdeaList sort feature
+   * (server attaches it via the PostgREST `comments(count)` aggregate).
+   * Optional because some legacy call sites don't yet hydrate it.
+   */
+  comments_count?: number
 }
 
 export type Invite = Database['public']['Tables']['invites']['Row']

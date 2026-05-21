@@ -14,6 +14,22 @@ const FILTERS: { key: FilterKey; label: string }[] = [
   { key: 'planned', label: 'Planned' },
 ]
 
+type SortKey = 'most-liked' | 'latest' | 'oldest' | 'most-comments'
+
+const SORTS: { key: SortKey; label: string }[] = [
+  { key: 'most-liked',    label: 'Most likes'    },
+  { key: 'latest',        label: 'Latest'        },
+  { key: 'oldest',        label: 'Oldest'        },
+  { key: 'most-comments', label: 'Most comments' },
+]
+
+const SORT_DESCRIPTIONS: Record<SortKey, string> = {
+  'most-liked':    'most liked',
+  'latest':        'newest first',
+  'oldest':        'oldest first',
+  'most-comments': 'most commented',
+}
+
 interface IdeaListProps {
   ideas: Idea[]
   currentUserId: string
@@ -29,6 +45,7 @@ export default function IdeaList({
 }: IdeaListProps) {
   const router       = useRouter()
   const [activeFilter, setActiveFilter] = useState<FilterKey>('all')
+  const [activeSort,   setActiveSort]   = useState<SortKey>('most-liked')
 
   /**
    * Local copy of ideas so like-count updates are instant and don't depend on
@@ -97,6 +114,30 @@ export default function IdeaList({
     ? localIdeas
     : localIdeas.filter(idea => (idea.status ?? 'open') === activeFilter)
 
+  /**
+   * Apply the current sort to a *copy* so the prop reference isn't mutated
+   * (would break the realtime sync useEffect's reference comparison).
+   *
+   * 'most-comments' falls back to 0 when the parent hasn't hydrated
+   * comments_count (e.g. older call sites that haven't been updated to
+   * select comments(count) yet) — sort is stable in that case.
+   */
+  const sorted = (() => {
+    const list = [...filtered]
+    switch (activeSort) {
+      case 'most-liked':
+        return list.sort((a, b) => (b.likes_count ?? 0) - (a.likes_count ?? 0)
+                              || new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      case 'latest':
+        return list.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      case 'oldest':
+        return list.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+      case 'most-comments':
+        return list.sort((a, b) => (b.comments_count ?? 0) - (a.comments_count ?? 0)
+                              || (b.likes_count ?? 0) - (a.likes_count ?? 0))
+    }
+  })()
+
   // Only show tabs that have at least one idea (plus All), to avoid clutter
   const countsPerFilter = FILTERS.reduce<Record<FilterKey, number>>((acc, f) => {
     acc[f.key] = f.key === 'all'
@@ -113,13 +154,54 @@ export default function IdeaList({
     <div className="space-y-3">
       {/* Header + filter tabs */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', flexWrap: 'wrap' }}>
           <h2 style={{ fontSize: '0.775rem', fontWeight: 500, color: 'var(--ink-light)', margin: 0, letterSpacing: '-0.01em' }}>
-            {localIdeas.length === 1 ? '1 idea' : `${localIdeas.length} ideas`} · sorted by most liked
+            {localIdeas.length === 1 ? '1 idea' : `${localIdeas.length} ideas`} · {SORT_DESCRIPTIONS[activeSort]}
           </h2>
-          <span style={{ fontSize: '0.72rem', color: '#b8c0ce', fontVariantNumeric: 'tabular-nums' }}>
-            {filtered.length}{activeFilter !== 'all' ? ` / ${localIdeas.length}` : ''} total
-          </span>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            {localIdeas.length > 1 && (
+              <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                <span style={{ fontSize: '0.7rem', color: '#9ab0c8', fontWeight: 500 }}>Sort</span>
+                <div style={{ position: 'relative', display: 'inline-flex' }}>
+                  <select
+                    aria-label="Sort ideas"
+                    value={activeSort}
+                    onChange={e => setActiveSort(e.target.value as SortKey)}
+                    style={{
+                      appearance: 'none',
+                      WebkitAppearance: 'none',
+                      background: '#ffffff',
+                      border: '1px solid rgba(0,0,0,0.08)',
+                      borderRadius: '0.375rem',
+                      padding: '0.22rem 1.4rem 0.22rem 0.55rem',
+                      fontSize: '0.72rem',
+                      fontWeight: 600,
+                      color: '#0d1f35',
+                      cursor: 'pointer',
+                      lineHeight: 1.4,
+                    }}
+                  >
+                    {SORTS.map(s => (
+                      <option key={s.key} value={s.key}>{s.label}</option>
+                    ))}
+                  </select>
+                  <span aria-hidden style={{
+                    position: 'absolute',
+                    right: '0.4rem',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    color: '#94a3b8',
+                    fontSize: '0.55rem',
+                    pointerEvents: 'none',
+                  }}>▾</span>
+                </div>
+              </label>
+            )}
+            <span style={{ fontSize: '0.72rem', color: '#b8c0ce', fontVariantNumeric: 'tabular-nums' }}>
+              {filtered.length}{activeFilter !== 'all' ? ` / ${localIdeas.length}` : ''} total
+            </span>
+          </div>
         </div>
 
         {/* Filter tabs — only rendered when there are ideas */}
@@ -177,7 +259,7 @@ export default function IdeaList({
             Be the first to post. The best teams build on each other&apos;s thinking.
           </p>
         </div>
-      ) : filtered.length === 0 ? (
+      ) : sorted.length === 0 ? (
         <div style={{
           border: '1.5px dashed rgba(26,107,191,0.15)',
           borderRadius: '0.75rem',
@@ -190,7 +272,7 @@ export default function IdeaList({
           </p>
         </div>
       ) : (
-        filtered.map(idea => (
+        sorted.map(idea => (
           <IdeaCard
             key={idea.id}
             idea={idea}

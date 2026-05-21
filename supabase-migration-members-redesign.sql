@@ -12,11 +12,12 @@
 --                round_members rows, if any, are advisory (e.g. role pins).
 --   restricted → only users listed in round_members can access the flow.
 --
--- Default 'workspace' is safe because the data backfill below promotes any
--- round that already has round_members rows to 'restricted'.
+-- Product decision: every IdeaFlow is restricted by default. Admins
+-- explicitly add or invite members per flow. The default applies to
+-- *new* rounds; existing rounds are promoted to 'restricted' in §6 below.
 
 alter table public.idea_rounds
-  add column if not exists audience_mode text not null default 'workspace';
+  add column if not exists audience_mode text not null default 'restricted';
 
 -- Replace any prior check constraint to avoid conflicts on re-run.
 alter table public.idea_rounds drop constraint if exists idea_rounds_audience_mode_values;
@@ -60,12 +61,13 @@ create index if not exists idx_round_members_user_id on public.round_members (us
 
 
 -- ── 6. Data backfill ────────────────────────────────────────────────────────
--- 6a. Translate the legacy "empty/non-empty" convention into audience_mode.
---     Any round that already has ≥1 round_members row is restricted today.
-update public.idea_rounds r
+-- 6a. Every IdeaFlow becomes restricted on migration.
+--     Admins are unaffected (the access guard always grants admins access).
+--     Members who were previously implicit participants will need to be
+--     explicitly added by an admin from the flow's admin panel.
+update public.idea_rounds
    set audience_mode = 'restricted'
- where audience_mode = 'workspace'
-   and exists (select 1 from public.round_members rm where rm.round_id = r.id);
+ where audience_mode is distinct from 'restricted';
 
 -- 6b. Best-effort backfill of profiles.last_active_at from ideas/comments/likes.
 --     We do not include views or impressions because we do not track them.

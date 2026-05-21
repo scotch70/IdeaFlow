@@ -91,17 +91,24 @@ export default async function FlowDetailPage({
   })
 
   // ── Ideas ─────────────────────────────────────────────────────────────────
-  let ideas: IdeaJoinResult[] = []
+  // comments(count) attaches a comment-count aggregate to each idea so the
+  // client-side sort in IdeaList ("Most comments") works without a round trip.
+  let ideas: (IdeaJoinResult & { comments_count?: number })[] = []
   if (effectiveStatus === 'active') {
     const { data: roundIdeas } = await (supabase as any)
       .from('ideas')
-      .select('*, profiles(full_name)')
+      .select('*, profiles(full_name), comments(count)')
       .eq('company_id', profile.company_id)
       .eq('idea_round_id', roundId)
       .order('likes_count', { ascending: false })
-      .order('created_at', { ascending: false })
+      .order('created_at', { ascending: false }) as {
+      data: (IdeaJoinResult & { comments?: { count: number }[] })[] | null
+    }
 
-    ideas = roundIdeas ?? []
+    ideas = (roundIdeas ?? []).map(i => ({
+      ...i,
+      comments_count: i.comments?.[0]?.count ?? 0,
+    }))
   }
 
   // ── Likes ─────────────────────────────────────────────────────────────────
@@ -364,10 +371,10 @@ export default async function FlowDetailPage({
                   initialEndsAt={round.ends_at ?? null}
                   initialManualOverride={round.manual_override ?? null}
                   initialAudienceMode={
-                    // Honour the explicit column when present; legacy rows
-                    // without audience_mode use the assignedUserIds fallback.
-                    (round.audience_mode as 'workspace' | 'restricted' | null)
-                      ?? (assignedUserIds.length > 0 ? 'restricted' : 'workspace')
+                    // Honour the explicit column when present. When it isn't
+                    // (pre-migration DB), default to 'restricted' to match the
+                    // product rule that every IdeaFlow is restricted by default.
+                    (round.audience_mode as 'workspace' | 'restricted' | null) ?? 'restricted'
                   }
                   effectiveStatus={effectiveStatus}
                   companyMembers={companyMembers}

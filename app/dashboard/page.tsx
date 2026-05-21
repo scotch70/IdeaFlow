@@ -203,16 +203,21 @@ export default async function DashboardPage() {
   // No active round → empty list. Never show legacy/unscoped ideas.
   let ideas: IdeaJoinResult[] = []
   if (effectiveStatus === 'active' && currentRoundId) {
+    // Attach comments(count) via PostgREST aggregate so the IdeaList sort
+    // by "Most comments" can be done client-side without an extra round trip.
     const { data: roundIdeas } = (await (supabase as any)
       .from('ideas')
-      .select('*, profiles(full_name)')
+      .select('*, profiles(full_name), comments(count)')
       .eq('company_id', profile.company_id)
       .eq('idea_round_id', currentRoundId)
       .order('likes_count', { ascending: false })
       .order('created_at', { ascending: false })) as unknown as {
-      data: IdeaJoinResult[] | null
+      data: (IdeaJoinResult & { comments?: { count: number }[] })[] | null
     }
-    ideas = roundIdeas ?? []
+    ideas = (roundIdeas ?? []).map(i => ({
+      ...i,
+      comments_count: i.comments?.[0]?.count ?? 0,
+    }))
   }
 
   // Only fetch likes when there are ideas to decorate.

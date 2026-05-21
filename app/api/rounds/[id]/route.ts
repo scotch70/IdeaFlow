@@ -81,13 +81,17 @@ export async function PATCH(request: NextRequest, { params }: Params) {
 
     const admin = createAdminClient()
 
-    // Verify round belongs to this company
+    // Verify round belongs to this company.
+    // select('*') so the query keeps working before the members-redesign
+    // migration adds audience_mode — selecting it explicitly used to make
+    // PostgREST 404 the whole row and surface as 'Not found' in the
+    // audience-switch UI.
     const { data: existing } = await (admin as any)
       .from('idea_rounds')
-      .select('id, status, audience_mode')
+      .select('*')
       .eq('id', id)
       .eq('company_id', profile.company_id)
-      .single() as { data: { id: string; status: string | null; audience_mode: 'workspace' | 'restricted' | null } | null }
+      .single() as { data: { id: string; status: string | null; audience_mode?: 'workspace' | 'restricted' | null } | null }
 
     if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
