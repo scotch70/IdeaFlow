@@ -250,9 +250,33 @@ export default function IdeaCard({ idea, currentUserId, isAdmin, onLikeChange }:
           <>
             {/* Title row */}
             <div className="idea-card-title-row">
-              <p style={{ flex: 1, fontSize: '0.875rem', fontWeight: 600, lineHeight: 1.45, color: 'var(--ink)' }}>
-                {idea.title}
-              </p>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                {idea.flow_name && (
+                  <span style={{
+                    display: 'inline-block',
+                    fontSize: '0.62rem',
+                    fontWeight: 700,
+                    letterSpacing: '0.06em',
+                    textTransform: 'uppercase',
+                    color: '#1a6bbf',
+                    background: 'rgba(26,107,191,0.07)',
+                    border: '1px solid rgba(26,107,191,0.14)',
+                    padding: '0.1rem 0.45rem',
+                    borderRadius: '999px',
+                    marginBottom: '0.25rem',
+                    maxWidth: '100%',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    verticalAlign: 'middle',
+                  }}>
+                    {idea.flow_name}
+                  </span>
+                )}
+                <p style={{ fontSize: '0.875rem', fontWeight: 600, lineHeight: 1.45, color: 'var(--ink)' }}>
+                  {idea.title}
+                </p>
+              </div>
 
               {/* Status badge + admin inline actions */}
               <div className="idea-card-actions">

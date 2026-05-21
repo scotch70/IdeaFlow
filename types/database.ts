@@ -394,6 +394,13 @@ export type Idea = Database['public']['Tables']['ideas']['Row'] & {
    * Optional because some legacy call sites don't yet hydrate it.
    */
   comments_count?: number
+  /**
+   * Name of the IdeaFlow this idea belongs to. Populated by the cross-flow
+   * Ideas overview so cards rendered in "All" mode can show a flow chip.
+   * Optional because per-flow views don't need it (they already scope to
+   * one flow visually).
+   */
+  flow_name?: string
 }
 
 export type Invite = Database['public']['Tables']['invites']['Row']

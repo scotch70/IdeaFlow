@@ -1,27 +1,53 @@
+/**
+ * /dashboard/ideas — cross-flow ideas overview.
+ *
+ * Default scope: every IdeaFlow the user can access ("All IdeaFlows").
+ * Optional scope: a single flow via ?flow=<id>.
+ *
+ * Each idea carries its flow's name so cards rendered in "All" mode can show
+ * a small flow chip — the user can tell at a glance which IdeaFlow an idea
+ * came from. The IdeaList sort dropdown (Most liked / Newest / Oldest /
+ * Most comments) is reused unchanged.
+ *
+ * Access rules:
+ *   - admins see every flow in the workspace.
+ *   - members see only the flows they're in via round_members (handled by
+ *     isRoundAccessible, which also covers the pre-migration legacy fallback).
+ */
+
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import IdeaList from '@/components/IdeaList'
-import NewIdeaForm from '@/components/NewIdeaForm'
 import PageContainer from '@/components/PageContainer'
-import type { Idea } from '@/types/database'
-import type { Database } from '@/types/database'
+import IdeasFlowSwitcher from '@/components/IdeasFlowSwitcher'
+import type { SwitchableIdeasFlow } from '@/components/IdeasFlowSwitcher'
 import { getEffectiveRoundStatus } from '@/lib/rounds/getEffectiveRoundStatus'
-import RoundGateCard from '@/components/RoundGateCard'
+import { isRoundAccessible } from '@/lib/auth/guards'
+import type { Database, Idea } from '@/types/database'
 
 type IdeaJoinResult = Database['public']['Tables']['ideas']['Row'] & {
   profiles: { full_name: string | null } | null
+  comments?: { count: number }[]
 }
 
-type RoundDataResult = Pick<
-  Database['public']['Tables']['companies']['Row'],
-  'idea_round_name' | 'idea_round_status' | 'idea_round_starts_at' | 'idea_round_ends_at' | 'idea_round_manual_override' | 'current_idea_round_id'
->
+type RoundRow = {
+  id:               string
+  name:             string | null
+  status:           string | null
+  manual_override:  string | null
+  starts_at:        string | null
+  ends_at:          string | null
+}
 
 export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Ideas — IdeaFlow' }
 
-export default async function IdeasPage() {
+export default async function IdeasPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ flow?: string }>
+}) {
   const supabase = await createClient()
 
   const { data: { user }, error: userError } = await supabase.auth.getUser()
@@ -37,58 +63,83 @@ export default async function IdeasPage() {
 
   if (!profile?.company_id) redirect('/dashboard')
 
-  // ── Round data (fetched before ideas so we can scope the query) ────────────
-  const { data: roundData } = (await supabase
-    .from('companies')
-    .select('idea_round_name, idea_round_status, idea_round_starts_at, idea_round_ends_at, idea_round_manual_override, current_idea_round_id')
-    .eq('id', profile.company_id)
-    .single()) as unknown as { data: RoundDataResult | null }
+  const isAdmin = profile.role === 'admin'
+  const admin   = createAdminClient()
 
-  const roundStatus         = roundData?.idea_round_status          ?? null
-  const roundEndsAt         = roundData?.idea_round_ends_at         ?? null
-  const roundManualOverride = roundData?.idea_round_manual_override ?? null
-  const currentRoundId = roundData?.current_idea_round_id ?? null
+  // ── 1. Every round in the workspace ──────────────────────────────────────
+  const { data: roundRows } = await (admin as any)
+    .from('idea_rounds')
+    .select('*')
+    .eq('company_id', profile.company_id)
+    .order('created_at', { ascending: false }) as { data: RoundRow[] | null }
 
-  const effectiveStatus = getEffectiveRoundStatus({
-    raw_status:      roundStatus,
-    manual_override: roundManualOverride,
-    opens_at:        roundData?.idea_round_starts_at ?? null,
-    closes_at:       roundEndsAt,
-  })
+  const allRounds: RoundRow[] = roundRows ?? []
 
-  const isRoundActive = effectiveStatus === 'active'
+  // ── 2. round_members for access filtering ────────────────────────────────
+  const { data: memberRows } = allRounds.length > 0
+    ? await (admin as any)
+        .from('round_members')
+        .select('round_id, user_id')
+        .in('round_id', allRounds.map(r => r.id)) as { data: { round_id: string; user_id: string }[] | null }
+    : { data: [] as { round_id: string; user_id: string }[] }
 
-  // ── Fetch prompt from the current idea_rounds row ─────────────────────────
-  let roundPrompt: string | null = null
-  if (currentRoundId) {
-    const adminClient = createAdminClient()
-    const { data: roundRow } = await (adminClient as any)
-      .from('idea_rounds')
-      .select('prompt')
-      .eq('id', currentRoundId)
-      .single() as { data: { prompt: string | null } | null }
-    roundPrompt = roundRow?.prompt ?? null
+  const assignedByRound: Record<string, string[]> = {}
+  for (const row of memberRows ?? []) {
+    if (!assignedByRound[row.round_id]) assignedByRound[row.round_id] = []
+    assignedByRound[row.round_id].push(row.user_id)
   }
 
-  // ── Ideas — only fetch when there is an active round with a valid ID ───────
-  // Never show legacy/unscoped ideas. No active round → empty list.
-  let ideas: IdeaJoinResult[] = []
-  if (isRoundActive && currentRoundId) {
-    const { data: roundIdeas } = (await (supabase as any)
+  const accessibleRounds = allRounds.filter(r => isRoundAccessible({
+    userId: user.id,
+    isAdmin,
+    round: { id: r.id, audience_mode: (r as { audience_mode?: 'workspace' | 'restricted' | null }).audience_mode ?? null },
+    assignedUserIds: assignedByRound[r.id] ?? [],
+  }))
+
+  const switchableFlows: SwitchableIdeasFlow[] = accessibleRounds.map(r => ({
+    id:     r.id,
+    name:   r.name ?? 'Unnamed IdeaFlow',
+    status: getEffectiveRoundStatus({
+      raw_status:      (r.status          ?? null) as 'draft' | 'active' | 'closed' | null,
+      manual_override: (r.manual_override ?? null) as 'open'  | 'closed' | null,
+      opens_at:        r.starts_at ?? null,
+      closes_at:       r.ends_at   ?? null,
+    }),
+  }))
+
+  // ── 3. Resolve selected scope ────────────────────────────────────────────
+  const params = await searchParams
+  const requestedId = typeof params.flow === 'string' && params.flow ? params.flow : null
+
+  // Validate ?flow=<id> against the accessible set. Unknown id falls back to 'all'.
+  const selectedFlow: SwitchableIdeasFlow | null =
+    requestedId && requestedId !== 'all'
+      ? switchableFlows.find(f => f.id === requestedId) ?? null
+      : null
+
+  const scope: 'all' | string = selectedFlow ? selectedFlow.id : 'all'
+  const visibleRoundIds = selectedFlow
+    ? [selectedFlow.id]
+    : accessibleRounds.map(r => r.id)
+
+  // ── 4. Fetch ideas across the selected scope ─────────────────────────────
+  // PostgREST's comments(count) aggregate powers the "Most comments" sort
+  // in IdeaList without an extra round trip.
+  let rawIdeas: IdeaJoinResult[] = []
+  if (visibleRoundIds.length > 0) {
+    const { data } = await (supabase as any)
       .from('ideas')
-      .select('*, profiles(full_name)')
+      .select('*, profiles(full_name), comments(count)')
       .eq('company_id', profile.company_id)
-      .eq('idea_round_id', currentRoundId)
+      .in('idea_round_id', visibleRoundIds)
       .order('likes_count', { ascending: false })
-      .order('created_at', { ascending: false })) as unknown as {
-      data: IdeaJoinResult[] | null
-    }
-    ideas = roundIdeas ?? []
+      .order('created_at', { ascending: false }) as { data: IdeaJoinResult[] | null }
+    rawIdeas = data ?? []
   }
 
-  // ── User's own likes (for heart toggle state) ──────────────────────────────
+  // ── 5. Liked-by-current-user decoration ──────────────────────────────────
   let likedIds = new Set<string>()
-  if (ideas.length > 0) {
+  if (rawIdeas.length > 0) {
     const { data: userLikes } = await supabase
       .from('likes')
       .select('idea_id')
@@ -96,13 +147,23 @@ export default async function IdeasPage() {
     likedIds = new Set((userLikes ?? []).map((l) => (l as { idea_id: string }).idea_id))
   }
 
-  const ideasWithLikeStatus: Idea[] = ideas.map((idea) => ({
+  // Map of round_id → flow name so we can chip the cards in "All" mode.
+  const roundNameById: Record<string, string> = {}
+  for (const r of allRounds) roundNameById[r.id] = r.name ?? 'Unnamed IdeaFlow'
+
+  const ideas: Idea[] = rawIdeas.map(idea => ({
     ...idea,
-    profiles: idea.profiles ?? undefined,
-    liked_by_user: likedIds.has(idea.id),
+    profiles:        idea.profiles ?? undefined,
+    liked_by_user:   likedIds.has(idea.id),
+    comments_count:  idea.comments?.[0]?.count ?? 0,
+    // Only attach a flow_name when we're showing more than one flow's ideas.
+    // In single-flow mode the page header already says which flow we're in.
+    flow_name:       scope === 'all' && idea.idea_round_id
+      ? roundNameById[idea.idea_round_id]
+      : undefined,
   }))
 
-  const totalIdeas = ideasWithLikeStatus.length
+  const totalIdeas = ideas.length
 
   return (
     <div className="page-content-enter">
@@ -117,15 +178,24 @@ export default async function IdeasPage() {
         }}
       >
         <PageContainer style={{ paddingTop: '1.125rem', paddingBottom: '1.125rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
-            <div>
-              <p style={{ fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#9ab0c8', marginBottom: '0.2rem' }}>
-                Workspace
-              </p>
-              <h1 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0d1f35', letterSpacing: '-0.02em', lineHeight: 1.2 }}>
-                Ideas
-              </h1>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.55rem', minWidth: 0 }}>
+              <div>
+                <p style={{ fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#9ab0c8', marginBottom: '0.2rem' }}>
+                  Workspace
+                </p>
+                <h1 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0d1f35', letterSpacing: '-0.02em', lineHeight: 1.2 }}>
+                  Ideas
+                </h1>
+              </div>
+
+              {/* Flow switcher — shown only when the user can access at least one flow */}
+              {switchableFlows.length > 0 && (
+                <IdeasFlowSwitcher flows={switchableFlows} currentId={scope} />
+              )}
             </div>
+
             <p style={{ fontSize: '0.825rem', color: '#9ab0c8', fontWeight: 500 }}>
               {totalIdeas} idea{totalIdeas !== 1 ? 's' : ''}
             </p>
@@ -135,51 +205,36 @@ export default async function IdeasPage() {
 
       <main>
         <PageContainer style={{ paddingTop: '1.75rem', paddingBottom: '3rem' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
 
-            {effectiveStatus === 'active' ? (
-              <>
-                {/* ── New idea form ── */}
-                <div
-                  style={{
-                    borderRadius: '1.25rem',
-                    border: '1px solid rgba(26,107,191,0.11)',
-                    background: 'linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(248,250,255,1) 100%)',
-                    boxShadow: '0 6px 24px rgba(6,14,38,0.04)',
-                    padding: '1.25rem',
-                  }}
-                >
-                  <NewIdeaForm
-                    userId={user.id}
-                    companyId={profile.company_id}
-                    isAdmin={profile.role === 'admin'}
-                    roundPrompt={roundPrompt}
-                    roundActive={true}
-                    roundName={roundData?.idea_round_name ?? null}
-                    defaultOpen={totalIdeas === 0}
-                    roundIsDraft={false}
-                  />
-                </div>
-
-                {/* ── Idea list with filters ── */}
-                <IdeaList
-                  ideas={ideasWithLikeStatus}
-                  currentUserId={user.id}
-                  companyId={profile.company_id}
-                  isAdmin={profile.role === 'admin'}
-                />
-              </>
-            ) : (
-              /* ── Gate card only: no ideas shown when round is not active ── */
-              <RoundGateCard
-                status={effectiveStatus}
-                isAdmin={profile.role === 'admin'}
-                companyId={profile.company_id}
-                roundName={roundData?.idea_round_name ?? null}
-              />
-            )}
-
-          </div>
+          {/* No accessible flows → orient the user back to the dashboard. */}
+          {switchableFlows.length === 0 ? (
+            <div style={{
+              background: '#ffffff',
+              border: '1px solid rgba(26,107,191,0.10)',
+              borderRadius: '1.25rem',
+              padding: '3rem 2rem',
+              textAlign: 'center',
+              boxShadow: '0 2px 12px rgba(6,14,38,0.05)',
+              maxWidth: '32rem',
+              margin: '0 auto',
+            }}>
+              <h2 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0d1f35', letterSpacing: '-0.02em', marginBottom: '0.4rem' }}>
+                {isAdmin ? 'No IdeaFlows yet' : 'No IdeaFlows assigned to you'}
+              </h2>
+              <p style={{ fontSize: '0.875rem', color: '#9ab0c8', lineHeight: 1.6, maxWidth: '22rem', margin: '0 auto' }}>
+                {isAdmin
+                  ? 'Create an IdeaFlow from the dashboard, then ideas will appear here.'
+                  : 'Once an admin adds you to an IdeaFlow, its ideas will show up here.'}
+              </p>
+            </div>
+          ) : (
+            <IdeaList
+              ideas={ideas}
+              currentUserId={user.id}
+              companyId={profile.company_id}
+              isAdmin={isAdmin}
+            />
+          )}
         </PageContainer>
       </main>
     </div>
