@@ -17,18 +17,11 @@ const FILTERS: { key: FilterKey; label: string }[] = [
 type SortKey = 'most-liked' | 'latest' | 'oldest' | 'most-comments'
 
 const SORTS: { key: SortKey; label: string }[] = [
-  { key: 'most-liked',    label: 'Most likes'    },
-  { key: 'latest',        label: 'Latest'        },
-  { key: 'oldest',        label: 'Oldest'        },
+  { key: 'most-liked',    label: 'Most liked'    },
+  { key: 'latest',        label: 'Newest first'  },
+  { key: 'oldest',        label: 'Oldest first'  },
   { key: 'most-comments', label: 'Most comments' },
 ]
-
-const SORT_DESCRIPTIONS: Record<SortKey, string> = {
-  'most-liked':    'most liked',
-  'latest':        'newest first',
-  'oldest':        'oldest first',
-  'most-comments': 'most commented',
-}
 
 interface IdeaListProps {
   ideas: Idea[]
@@ -155,53 +148,54 @@ export default function IdeaList({
       {/* Header + filter tabs */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', flexWrap: 'wrap' }}>
-          <h2 style={{ fontSize: '0.775rem', fontWeight: 500, color: 'var(--ink-light)', margin: 0, letterSpacing: '-0.01em' }}>
-            {localIdeas.length === 1 ? '1 idea' : `${localIdeas.length} ideas`} · {SORT_DESCRIPTIONS[activeSort]}
-          </h2>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            {localIdeas.length > 1 && (
-              <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
-                <span style={{ fontSize: '0.7rem', color: '#9ab0c8', fontWeight: 500 }}>Sort</span>
-                <div style={{ position: 'relative', display: 'inline-flex' }}>
-                  <select
-                    aria-label="Sort ideas"
-                    value={activeSort}
-                    onChange={e => setActiveSort(e.target.value as SortKey)}
-                    style={{
-                      appearance: 'none',
-                      WebkitAppearance: 'none',
-                      background: '#ffffff',
-                      border: '1px solid rgba(0,0,0,0.08)',
-                      borderRadius: '0.375rem',
-                      padding: '0.22rem 1.4rem 0.22rem 0.55rem',
-                      fontSize: '0.72rem',
-                      fontWeight: 600,
-                      color: '#0d1f35',
-                      cursor: 'pointer',
-                      lineHeight: 1.4,
-                    }}
-                  >
-                    {SORTS.map(s => (
-                      <option key={s.key} value={s.key}>{s.label}</option>
-                    ))}
-                  </select>
-                  <span aria-hidden style={{
-                    position: 'absolute',
-                    right: '0.4rem',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    color: '#94a3b8',
-                    fontSize: '0.55rem',
-                    pointerEvents: 'none',
-                  }}>▾</span>
-                </div>
-              </label>
-            )}
-            <span style={{ fontSize: '0.72rem', color: '#b8c0ce', fontVariantNumeric: 'tabular-nums' }}>
-              {filtered.length}{activeFilter !== 'all' ? ` / ${localIdeas.length}` : ''} total
-            </span>
+          {/* Count + sort selector inline. The dropdown replaces the static
+              "most liked" label so admins can re-sort with a single click. */}
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
+            <h2 style={{ fontSize: '0.775rem', fontWeight: 500, color: 'var(--ink-light)', margin: 0, letterSpacing: '-0.01em' }}>
+              {localIdeas.length === 1 ? '1 idea' : `${localIdeas.length} ideas`}
+            </h2>
+            <span aria-hidden style={{ fontSize: '0.72rem', color: '#cbd5e1' }}>·</span>
+            <div style={{ position: 'relative', display: 'inline-flex' }}>
+              <select
+                aria-label="Sort ideas"
+                value={activeSort}
+                onChange={e => setActiveSort(e.target.value as SortKey)}
+                disabled={localIdeas.length === 0}
+                style={{
+                  appearance: 'none',
+                  WebkitAppearance: 'none',
+                  background: 'transparent',
+                  border: '1px solid rgba(0,0,0,0.08)',
+                  borderRadius: '0.4rem',
+                  padding: '0.18rem 1.35rem 0.18rem 0.55rem',
+                  fontSize: '0.74rem',
+                  fontWeight: 600,
+                  color: '#0d1f35',
+                  cursor: localIdeas.length === 0 ? 'not-allowed' : 'pointer',
+                  opacity: localIdeas.length === 0 ? 0.55 : 1,
+                  lineHeight: 1.4,
+                }}
+              >
+                {SORTS.map(s => (
+                  <option key={s.key} value={s.key}>{s.label}</option>
+                ))}
+              </select>
+              <span aria-hidden style={{
+                position: 'absolute',
+                right: '0.4rem',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                color: '#94a3b8',
+                fontSize: '0.55rem',
+                pointerEvents: 'none',
+              }}>▾</span>
+            </div>
           </div>
+
+          <span style={{ fontSize: '0.72rem', color: '#b8c0ce', fontVariantNumeric: 'tabular-nums' }}>
+            {filtered.length}{activeFilter !== 'all' ? ` / ${localIdeas.length}` : ''} total
+          </span>
         </div>
 
         {/* Filter tabs — only rendered when there are ideas */}
