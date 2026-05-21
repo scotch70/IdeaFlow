@@ -370,12 +370,6 @@ export default async function FlowDetailPage({
                   initialStartsAt={round.starts_at ?? null}
                   initialEndsAt={round.ends_at ?? null}
                   initialManualOverride={round.manual_override ?? null}
-                  initialAudienceMode={
-                    // Honour the explicit column when present. When it isn't
-                    // (pre-migration DB), default to 'restricted' to match the
-                    // product rule that every IdeaFlow is restricted by default.
-                    (round.audience_mode as 'workspace' | 'restricted' | null) ?? 'restricted'
-                  }
                   effectiveStatus={effectiveStatus}
                   companyMembers={companyMembers}
                   assignedUserIds={assignedUserIds}

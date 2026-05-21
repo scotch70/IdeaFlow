@@ -9,7 +9,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import type { AudienceMode, SlimProfile } from '@/types/database'
+import type { SlimProfile } from '@/types/database'
 
 type RoundStatus = 'draft' | 'active' | 'closed'
 
@@ -40,7 +40,6 @@ interface FlowAdminPanelProps {
   initialStartsAt:       string | null
   initialEndsAt:         string | null
   initialManualOverride: 'open' | 'closed' | null
-  initialAudienceMode:   AudienceMode
   effectiveStatus:       'active' | 'closed' | 'draft'
   companyMembers:        SlimProfile[]
   assignedUserIds:       string[]
@@ -124,7 +123,6 @@ export default function FlowAdminPanel({
   initialStartsAt,
   initialEndsAt,
   initialManualOverride,
-  initialAudienceMode,
   companyMembers,
   assignedUserIds,
   flowInvites: initialFlowInvites,
@@ -144,11 +142,6 @@ export default function FlowAdminPanel({
   const [currentStatus,   setCurrentStatus]   = useState<RoundStatus>(initialStatus)
   const [currentOverride, setCurrentOverride] = useState<'open' | 'closed' | null>(initialManualOverride)
   const [statusSaving,    setStatusSaving]    = useState(false)
-
-  // Audience mode
-  const [audienceMode, setAudienceMode] = useState<AudienceMode>(initialAudienceMode)
-  const [audienceSaving, setAudienceSaving] = useState(false)
-  const [audienceError, setAudienceError]   = useState('')
 
   // Members (inlined from FlowMemberPicker)
   const [assigned,       setAssigned]       = useState<Set<string>>(new Set(assignedUserIds))
@@ -241,32 +234,6 @@ export default function FlowAdminPanel({
       router.refresh()
     } finally {
       setStatusSaving(false)
-    }
-  }
-
-  async function handleAudienceChange(next: AudienceMode) {
-    if (audienceMode === next || audienceSaving) return
-    setAudienceSaving(true)
-    setAudienceError('')
-    // Optimistic — rolled back on error
-    const prev = audienceMode
-    setAudienceMode(next)
-    try {
-      const res = await fetch(`/api/rounds/${roundId}`, {
-        method:  'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ audience_mode: next }),
-      })
-      if (!res.ok) {
-        const d = await res.json().catch(() => ({}))
-        throw new Error(d.error ?? 'Failed to update access')
-      }
-      router.refresh()
-    } catch (err: unknown) {
-      setAudienceMode(prev)
-      setAudienceError(err instanceof Error ? err.message : 'Something went wrong')
-    } finally {
-      setAudienceSaving(false)
     }
   }
 
@@ -544,102 +511,25 @@ export default function FlowAdminPanel({
         </div>
       </div>
 
-      {/* ── Audience ──────────────────────────────────────────────────────── */}
-      <div style={HAIRLINE}>
-        <p style={SECTION_LABEL}>Audience</p>
-
-        {/* Audience switch — radio-style cards */}
-        <div role="radiogroup" aria-label="IdeaFlow audience" style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '0.4rem',
-          marginBottom: '0.75rem',
-        }}>
-          {(
-            [
-              { value: 'workspace',  label: 'Open to the workspace', desc: 'Every workspace member can submit and vote.' },
-              { value: 'restricted', label: 'Restricted members only', desc: 'Only members you add can access this IdeaFlow.' },
-            ] as const
-          ).map(opt => {
-            const isSelected = audienceMode === opt.value
-            return (
-              <button
-                key={opt.value}
-                type="button"
-                role="radio"
-                aria-checked={isSelected}
-                onClick={() => handleAudienceChange(opt.value)}
-                disabled={audienceSaving}
-                style={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: '0.625rem',
-                  padding: '0.6rem 0.75rem',
-                  borderRadius: '0.55rem',
-                  border: `1px solid ${isSelected ? 'rgba(26,107,191,0.32)' : 'rgba(0,0,0,0.08)'}`,
-                  background: isSelected ? 'rgba(26,107,191,0.04)' : '#ffffff',
-                  textAlign: 'left',
-                  cursor: audienceSaving ? 'wait' : 'pointer',
-                  transition: 'background 0.12s, border-color 0.12s',
-                }}
-              >
-                <span
-                  aria-hidden
-                  style={{
-                    marginTop: '0.2rem',
-                    width: '0.85rem', height: '0.85rem',
-                    borderRadius: '50%',
-                    border: `1.5px solid ${isSelected ? '#0e52a8' : 'rgba(0,0,0,0.20)'}`,
-                    flexShrink: 0,
-                    position: 'relative',
-                  }}
-                >
-                  {isSelected && (
-                    <span style={{
-                      position: 'absolute',
-                      top: '50%', left: '50%',
-                      transform: 'translate(-50%, -50%)',
-                      width: '0.4rem', height: '0.4rem',
-                      borderRadius: '50%',
-                      background: '#0e52a8',
-                    }} />
-                  )}
-                </span>
-                <span style={{ minWidth: 0 }}>
-                  <span style={{ display: 'block', fontSize: '0.825rem', fontWeight: 600, color: '#0d1f35' }}>
-                    {opt.label}
-                  </span>
-                  <span style={{ display: 'block', fontSize: '0.72rem', color: '#64748b', marginTop: '0.1rem', lineHeight: 1.45 }}>
-                    {opt.desc}
-                  </span>
-                </span>
-              </button>
-            )
-          })}
-        </div>
-
-        {audienceError && (
-          <p style={{ fontSize: '0.745rem', color: '#dc2626', marginBottom: '0.5rem' }}>{audienceError}</p>
-        )}
-      </div>
-
       {/* ── Members ───────────────────────────────────────────────────────── */}
+      {/* Audience model: every IdeaFlow is restricted. Admins always have
+          access; everyone else must be added below or invited. There's
+          deliberately no workspace-wide toggle in the UI. */}
       <div style={HAIRLINE}>
         <p style={SECTION_LABEL}>Members</p>
 
-        {/* Audience summary */}
         <p style={{
           fontSize: '0.775rem',
-          color: audienceMode === 'workspace' ? '#059669' : '#0e52a8',
+          color: '#0e52a8',
           marginBottom: '0.875rem',
           fontWeight: 500,
         }}>
-          {audienceMode === 'workspace'
-            ? `Anyone in your workspace can access. ${assigned.size > 0 ? `${assigned.size} highlighted ${assigned.size === 1 ? 'person' : 'people'}.` : ''}`
-            : `${assigned.size} ${assigned.size === 1 ? 'member' : 'members'} can access.`}
+          {assigned.size === 0
+            ? 'No members added yet — only workspace admins can access this IdeaFlow.'
+            : `${assigned.size} ${assigned.size === 1 ? 'member has' : 'members have'} access.`}
         </p>
 
-        {audienceMode === 'restricted' && assigned.size === 0 && (
+        {assigned.size === 0 && (
           <p style={{
             fontSize: '0.745rem',
             color: '#92400e',
@@ -649,7 +539,7 @@ export default function FlowAdminPanel({
             padding: '0.45rem 0.6rem',
             marginBottom: '0.625rem',
           }}>
-            No members assigned yet — only workspace admins can access this IdeaFlow.
+            Add people below, or send an invite, so they can submit and vote on ideas.
           </p>
         )}
 

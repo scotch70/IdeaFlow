@@ -66,9 +66,13 @@ export async function POST(request: NextRequest) {
       if (typeof bodyRoundId === 'string' && bodyRoundId) {
         // ── Multi-flow path: caller provided explicit roundId ─────────────────
         // Validate the round exists, belongs to this company, and is active.
+        // select('*') so this works on a database that hasn't run the
+        // members-redesign migration yet — naming audience_mode explicitly
+        // would otherwise make PostgREST 404 the row and surface as
+        // "IdeaFlow not found." in the NewIdeaForm.
         const { data: explicitRound } = await (adminClient as any)
           .from('idea_rounds')
-          .select('id, status, company_id, manual_override, starts_at, ends_at, audience_mode')
+          .select('*')
           .eq('id', bodyRoundId)
           .eq('company_id', profile.company_id)
           .single()
