@@ -1482,3 +1482,30 @@ button, a {
   flex-shrink: 0;
 }
 
+
+/* ── Flow detail page — responsive admin layout ─────────────────────────── */
+/* Server-rendered page can't use JS-based responsive detection, so we drive */
+/* the layout switch via CSS. Default is two columns; collapse to one column*/
+/* under 900px so the sticky right panel doesn't get clipped on mobile.     */
+.flow-admin-grid {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 3rem;
+  align-items: start;
+}
+
+.flow-admin-grid > .flow-admin-aside {
+  position: sticky;
+  top: calc(4rem + 1px);
+}
+
+@media (max-width: 900px) {
+  .flow-admin-grid {
+    grid-template-columns: 1fr;
+    gap: 1.75rem;
+  }
+  .flow-admin-grid > .flow-admin-aside {
+    position: static;
+    top: auto;
+  }
+}

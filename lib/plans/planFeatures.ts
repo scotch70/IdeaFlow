@@ -26,6 +26,23 @@ export function isProPlan(plan: string | null | undefined): boolean {
   return plan === 'pro' || plan === 'pro_plus'
 }
 
+/**
+ * True when the plan can use the advanced sort + status filters in IdeaList
+ * (everything beyond "Most liked"). Free is locked.
+ */
+export function canUseAdvancedFilters(plan: string | null | undefined): boolean {
+  return isPaidPlan(plan)
+}
+
+/**
+ * True when the plan can call the real AI insights endpoint. Used both for
+ * server-side gating and as a hint for the client to render the upgrade
+ * teaser vs the actual summary.
+ */
+export function canUseAIInsights(plan: string | null | undefined): boolean {
+  return isProPlan(plan)
+}
+
 /** Human-readable label for a plan slug */
 export function planLabel(plan: string | null | undefined): string {
   switch (plan) {

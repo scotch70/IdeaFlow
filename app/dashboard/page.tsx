@@ -365,6 +365,7 @@ export default async function DashboardPage() {
                 currentUserId={user.id}
                 companyId={profile.company_id}
                 isAdmin={profile.role === 'admin'}
+                plan={company?.plan ?? 'free'}
               />
 
             </div>

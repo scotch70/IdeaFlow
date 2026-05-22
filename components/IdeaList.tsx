@@ -28,6 +28,13 @@ interface IdeaListProps {
   currentUserId: string
   companyId: string
   isAdmin: boolean
+  /**
+   * Workspace plan. Drives the sort + status filter gates.
+   *   free     → only 'Most liked' sort; status tabs hidden; upgrade chip
+   *   standard → full sort + status filter
+   *   pro      → full sort + status filter
+   */
+  plan?: 'free' | 'standard' | 'pro' | 'pro_plus' | string
 }
 
 export default function IdeaList({
@@ -35,8 +42,11 @@ export default function IdeaList({
   currentUserId,
   companyId,
   isAdmin,
+  plan = 'free',
 }: IdeaListProps) {
   const router       = useRouter()
+  const advancedFilters = plan === 'standard' || plan === 'pro' || plan === 'pro_plus'
+
   const [activeFilter, setActiveFilter] = useState<FilterKey>('all')
   const [activeSort,   setActiveSort]   = useState<SortKey>('most-liked')
 
@@ -156,12 +166,18 @@ export default function IdeaList({
               {localIdeas.length === 1 ? '1 idea' : `${localIdeas.length} ideas`}
             </h2>
             <span aria-hidden style={{ fontSize: '0.72rem', color: '#cbd5e1' }}>·</span>
-            <div style={{ position: 'relative', display: 'inline-flex' }}>
+            <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
               <select
                 aria-label="Sort ideas"
                 value={activeSort}
-                onChange={e => setActiveSort(e.target.value as SortKey)}
-                disabled={localIdeas.length === 0}
+                onChange={e => {
+                  if (!advancedFilters) return
+                  setActiveSort(e.target.value as SortKey)
+                }}
+                disabled={localIdeas.length === 0 || !advancedFilters}
+                title={advancedFilters
+                  ? undefined
+                  : 'Sorting beyond "Most liked" is a Standard plan feature.'}
                 style={{
                   appearance: 'none',
                   WebkitAppearance: 'none',
@@ -172,8 +188,8 @@ export default function IdeaList({
                   fontSize: '0.74rem',
                   fontWeight: 600,
                   color: '#0d1f35',
-                  cursor: localIdeas.length === 0 ? 'not-allowed' : 'pointer',
-                  opacity: localIdeas.length === 0 ? 0.55 : 1,
+                  cursor: (localIdeas.length === 0 || !advancedFilters) ? 'not-allowed' : 'pointer',
+                  opacity: (localIdeas.length === 0 || !advancedFilters) ? 0.55 : 1,
                   lineHeight: 1.4,
                 }}
               >
@@ -191,6 +207,30 @@ export default function IdeaList({
                 pointerEvents: 'none',
               }}>▾</span>
             </div>
+
+            {!advancedFilters && localIdeas.length > 0 && (
+              <a
+                href="/settings"
+                title="Upgrade to Standard to unlock sort + status filters"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.25rem',
+                  fontSize: '0.62rem',
+                  fontWeight: 700,
+                  letterSpacing: '0.06em',
+                  textTransform: 'uppercase',
+                  color: '#c2540a',
+                  background: 'rgba(249,115,22,0.08)',
+                  border: '1px solid rgba(249,115,22,0.18)',
+                  borderRadius: '999px',
+                  padding: '0.12rem 0.5rem',
+                  textDecoration: 'none',
+                }}
+              >
+                <span aria-hidden>🔒</span> Standard
+              </a>
+            )}
           </div>
 
           <span style={{ fontSize: '0.72rem', color: '#b8c0ce', fontVariantNumeric: 'tabular-nums' }}>
@@ -198,8 +238,9 @@ export default function IdeaList({
           </span>
         </div>
 
-        {/* Filter tabs — only rendered when there are ideas */}
-        {localIdeas.length > 0 && visibleFilters.length > 1 && (
+        {/* Filter tabs — only rendered when there are ideas AND the plan
+            entitles the user to status filtering. Free is locked. */}
+        {advancedFilters && localIdeas.length > 0 && visibleFilters.length > 1 && (
           <div style={{ display: 'flex', gap: '0.375rem', flexWrap: 'wrap' }}>
             {visibleFilters.map(f => {
               const active = activeFilter === f.key

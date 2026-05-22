@@ -55,6 +55,14 @@ export default async function FlowDetailPage({
   const isAdmin = profile.role === 'admin'
   const admin   = createAdminClient()
 
+  // Plan drives the IdeaList sort + status filter gate.
+  const { data: companyRow } = await supabase
+    .from('companies')
+    .select('plan')
+    .eq('id', profile.company_id)
+    .single() as unknown as { data: { plan: string } | null }
+  const companyPlan = companyRow?.plan ?? 'free'
+
   // ── Fetch round ──────────────────────────────────────────────────────────
   const { data: round, error: roundError } = await (admin as any)
     .from('idea_rounds')
@@ -272,12 +280,7 @@ export default async function FlowDetailPage({
         /* ── Admin: two-column layout ─────────────────────────────────── */
         <main style={{ flex: 1, overflowY: 'auto' }}>
           <PageContainer style={{ paddingTop: '2rem', paddingBottom: '3rem' }}>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 380px',
-              gap: '3rem',
-              alignItems: 'start',
-            }}>
+            <div className="flow-admin-grid">
 
               {/* Left: content */}
               <div>
@@ -335,6 +338,7 @@ export default async function FlowDetailPage({
                       ideas={ideasWithLikeStatus}
                       currentUserId={user.id}
                       companyId={profile.company_id}
+                      plan={companyPlan}
                       isAdmin={isAdmin}
                     />
                   </>
@@ -360,8 +364,8 @@ export default async function FlowDetailPage({
                 )}
               </div>
 
-              {/* Right: admin panel (sticky) */}
-              <div style={{ position: 'sticky', top: 'calc(4rem + 1px)' }}>
+              {/* Right: admin panel (sticky on desktop, static on mobile) */}
+              <div className="flow-admin-aside">
                 <FlowAdminPanel
                   roundId={roundId}
                   initialName={round.name ?? ''}
