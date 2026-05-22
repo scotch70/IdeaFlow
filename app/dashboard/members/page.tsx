@@ -21,6 +21,14 @@ export default async function MembersPage() {
 
   if (!profile?.company_id) redirect('/dashboard')
 
+  // Plan is needed to gate the members search bar — Standard+ only.
+  const { data: companyRow } = (await supabase
+    .from('companies')
+    .select('plan')
+    .eq('id', profile.company_id)
+    .single()) as unknown as { data: { plan: string } | null }
+  const companyPlan = companyRow?.plan ?? 'free'
+
   // Server-side join: members × IdeaFlows. Honours audience_mode + the legacy
   // empty-round_members fallback. Closed and deleted flows are excluded.
   const members = await getWorkspaceMembersWithFlows(profile.company_id)
@@ -67,6 +75,7 @@ export default async function MembersPage() {
               members={members}
               currentUserId={user.id}
               currentUserRole={profile.role}
+              companyPlan={companyPlan}
             />
 
             {/* ── Invite CTA for admins ──────────────────────────────────── */}

@@ -20,11 +20,14 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useMemo, useState } from 'react'
 import type { FlowSummary, WorkspaceMemberWithFlows } from '@/types/database'
+import { isPaidPlan } from '@/lib/plans/planFeatures'
 
 interface Props {
   members:         WorkspaceMemberWithFlows[]
   currentUserId:   string
   currentUserRole: string
+  /** Company plan slug — search bar only renders on Standard+ */
+  companyPlan?:    string
 }
 
 // ─── Utilities ───────────────────────────────────────────────────────────────
@@ -288,12 +291,16 @@ function MemberCard({
 // ─── Main component ──────────────────────────────────────────────────────────
 
 export default function MembersRelationshipList({
-  members, currentUserId, currentUserRole,
+  members, currentUserId, currentUserRole, companyPlan,
 }: Props) {
   const router = useRouter()
-  const isAdmin = currentUserRole === 'admin'
+  const isAdmin    = currentUserRole === 'admin'
+  // Search is a Standard+ feature. On Free we hide the input entirely and
+  // keep the list unfiltered (query stays '').
+  const canSearch  = isAdmin && isPaidPlan(companyPlan)
 
   const [query,      setQuery]      = useState('')
+  const [searchFocused, setSearchFocused] = useState(false)
   const [removingId, setRemovingId] = useState<string | null>(null)
   const [error,      setError]      = useState('')
   const [showInactive, setShowInactive] = useState(false)
@@ -335,33 +342,79 @@ export default function MembersRelationshipList({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
 
-      {/* ── Search ──────────────────────────────────────────────────────── */}
-      <div style={{ position: 'relative' }}>
-        <input
-          type="search"
-          placeholder="Search members or IdeaFlows…"
-          value={query}
-          onChange={e => setQuery(e.target.value)}
-          className="input"
-          style={{ fontSize: '0.875rem', paddingLeft: '2.25rem' }}
-        />
-        <svg
-          aria-hidden
-          width="14" height="14" viewBox="0 0 24 24"
-          fill="none" stroke="#9ab0c8" strokeWidth="2"
-          strokeLinecap="round" strokeLinejoin="round"
-          style={{
-            position: 'absolute',
-            left: '0.75rem',
-            top: '50%',
-            transform: 'translateY(-50%)',
-            pointerEvents: 'none',
-          }}
-        >
-          <circle cx="11" cy="11" r="8" />
-          <line x1="21" y1="21" x2="16.65" y2="16.65" />
-        </svg>
-      </div>
+      {/* ── Search (Standard+ admins only) ──────────────────────────────── */}
+      {canSearch && (
+        <div style={{ position: 'relative' }}>
+          <input
+            type="search"
+            placeholder="Search members or IdeaFlows…"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            onFocus={() => setSearchFocused(true)}
+            onBlur={() => setSearchFocused(false)}
+            aria-label="Search members"
+            className="input"
+            style={{
+              fontSize: '0.875rem',
+              paddingLeft: '2.25rem',
+              paddingRight: query ? '2.25rem' : undefined,
+              borderColor: searchFocused ? 'rgba(249,115,22,0.45)' : undefined,
+              boxShadow:   searchFocused ? '0 0 0 3px rgba(249,115,22,0.10)' : undefined,
+              transition:  'border-color 0.12s, box-shadow 0.12s',
+            }}
+          />
+          <svg
+            aria-hidden
+            width="14" height="14" viewBox="0 0 24 24"
+            fill="none" stroke={searchFocused ? '#c2540a' : '#9ab0c8'} strokeWidth="2"
+            strokeLinecap="round" strokeLinejoin="round"
+            style={{
+              position: 'absolute',
+              left: '0.75rem',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              pointerEvents: 'none',
+              transition: 'stroke 0.12s',
+            }}
+          >
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          {query && (
+            <button
+              type="button"
+              onClick={() => setQuery('')}
+              aria-label="Clear search"
+              style={{
+                position: 'absolute',
+                right: '0.6rem',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'rgba(15,23,42,0.06)',
+                border: 'none',
+                width: '1.4rem', height: '1.4rem',
+                borderRadius: '999px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer',
+                color: '#64748b',
+                fontSize: '0.95rem', lineHeight: 1,
+              }}
+            >×</button>
+          )}
+          {/* Live result count for accessibility */}
+          {query && (
+            <p
+              aria-live="polite"
+              style={{
+                fontSize: '0.7rem', color: '#9ab0c8',
+                marginTop: '0.4rem', paddingLeft: '0.25rem',
+              }}
+            >
+              {active.length + inactive.length} match{(active.length + inactive.length) === 1 ? '' : 'es'} for &ldquo;{query}&rdquo;
+            </p>
+          )}
+        </div>
+      )}
 
       {error && (
         <p style={{
