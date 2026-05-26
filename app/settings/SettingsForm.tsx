@@ -407,7 +407,7 @@ export default function SettingsForm({
         </form>
 
         {/* ── Plan & billing ── */}
-        <div className="settings-card">
+        <div id="billing" className="settings-card" style={{ scrollMarginTop: '4.5rem' }}>
           <p style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#9ab0c8', marginBottom: '1.5rem' }}>
             Plan &amp; billing
           </p>

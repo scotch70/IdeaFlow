@@ -38,6 +38,7 @@ const ICONS = {
   dashboard: <Ico d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z" />,
   ideas:     <Ico d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z" d2="M9 21h6" />,
   flows:     <Ico d="M12 2L2 7l10 5 10-5-10-5z" d2="M2 12l10 5 10-5M2 17l10 5 10-5" />,
+  sessions:  <Ico d="M4 4h12a4 4 0 0 1 4 4v8a4 4 0 0 1-4 4H4z" d2="M9 9h7M9 13h7M9 17h4" />,
   review:    <Ico d="M9 11l3 3L22 4" d2="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />,
   members:   <Ico d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" d2="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm8 0c1.66 0 3-1.34 3-3s-1.34-3-3-3m3 13v-2a4 4 0 0 0-3-3.87" />,
   setup:     <Ico d="M12 20h9" d2="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />,
@@ -205,6 +206,7 @@ export default function MobileDashboardHeader({ userName, userEmail, userRole }:
           <DrawerLink href="/dashboard"        icon={ICONS.dashboard} label="Dashboard"   active={exact('/dashboard')} onClick={close} />
           <DrawerLink href="/dashboard/flows"  icon={ICONS.flows}     label="IdeaFlows"   active={active('/dashboard/flows')} onClick={close} />
           <DrawerLink href="/dashboard/ideas"  icon={ICONS.ideas}     label="Ideas"       active={active('/dashboard/ideas')} onClick={close} />
+          <DrawerLink href="/dashboard/sessions" icon={ICONS.sessions} label="Sessions"   active={active('/dashboard/sessions')} onClick={close} />
 
           {isAdmin && (
             <>

@@ -43,6 +43,14 @@ export function canUseAIInsights(plan: string | null | undefined): boolean {
   return isProPlan(plan)
 }
 
+/**
+ * True when the plan can use IdeaFlow Sessions — the guided brainstorming
+ * workspaces. Pro-only. Free + Standard see the upgrade screen.
+ */
+export function canUseSessions(plan: string | null | undefined): boolean {
+  return isProPlan(plan)
+}
+
 /** Human-readable label for a plan slug */
 export function planLabel(plan: string | null | undefined): string {
   switch (plan) {

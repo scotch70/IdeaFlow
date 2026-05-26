@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { canUseSessions } from '@/lib/plans/planFeatures'
 
 const SIDEBAR_W = 240
 const HEADER_H  = '3.625rem'
@@ -25,6 +26,7 @@ const ICONS = {
   dashboard:  <Ico d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z" />,
   ideas:      <Ico d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z" d2="M9 21h6" />,
   flows:      <Ico d="M12 2L2 7l10 5 10-5-10-5z" d2="M2 12l10 5 10-5M2 17l10 5 10-5" />,
+  sessions:   <Ico d="M4 4h12a4 4 0 0 1 4 4v8a4 4 0 0 1-4 4H4z" d2="M9 9h7M9 13h7M9 17h4" />,
   review:     <Ico d="M9 11l3 3L22 4" d2="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />,
   members:    <Ico d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" d2="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm8 0c1.66 0 3-1.34 3-3s-1.34-3-3-3m3 13v-2a4 4 0 0 0-3-3.87" />,
   invite:     <Ico d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" d2="M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm6 3h6m-3-3v6" />,
@@ -57,9 +59,10 @@ interface NavLinkProps {
   label: string
   active: boolean
   badge?: number
+  proChip?: boolean   // small "Pro" pill, shown when feature is locked
 }
 
-function NavLink({ href, icon, label, active, badge }: NavLinkProps) {
+function NavLink({ href, icon, label, active, badge, proChip }: NavLinkProps) {
   return (
     <Link
       href={href}
@@ -96,6 +99,20 @@ function NavLink({ href, icon, label, active, badge }: NavLinkProps) {
           {badge > 9 ? '9+' : badge}
         </span>
       )}
+      {proChip && (
+        <span style={{
+          fontSize: '0.5rem', fontWeight: 800, letterSpacing: '0.06em',
+          textTransform: 'uppercase',
+          color: '#c2540a',
+          background: 'rgba(249,115,22,0.10)',
+          border: '1px solid rgba(249,115,22,0.22)',
+          borderRadius: '999px',
+          padding: '0.06rem 0.32rem',
+          flexShrink: 0,
+        }}>
+          ✦ Pro
+        </span>
+      )}
     </Link>
   )
 }
@@ -108,6 +125,8 @@ interface Props {
   userName: string
   userEmail: string
   userRole: string
+  /** Company plan — used to decide whether to show the "Pro" chip next to Sessions */
+  companyPlan?: string
   pendingReviewCount?: number
 }
 
@@ -115,6 +134,7 @@ export default function DashboardSidebar({
   userName,
   userEmail,
   userRole,
+  companyPlan,
   pendingReviewCount,
 }: Props) {
   const pathname = usePathname()
@@ -192,6 +212,13 @@ export default function DashboardSidebar({
             icon={ICONS.ideas}
             label="Ideas"
             active={exact('/dashboard/ideas') || under('/dashboard/ideas')}
+          />
+          <NavLink
+            href="/dashboard/sessions"
+            icon={ICONS.sessions}
+            label="Sessions"
+            active={exact('/dashboard/sessions') || under('/dashboard/sessions')}
+            proChip={!canUseSessions(companyPlan)}
           />
         </nav>
 

@@ -22,15 +22,27 @@ export default async function DashboardLayout({
 
   const { data: profile } = (await supabase
     .from('profiles')
-    .select('full_name, role')
+    .select('full_name, role, company_id')
     .eq('id', user.id)
     .single()) as unknown as {
-    data: { full_name: string | null; role: string } | null
+    data: { full_name: string | null; role: string; company_id: string | null } | null
   }
 
   const userName  = profile?.full_name  ?? ''
   const userEmail = user.email           ?? ''
   const userRole  = profile?.role        ?? 'member'
+
+  // Plan is surfaced in the sidebar so Pro-only items (Sessions) can show a
+  // small Pro chip when the user isn't on Pro yet.
+  let companyPlan = 'free'
+  if (profile?.company_id) {
+    const { data: companyRow } = (await supabase
+      .from('companies')
+      .select('plan')
+      .eq('id', profile.company_id)
+      .single()) as unknown as { data: { plan: string } | null }
+    companyPlan = companyRow?.plan ?? 'free'
+  }
 
   return (
     <>
@@ -80,6 +92,7 @@ export default async function DashboardLayout({
             userName={userName}
             userEmail={userEmail}
             userRole={userRole}
+            companyPlan={companyPlan}
           />
         </div>
 
