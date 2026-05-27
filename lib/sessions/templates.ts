@@ -21,6 +21,20 @@ export const STEP_LABEL: Record<StepKey, string> = {
   action:     'Action plan',
 }
 
+/**
+ * One-line plain-English summary of what each step is for. Shown in the
+ * collapsible sidebar under the active step so the user understands the
+ * meaning at a glance — without having to read the longer per-template
+ * prompt in the right Guide panel.
+ */
+export const STEP_HELPER: Record<StepKey, string> = {
+  define:     'Clarify what you are solving — the problem, the audience, the goal.',
+  explore:    'Add many rough ideas without judging them.',
+  connect:    'Link related thoughts together.',
+  prioritize: 'Choose what matters most.',
+  action:     'Turn the best ideas into next steps.',
+}
+
 export interface StepGuide {
   title:  string
   prompt: string

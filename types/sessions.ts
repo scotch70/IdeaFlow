@@ -49,16 +49,28 @@ export interface Session {
 }
 
 export interface SessionCard {
-  id:         string
-  session_id: string
-  type:       CardType
-  title:      string
-  content:    string | null
-  x:          number
-  y:          number
-  priority:   number
-  created_at: string
-  updated_at: string
+  id:          string
+  session_id:  string
+  type:        CardType
+  title:       string
+  content:     string | null
+  x:           number
+  y:           number
+  priority:    number
+  /** auth.uid() of the user who created the card. Nullable for backfill rows. */
+  created_by:  string | null
+  created_at:  string
+  updated_at:  string
+}
+
+/**
+ * Minimal profile shape used to attribute cards in the UI (avatar initials +
+ * subtle "Admin / Member" metadata). Returned by getSession.
+ */
+export interface SessionMember {
+  id:        string
+  fullName:  string | null
+  role:      'admin' | 'member' | string
 }
 
 export interface SessionConnection {
@@ -85,4 +97,8 @@ export interface SessionDetail {
   cards:       SessionCard[]
   connections: SessionConnection[]
   steps:       SessionStepRow[]
+  /** Map from user_id → minimal profile, populated for every workspace member.
+   *  Used to render card avatar initials + the "Admin / Member" hint without
+   *  having to refetch profiles per card. */
+  members:     Record<string, SessionMember>
 }

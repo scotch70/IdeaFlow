@@ -31,12 +31,13 @@ import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   createCard, createConnection, deleteCard, deleteConnection,
+  duplicateCard,
   getSession, updateCard, updateSession, updateStep,
 } from '@/lib/sessions/store'
 import { CARD_TYPE_META } from '@/lib/sessions/cardTypes'
 import { getTemplate, STEP_LABEL, STEP_ORDER } from '@/lib/sessions/templates'
 import type {
-  CardType, Session, SessionCard, SessionConnection,
+  CardType, Session, SessionCard, SessionConnection, SessionMember,
   SessionStepRow, StepKey,
 } from '@/types/sessions'
 import SessionSidebar from './SessionSidebar'
@@ -64,17 +65,41 @@ export default function SessionWorkspace({ sessionId, userId }: Props) {
   const [cards,       setCards]       = useState<SessionCard[]>([])
   const [connections, setConnections] = useState<SessionConnection[]>([])
   const [steps,       setSteps]       = useState<SessionStepRow[]>([])
+  const [members,     setMembers]     = useState<Record<string, SessionMember>>({})
   const [loadError,   setLoadError]   = useState<string | null>(null)
 
-  const [currentStep, setCurrentStep] = useState<StepKey>('define')
-  const [saveStatus,  setSaveStatus]  = useState<SaveStatus>('idle')
-  const [showSummary, setShowSummary] = useState(false)
+  const [currentStep,      setCurrentStep]      = useState<StepKey>('define')
+  const [saveStatus,       setSaveStatus]       = useState<SaveStatus>('idle')
+  const [showSummary,      setShowSummary]      = useState(false)
+  // Left-sidebar collapse state, persisted across reloads of the same browser.
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  // The card the user has clicked once — the right Guide panel switches to
+  // an inline editor when this is set, and becomes the step guide again
+  // when nothing is selected.
+  const [selectedCardId,   setSelectedCardId]   = useState<string | null>(null)
+  // The card the user has double-clicked (or pressed Enter on) — focuses
+  // the inline title input on the canvas card itself.
+  const [editingCardId,    setEditingCardId]    = useState<string | null>(null)
 
   // Connection-draft state — set when the user enters connect mode by
   // clicking the link icon on a card or pressing the "Connect" guide button.
   const [connectingFrom, setConnectingFrom] = useState<string | null>(null)
 
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Persist collapsed state per browser (not per session) — feels like a UI
+  // preference, not session data.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      const v = window.localStorage.getItem('ideaflow:sessions:sidebarCollapsed')
+      if (v === '1') setSidebarCollapsed(true)
+    } catch { /* private mode etc. — fine, default to expanded */ }
+  }, [])
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try { window.localStorage.setItem('ideaflow:sessions:sidebarCollapsed', sidebarCollapsed ? '1' : '0') } catch {}
+  }, [sidebarCollapsed])
 
   // ── Initial load ───────────────────────────────────────────────────────────
   useEffect(() => {
@@ -86,6 +111,7 @@ export default function SessionWorkspace({ sessionId, userId }: Props) {
       setCards(d.cards)
       setConnections(d.connections)
       setSteps(d.steps)
+      setMembers(d.members)
     })
     return () => { alive = false }
   }, [userId, sessionId])
@@ -119,6 +145,20 @@ export default function SessionWorkspace({ sessionId, userId }: Props) {
       y:      120 + (offset % 200),
     })
     setCards(c => [...c, newCard])
+    // Auto-select + auto-focus title so the user can start typing.
+    setSelectedCardId(newCard.id)
+    setEditingCardId(newCard.id)
+    flashSaved()
+  }
+
+  async function handleDuplicateCard(id: string) {
+    if (!session) return
+    const source = cards.find(c => c.id === id)
+    if (!source) return
+    setSaveStatus('saving')
+    const copy = await duplicateCard({ userId, sessionId: session.id, source })
+    setCards(c => [...c, copy])
+    setSelectedCardId(copy.id)
     flashSaved()
   }
 
@@ -149,8 +189,17 @@ export default function SessionWorkspace({ sessionId, userId }: Props) {
   async function handleDeleteCard(id: string) {
     setCards(cs => cs.filter(c => c.id !== id))
     setConnections(cn => cn.filter(c => c.source_card_id !== id && c.target_card_id !== id))
+    if (selectedCardId === id) setSelectedCardId(null)
+    if (editingCardId === id)  setEditingCardId(null)
     setSaveStatus('saving')
     await deleteCard(userId, id)
+    flashSaved()
+  }
+
+  async function handleChangeCardType(id: string, type: CardType) {
+    setCards(cs => cs.map(c => c.id === id ? { ...c, type } : c))
+    setSaveStatus('saving')
+    await updateCard(userId, id, { type })
     flashSaved()
   }
 
@@ -398,7 +447,10 @@ export default function SessionWorkspace({ sessionId, userId }: Props) {
         style={{
           flex: 1, minHeight: 0,
           display: 'grid',
-          gridTemplateColumns: '14rem 1fr 17rem',
+          // First column shrinks when the steps sidebar is collapsed, so the
+          // dark canvas claims the freed width automatically.
+          gridTemplateColumns: `${sidebarCollapsed ? '3.5rem' : '15rem'} 1fr 18rem`,
+          transition: 'grid-template-columns 0.2s ease',
         }}
         className="session-workspace-grid"
       >
@@ -407,17 +459,25 @@ export default function SessionWorkspace({ sessionId, userId }: Props) {
           stepLabels={STEP_LABEL}
           currentStep={currentStep}
           completed={completedSet}
+          collapsed={sidebarCollapsed}
           onSelect={setCurrentStep}
           onToggleComplete={handleToggleStep}
+          onToggleCollapse={() => setSidebarCollapsed(v => !v)}
         />
 
         <SessionCanvas
           cards={cards}
           connections={connections}
+          members={members}
           connectingFrom={connectingFrom}
+          selectedCardId={selectedCardId}
+          editingCardId={editingCardId}
+          onSelectCard={setSelectedCardId}
+          onEditCard={setEditingCardId}
           onPositionEnd={handleUpdateCardPosition}
           onChangeText={handleUpdateCardText}
           onTogglePriority={handleTogglePriority}
+          onDuplicate={handleDuplicateCard}
           onDelete={handleDeleteCard}
           onStartConnect={startConnectFrom}
           onFinishConnect={handleFinishConnect}
@@ -426,8 +486,17 @@ export default function SessionWorkspace({ sessionId, userId }: Props) {
         />
 
         <GuidePanel
+          mode={selectedCardId ? 'card' : 'step'}
           stepKey={currentStep}
           guide={stepGuide}
+          selectedCard={selectedCardId ? cards.find(c => c.id === selectedCardId) ?? null : null}
+          members={members}
+          onDeselect={() => setSelectedCardId(null)}
+          onChangeCardType={handleChangeCardType}
+          onChangeCardText={handleUpdateCardText}
+          onTogglePriority={handleTogglePriority}
+          onDuplicateCard={handleDuplicateCard}
+          onDeleteCard={handleDeleteCard}
           onAddCard={handleAddCard}
           onSuggestAngles={handleAISuggestAngles}
           onFindDuplicates={handleAIFindDuplicates}
@@ -448,13 +517,15 @@ export default function SessionWorkspace({ sessionId, userId }: Props) {
         />
       )}
 
-      {/* Responsive guard — collapse the side panels under cards on narrow viewports */}
+      {/* Responsive guard — collapse the side panels under cards on narrow viewports.
+          On narrow widths the sidebar collapses regardless of the toggle so the canvas
+          stays usable. */}
       <style>{`
         @media (max-width: 1100px) {
-          .session-workspace-grid { grid-template-columns: 12rem 1fr 15rem; }
+          .session-workspace-grid { grid-template-columns: ${sidebarCollapsed ? '3.5rem' : '13rem'} 1fr 16rem !important; }
         }
         @media (max-width: 880px) {
-          .session-workspace-grid { grid-template-columns: 1fr; }
+          .session-workspace-grid { grid-template-columns: 3.5rem 1fr 0 !important; }
         }
       `}</style>
     </div>

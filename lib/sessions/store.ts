@@ -35,7 +35,7 @@ import { createClient } from '@/lib/supabase/client'
 import { STEP_ORDER } from './templates'
 import type {
   Session, SessionCard, SessionConnection, SessionStepRow,
-  SessionDetail, TemplateType, CardType, StepKey,
+  SessionDetail, SessionMember, TemplateType, CardType, StepKey,
 } from '@/types/sessions'
 
 // Postgres duplicate-key error
@@ -73,28 +73,42 @@ export async function listSessions(_userId: string, _companyId: string): Promise
 export async function getSession(_userId: string, sessionId: string): Promise<SessionDetail | null> {
   const supabase = db()
 
-  // One round-trip per table — Supabase's PostgREST embed syntax could fold
-  // these into one query but the un-embedded version is easier to read and
-  // avoids the cards/connections/steps shapes mutating through the embed.
-  const [sessionRes, cardsRes, connectionsRes, stepsRes] = await Promise.all([
-    supabase.from('sessions').select('*').eq('id', sessionId).maybeSingle(),
+  // Fetch session metadata first so we can scope the profiles query to its
+  // company. Then in parallel pull the four child resources (cards,
+  // connections, steps, workspace profiles).
+  const sessionRes = await supabase
+    .from('sessions').select('*').eq('id', sessionId).maybeSingle()
+  if (sessionRes.error) throwIfError(sessionRes.error, 'getSession')
+  if (!sessionRes.data) return null
+
+  const session = sessionRes.data as Session
+
+  const [cardsRes, connectionsRes, stepsRes, profilesRes] = await Promise.all([
     supabase.from('session_cards').select('*').eq('session_id', sessionId).order('created_at', { ascending: true }),
     supabase.from('session_connections').select('*').eq('session_id', sessionId),
     supabase.from('session_steps').select('*').eq('session_id', sessionId),
+    // Workspace member directory — used to render card avatar initials and
+    // the "Admin / Member" hint without re-querying per card.
+    supabase.from('profiles').select('id, full_name, role').eq('company_id', session.company_id),
   ])
-
-  if (sessionRes.error) { throwIfError(sessionRes.error, 'getSession') }
-  if (!sessionRes.data)  return null
 
   throwIfError(cardsRes.error,       'getSession.cards')
   throwIfError(connectionsRes.error, 'getSession.connections')
   throwIfError(stepsRes.error,       'getSession.steps')
+  throwIfError(profilesRes.error,    'getSession.profiles')
+
+  const members: Record<string, SessionMember> = {}
+  type ProfileRow = { id: string; full_name: string | null; role: string }
+  for (const row of ((profilesRes.data ?? []) as ProfileRow[])) {
+    members[row.id] = { id: row.id, fullName: row.full_name, role: row.role }
+  }
 
   return {
-    session:     sessionRes.data     as Session,
+    session,
     cards:       (cardsRes.data       ?? []) as SessionCard[],
     connections: (connectionsRes.data ?? []) as SessionConnection[],
     steps:       (stepsRes.data       ?? []) as SessionStepRow[],
+    members,
   }
 }
 
@@ -180,12 +194,37 @@ export async function createCard(args: {
       x:          args.x ?? 80 + Math.random() * 200,
       y:          args.y ?? 80 + Math.random() * 200,
       priority:   0,
+      // Attribute the card to whoever is creating it. Falls back to null so
+      // the row still inserts cleanly even if userId is somehow empty.
+      created_by: args.userId || null,
     })
     .select()
     .single()
   throwIfError(error, 'createCard')
   if (!data) throw new Error('[sessions] createCard returned no row')
   return data as SessionCard
+}
+
+/**
+ * Duplicate a card — spawns a new card with the same type/title/content and
+ * priority, offset slightly from the original so the user can see both at
+ * once. The new card is attributed to the duplicating user, not the original
+ * author, so card history reflects who pressed the button.
+ */
+export async function duplicateCard(args: {
+  userId:    string
+  sessionId: string
+  source:    SessionCard
+}): Promise<SessionCard> {
+  return createCard({
+    userId:    args.userId,
+    sessionId: args.sessionId,
+    type:      args.source.type,
+    title:     args.source.title ? `${args.source.title} (copy)` : '',
+    content:   args.source.content,
+    x:         args.source.x + 32,
+    y:         args.source.y + 32,
+  })
 }
 
 export async function updateCard(
