@@ -31,18 +31,21 @@ const STANDARD_FEATURES = [
   'Participation reports',
 ]
 
-// Ordered so the headline value (Sessions) reads first. AI lives near the
-// bottom and is labelled "optional" to honour the product direction.
-const PRO_FEATURES = [
-  'Everything in Standard',
-  'Unlimited Brainstorm Sessions',
-  'Collaborative idea canvases',
-  'Guided thinking workflows',
-  'Team brainstorming',
-  'Visual idea mapping',
-  'Session summaries & action plans',
-  '✦ AI helpers (optional)',
-  'Priority support',
+// Sessions get the ✦ marker so the eye picks them out as the headline value.
+// Generic carry-over capabilities get the standard ✓. AI is intentionally
+// not in this list — it lives as a single muted line below the features so
+// the card never reads as an AI product.
+type ProFeature = { icon: '✦' | '✓'; text: string }
+const PRO_FEATURES: ProFeature[] = [
+  { icon: '✓', text: 'Everything in Standard' },
+  { icon: '✦', text: 'Unlimited Brainstorm Sessions' },
+  { icon: '✦', text: 'Collaborative idea canvases' },
+  { icon: '✦', text: 'Guided thinking workflows' },
+  { icon: '✦', text: 'Team brainstorming' },
+  { icon: '✦', text: 'Visual idea mapping' },
+  { icon: '✦', text: 'Session summaries & action plans' },
+  { icon: '✦', text: 'Priority support' },
+  { icon: '✓', text: 'Up to 100 workspace members' },
 ]
 
 export default function UpgradePlans({ compact = false, currentPlan }: UpgradePlansProps) {
@@ -203,16 +206,16 @@ export default function UpgradePlans({ compact = false, currentPlan }: UpgradePl
             : '0 4px 28px rgba(9,13,30,0.22), 0 0 0 1px rgba(99,179,237,0.12)',
         }}
       >
-        {/* "Most popular for teams" badge — pins to the top-right corner */}
+        {/* "Most popular for teams" — secondary, top-right badge */}
         {currentPlan !== 'pro' && (
           <div
             style={{
               position: 'absolute', top: '0.85rem', right: '0.85rem',
-              fontSize: '0.55rem', fontWeight: 800, letterSpacing: '0.08em',
+              fontSize: '0.52rem', fontWeight: 800, letterSpacing: '0.08em',
               textTransform: 'uppercase',
-              color: '#fdba74',
-              background: 'rgba(249,115,22,0.16)',
-              border: '1px solid rgba(249,115,22,0.32)',
+              color: 'rgba(255,255,255,0.55)',
+              background: 'rgba(255,255,255,0.06)',
+              border: '1px solid rgba(255,255,255,0.10)',
               borderRadius: '999px',
               padding: '0.2rem 0.55rem',
               zIndex: 2,
@@ -222,19 +225,36 @@ export default function UpgradePlans({ compact = false, currentPlan }: UpgradePl
           </div>
         )}
 
-        {/* Top-right glow */}
+        {/* Soft top-right glow — keeps the card feeling premium without
+            reading as "AI sparkle". */}
         <div style={{
           position: 'absolute', top: 0, right: 0,
           width: '65%', height: '55%',
-          background: 'radial-gradient(ellipse at top right, rgba(99,179,237,0.10) 0%, transparent 70%)',
+          background: 'radial-gradient(ellipse at top right, rgba(249,115,22,0.10) 0%, transparent 70%)',
           pointerEvents: 'none',
         }} />
 
         <div style={{ position: 'relative', paddingTop: currentPlan === 'pro' ? 0 : '0.6rem' }}>
+          {/* Headline badge — the Pro plan IS Sessions. */}
+          <div
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: '0.35rem',
+              fontSize: '0.58rem', fontWeight: 800, letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              color: '#fdba74',
+              background: 'rgba(249,115,22,0.14)',
+              border: '1px solid rgba(249,115,22,0.32)',
+              borderRadius: '999px',
+              padding: '0.22rem 0.6rem',
+              marginBottom: '0.65rem',
+            }}
+          >
+            <span>✦</span> Brainstorm Sessions
+          </div>
           <p style={{
             fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.1em',
             textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)',
-            marginBottom: '0.45rem',
+            marginBottom: '0.4rem',
           }}>
             IdeaFlow Pro
           </p>
@@ -246,7 +266,7 @@ export default function UpgradePlans({ compact = false, currentPlan }: UpgradePl
           </p>
           <p
             style={{
-              fontSize: '0.8rem', color: 'rgba(255,255,255,0.62)',
+              fontSize: '0.8rem', color: 'rgba(255,255,255,0.65)',
               marginTop: '0.5rem', lineHeight: 1.5,
               maxWidth: '20rem',
             }}
@@ -260,32 +280,44 @@ export default function UpgradePlans({ compact = false, currentPlan }: UpgradePl
 
         <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.35rem', position: 'relative' }}>
           {PRO_FEATURES.map((f, i) => {
-            const isAI    = f.startsWith('✦')
-            const isFirst = i === 0
-            const label   = isAI ? f.slice(2) : f
+            const isFirst = i === 0  // "Everything in Standard" — render slightly muted
+            const isSessions = f.icon === '✦'
             return (
-              <li key={f} style={{
+              <li key={f.text} style={{
                 fontSize: '0.8rem',
                 color: isFirst
-                  ? 'rgba(255,255,255,0.32)'
-                  : isAI
-                    ? 'rgba(186,230,253,0.78)'
-                    : 'rgba(255,255,255,0.78)',
+                  ? 'rgba(255,255,255,0.45)'
+                  : 'rgba(255,255,255,0.82)',
                 display: 'flex', alignItems: 'flex-start', gap: '0.4rem',
                 fontStyle: isFirst ? 'italic' : 'normal',
                 lineHeight: 1.5,
               }}>
                 <span style={{
-                  color: isAI ? 'rgba(249,115,22,0.7)' : 'rgba(99,179,237,0.7)',
+                  color: isSessions ? 'rgba(253,186,116,0.85)' : 'rgba(99,179,237,0.7)',
                   fontSize: '0.72rem', marginTop: '0.1rem', flexShrink: 0,
                 }}>
-                  {isAI ? '✦' : '✓'}
+                  {f.icon}
                 </span>
-                {label}
+                {f.text}
               </li>
             )
           })}
         </ul>
+
+        {/* AI — one muted line. Sits below the features list so it reads as
+            "and a small extra thing", not as the headline. */}
+        <p
+          style={{
+            fontSize: '0.7rem',
+            color: 'rgba(255,255,255,0.32)',
+            display: 'inline-flex', alignItems: 'center', gap: '0.35rem',
+            position: 'relative',
+            marginTop: '-0.25rem',
+          }}
+        >
+          <span style={{ color: 'rgba(255,255,255,0.20)', fontSize: '0.65rem' }}>+</span>
+          Optional AI helpers
+        </p>
 
         {currentPlan === 'pro' ? (
           <span style={{

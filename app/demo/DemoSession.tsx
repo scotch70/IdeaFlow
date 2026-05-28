@@ -26,8 +26,9 @@ const CANVAS_SURFACE = '#161c2e'
 const CANVAS_BORDER  = 'rgba(255,255,255,0.07)'
 const CANVAS_DOT     = 'rgba(255,255,255,0.05)'
 
-const CARD_W = 220
-const CARD_H = 110
+// Match the real workspace card dimensions so the demo reads as accurate.
+const CARD_W = 236
+const CARD_H = 118
 
 // ── Mock data ────────────────────────────────────────────────────────────────
 interface DemoCard {
@@ -57,54 +58,57 @@ const C = {
   task:     { accent: '#94a3b8', ink: '#cbd5e1', bg: 'rgba(148,163,184,0.10)', label: 'TASK'      },
 } as const
 
+// Positions are picked so the eye reads top→bottom-left→right (Problem
+// anchors the top-left, Idea sits beneath it, Risk + Decision flank to the
+// right, Task closes at the bottom). Hand-tuned for the new wider canvas.
 const DEMO_CARDS: DemoCard[] = [
   {
     id: 'card-problem', type: 'problem', ...C.problem,
     title: 'Busy professionals waste time finding reliable help',
     detail: 'Hours lost vetting freelancers across half-a-dozen platforms.',
-    x: 40, y: 30,
+    x: 64, y: 56,
     owner: 'Sara Kim', ownerColor: 'rgba(249,115,22,0.45)', ownerRole: 'Admin', starred: true,
   },
   {
     id: 'card-audience', type: 'audience', ...C.audience,
     title: 'Busy professionals & small businesses',
     detail: 'Founders, ops leads, and indie agencies — $50k+/yr in freelance spend.',
-    x: 304, y: 30,
+    x: 412, y: 56,
     owner: 'James Ortiz', ownerColor: 'rgba(59,130,246,0.45)', ownerRole: 'Member',
   },
   {
     id: 'card-cause', type: 'cause', ...C.cause,
     title: 'Too many low-quality freelancers',
     detail: 'Open marketplaces favour volume over signal — vetting falls on the buyer.',
-    x: 40, y: 180,
+    x: 64, y: 248,
     owner: 'Priya Shah', ownerColor: 'rgba(167,139,250,0.45)', ownerRole: 'Member',
   },
   {
     id: 'card-idea', type: 'idea', ...C.idea,
     title: 'Vetted marketplace with reviews',
     detail: 'Curated supply + structured reviews + verified past work.',
-    x: 304, y: 180,
+    x: 412, y: 248,
     owner: 'Sara Kim', ownerColor: 'rgba(249,115,22,0.45)', ownerRole: 'Admin', starred: true,
   },
   {
     id: 'card-risk', type: 'risk', ...C.risk,
     title: 'Chicken-and-egg problem',
     detail: 'No demand → no supply → no demand. Need a side to seed first.',
-    x: 568, y: 100,
+    x: 760, y: 144,
     owner: 'Marcus Lin', ownerColor: 'rgba(16,185,129,0.45)', ownerRole: 'Member',
   },
   {
     id: 'card-decision', type: 'decision', ...C.decision,
     title: 'Start with a niche market',
     detail: 'Pilot in B2B legal admin work — defined buyers, repeatable scope.',
-    x: 568, y: 252,
+    x: 760, y: 340,
     owner: 'Sara Kim', ownerColor: 'rgba(249,115,22,0.45)', ownerRole: 'Admin', starred: true,
   },
   {
     id: 'card-task', type: 'task', ...C.task,
     title: 'Interview 10 users',
     detail: 'Talk to 10 legal-ops leads next week — confirm pain + price ceiling.',
-    x: 304, y: 354,
+    x: 412, y: 448,
     owner: 'James Ortiz', ownerColor: 'rgba(59,130,246,0.45)', ownerRole: 'Member',
   },
 ]
@@ -165,7 +169,30 @@ export default function DemoSession() {
   }
 
   return (
-    <div style={{ height: 'calc(100vh - 3.625rem - 4rem)', minHeight: 640, display: 'flex', flexDirection: 'column' }}>
+    <div
+      // Cinematic outer frame — wider max-width than the IdeaFlow demo so the
+      // Session demo visually dominates. Centred with breathing room and a
+      // soft drop shadow so the dark canvas reads as a premium surface.
+      style={{
+        maxWidth: 1400,
+        margin: '0 auto',
+        padding: 'clamp(0.75rem, 1.5vw, 1.4rem) clamp(0.75rem, 2vw, 1.75rem) 2.25rem',
+        fontFamily: 'inherit',
+      }}
+    >
+      <div
+        style={{
+          height: 'calc(100vh - 3.625rem - 2.4rem - 3.5rem - 1.4rem)',
+          minHeight: 620,
+          borderRadius: '1rem',
+          border: '1px solid rgba(15,23,42,0.10)',
+          overflow: 'hidden',
+          background: '#fff',
+          boxShadow: '0 12px 48px rgba(6,14,38,0.10), 0 1px 4px rgba(6,14,38,0.05)',
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
 
       {/* ── Top bar ────────────────────────────────────────────────────────── */}
       <div
@@ -230,12 +257,12 @@ export default function DemoSession() {
         </div>
       </div>
 
-      {/* ── Three-pane workspace ───────────────────────────────────────────── */}
+      {/* ── Three-pane workspace — narrower rails, dominant centre canvas ── */}
       <div
         style={{
           flex: 1, minHeight: 0,
           display: 'grid',
-          gridTemplateColumns: '15rem minmax(0, 1fr) 17rem',
+          gridTemplateColumns: '12.5rem minmax(0, 1fr) 15rem',
         }}
         className="demo-session-grid"
       >
@@ -317,8 +344,10 @@ export default function DemoSession() {
             minHeight: 0,
           }}
         >
-          {/* Connection layer */}
-          <svg width="100%" height="100%" viewBox="0 0 760 480" preserveAspectRatio="xMidYMid meet" style={{ position: 'absolute', inset: 0 }}>
+          {/* Connection layer — no viewBox so SVG user-units render as actual
+              CSS pixels and the bezier paths land on the same coordinate
+              system the cards are positioned in. */}
+          <svg width="100%" height="100%" style={{ position: 'absolute', inset: 0, overflow: 'visible' }}>
             <defs>
               <marker id="demo-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
                 <path d="M 0 0 L 10 5 L 0 10 z" fill="rgba(148,163,184,0.7)" />
@@ -517,12 +546,13 @@ export default function DemoSession() {
           box-shadow: 0 0 0 1px rgba(255,255,255,0.10), 0 8px 24px rgba(0,0,0,0.42) !important;
         }
         @media (max-width: 1100px) {
-          .demo-session-grid { grid-template-columns: 13rem minmax(0, 1fr) 15rem !important; }
+          .demo-session-grid { grid-template-columns: 11rem minmax(0, 1fr) 13.5rem !important; }
         }
         @media (max-width: 880px) {
           .demo-session-grid { grid-template-columns: 3.5rem minmax(0, 1fr) 0 !important; }
         }
       `}</style>
+      </div>{/* close the framed inner card */}
     </div>
   )
 }

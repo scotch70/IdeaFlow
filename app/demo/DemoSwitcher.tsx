@@ -16,21 +16,27 @@ import DemoWorkspace from './DemoWorkspace'
 type Tab = 'session' | 'ideaflow'
 
 export default function DemoSwitcher() {
+  // Brainstorm Session is the flagship Pro feature — explicitly the default.
   const [tab, setTab] = useState<Tab>('session')
 
   return (
     <>
-      {/* Tab strip */}
+      {/* Tab strip — Session sits first and carries a small Pro chip so the
+          eye lands on it as "the headline thing to see". */}
       <div
         style={{
           background: '#fbfaf7',
           borderBottom: '1px solid rgba(0,0,0,0.06)',
-          padding: '0.5rem 1rem',
+          padding: '0.55rem 1rem',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          gap: '0.4rem',
+          gap: '0.45rem',
         }}
       >
-        <TabButton active={tab === 'session'}  onClick={() => setTab('session')}>
+        <TabButton
+          active={tab === 'session'}
+          onClick={() => setTab('session')}
+          chip="Pro"
+        >
           ✦ Brainstorm Session
         </TabButton>
         <TabButton active={tab === 'ideaflow'} onClick={() => setTab('ideaflow')}>
@@ -44,11 +50,12 @@ export default function DemoSwitcher() {
 }
 
 function TabButton({
-  active, onClick, children,
+  active, onClick, children, chip,
 }: {
   active:   boolean
   onClick:  () => void
   children: React.ReactNode
+  chip?:    string
 }) {
   return (
     <button
@@ -56,8 +63,9 @@ function TabButton({
       onClick={onClick}
       aria-pressed={active}
       style={{
+        display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
         fontSize: '0.78rem', fontWeight: 700,
-        padding: '0.4rem 0.85rem',
+        padding: '0.42rem 0.9rem',
         borderRadius: '999px',
         background: active ? '#0d1f35' : 'transparent',
         color: active ? '#fff' : '#5d667a',
@@ -70,6 +78,21 @@ function TabButton({
       onMouseLeave={e => { if (!active) { e.currentTarget.style.background = 'transparent';        e.currentTarget.style.color = '#5d667a' } }}
     >
       {children}
+      {chip && (
+        <span
+          style={{
+            fontSize: '0.52rem', fontWeight: 800, letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+            color: active ? '#fdba74' : '#c2540a',
+            background: active ? 'rgba(249,115,22,0.18)' : 'rgba(249,115,22,0.10)',
+            border: `1px solid ${active ? 'rgba(249,115,22,0.35)' : 'rgba(249,115,22,0.22)'}`,
+            borderRadius: '999px',
+            padding: '0.1rem 0.42rem',
+          }}
+        >
+          {chip}
+        </span>
+      )}
     </button>
   )
 }
