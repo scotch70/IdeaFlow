@@ -1,5 +1,5 @@
 import SiteHeader from '@/components/SiteHeader'
-import DemoWorkspace from './DemoWorkspace'
+import DemoSwitcher from './DemoSwitcher'
 
 export const metadata = { title: 'Live Demo — IdeaFlow' }
 
@@ -27,7 +27,7 @@ export default function DemoPage() {
             fontSize: '0.6rem',
           }}>✦</span>
           <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.85)', fontWeight: 500 }}>
-            You're exploring a demo workspace — <strong style={{ color: '#e8b77e' }}>Meridian Labs</strong>. No sign-up needed.
+            Try your own <strong style={{ color: '#e8b77e' }}>Brainstorm Session</strong>. No sign-up needed.
           </span>
         </div>
         <a
@@ -47,7 +47,7 @@ export default function DemoPage() {
         </a>
       </div>
 
-      <DemoWorkspace />
+      <DemoSwitcher />
     </div>
   )
 }

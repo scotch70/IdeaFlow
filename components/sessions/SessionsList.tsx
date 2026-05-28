@@ -122,9 +122,13 @@ export default function SessionsList({ userId, companyId }: Props) {
                     <span style={{ flex: 1 }} />
                     <StatusPill status={s.status} />
                   </div>
-                  <p style={{ fontSize: '0.9rem', fontWeight: 700, color: '#0d1f35', letterSpacing: '-0.01em', lineHeight: 1.3, marginBottom: '0.65rem', minHeight: '1.2em' }}>
+                  <p style={{ fontSize: '0.9rem', fontWeight: 700, color: '#0d1f35', letterSpacing: '-0.01em', lineHeight: 1.3, marginBottom: '0.6rem', minHeight: '1.2em' }}>
                     {s.title || 'Untitled session'}
                   </p>
+                  {/* Mini canvas thumbnail — deterministic per-session so each
+                      card has its own little identity without us needing to
+                      query the actual cards table on the list page. */}
+                  <SessionMiniThumbnail seed={s.id} marginBottom="0.55rem" />
                   <p style={{ fontSize: '0.7rem', color: '#9faab8' }}>
                     Updated {relativeTime(s.updated_at)}
                   </p>
@@ -197,6 +201,62 @@ export default function SessionsList({ userId, companyId }: Props) {
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+// Stable hash → small set of "card positions" for the thumbnail. Cheap,
+// deterministic, runs only at render time.
+function seededHash(str: string): number {
+  let h = 0
+  for (let i = 0; i < str.length; i++) h = ((h << 5) - h + str.charCodeAt(i)) | 0
+  return Math.abs(h)
+}
+
+function SessionMiniThumbnail({ seed, marginBottom }: { seed: string; marginBottom?: string }) {
+  const h = seededHash(seed)
+  // 3 deterministic dots positioned across the canvas — gives each card a
+  // distinct visual fingerprint without ever loading the real session data.
+  const dots = [
+    { x: 12 + (h % 30),                 y: 10 + ((h >> 3)  % 14), c: '#f97316' },
+    { x: 70 + ((h >> 7)  % 60),         y: 28 + ((h >> 5)  % 12), c: '#10b981' },
+    { x: 150 + ((h >> 11) % 50),        y: 14 + ((h >> 9)  % 20), c: '#3b82f6' },
+  ]
+  return (
+    <div
+      aria-hidden
+      style={{
+        position: 'relative',
+        height: '56px',
+        borderRadius: '0.45rem',
+        background: '#0e1320',
+        backgroundImage: 'radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1px)',
+        backgroundSize: '10px 10px',
+        backgroundPosition: '-1px -1px',
+        border: '1px solid rgba(255,255,255,0.06)',
+        overflow: 'hidden',
+        marginBottom,
+      }}
+    >
+      <svg viewBox="0 0 220 56" width="100%" height="100%" preserveAspectRatio="none">
+        {/* Connectors */}
+        <path d={`M ${dots[0].x + 14} ${dots[0].y + 6} C ${dots[1].x} ${dots[0].y + 6}, ${dots[0].x + 24} ${dots[1].y + 6}, ${dots[1].x} ${dots[1].y + 6}`}
+              fill="none" stroke="rgba(148,163,184,0.40)" strokeWidth="0.9" />
+        <path d={`M ${dots[1].x + 14} ${dots[1].y + 6} C ${dots[2].x} ${dots[1].y + 6}, ${dots[1].x + 24} ${dots[2].y + 6}, ${dots[2].x} ${dots[2].y + 6}`}
+              fill="none" stroke="rgba(148,163,184,0.40)" strokeWidth="0.9" />
+        {/* Cards */}
+        {dots.map((d, i) => (
+          <g key={i}>
+            <rect
+              x={d.x} y={d.y} width={28} height={12} rx={2.5}
+              fill={`${d.c}22`} stroke={`${d.c}88`} strokeWidth="0.7"
+            />
+            <rect x={d.x + 3} y={d.y + 3} width={8} height={1.8} rx={0.9} fill={`${d.c}cc`} />
+            <rect x={d.x + 3} y={d.y + 6.5} width={20} height={1.4} rx={0.7} fill="rgba(255,255,255,0.40)" />
+            <rect x={d.x + 3} y={d.y + 9} width={14} height={1.4} rx={0.7} fill="rgba(255,255,255,0.25)" />
+          </g>
+        ))}
+      </svg>
     </div>
   )
 }

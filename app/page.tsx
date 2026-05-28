@@ -25,6 +25,111 @@ const P = {
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared mockup chrome wrapper
 // ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// SessionShowcase — non-interactive visual mock of the Sessions canvas used
+// as the hero visual in the Brainstorm Sessions landing section. Styled to
+// match the actual product (dark canvas, dot grid, accent-coloured cards,
+// SVG connectors) so what marketing promises matches what the user gets.
+// ─────────────────────────────────────────────────────────────────────────────
+function SessionShowcase() {
+  // Static positions chosen so the layout reads like a real session: Problem
+  // anchors the top-left, Idea cluster sits below, Risk + Decision flank to
+  // the right.
+  const CARDS = [
+    { x: 28,  y: 38,  w: 132, label: 'PROBLEM',  title: 'Sprint review chaos', accent: '#f97316', bg: 'rgba(249,115,22,0.10)', ink: '#fdba74' },
+    { x: 184, y: 32,  w: 132, label: 'AUDIENCE', title: 'Engineering leads',  accent: '#3b82f6', bg: 'rgba(59,130,246,0.10)', ink: '#93c5fd' },
+    { x: 28,  y: 150, w: 132, label: 'IDEA',     title: 'Shared template',    accent: '#10b981', bg: 'rgba(16,185,129,0.10)', ink: '#6ee7b7' },
+    { x: 184, y: 156, w: 132, label: 'DECISION', title: 'Pilot one team',     accent: '#06b6d4', bg: 'rgba(6,182,212,0.10)',  ink: '#67e8f9' },
+    { x: 340, y: 96,  w: 132, label: 'TASK',     title: 'Draft template v0',  accent: '#94a3b8', bg: 'rgba(148,163,184,0.10)', ink: '#cbd5e1' },
+  ]
+  const CARD_H = 64
+  const center = (c: { x: number; y: number; w: number }) => ({ cx: c.x + c.w / 2, cy: c.y + CARD_H / 2 })
+  const a = center(CARDS[0]), b = center(CARDS[1]), c = center(CARDS[2]), d = center(CARDS[3]), e = center(CARDS[4])
+  function curve(p: { cx: number; cy: number }, q: { cx: number; cy: number }) {
+    const dx = (q.cx - p.cx) * 0.45
+    return `M ${p.cx} ${p.cy} C ${p.cx + dx} ${p.cy}, ${q.cx - dx} ${q.cy}, ${q.cx} ${q.cy}`
+  }
+
+  return (
+    <div
+      style={{
+        position: 'relative',
+        borderRadius: '1rem',
+        background: '#0e1320',
+        backgroundImage: 'radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px)',
+        backgroundSize: '22px 22px',
+        backgroundPosition: '-1px -1px',
+        border: '1px solid rgba(255,255,255,0.08)',
+        boxShadow: '0 18px 60px rgba(9,13,30,0.32)',
+        padding: '1rem',
+        overflow: 'hidden',
+        aspectRatio: '5 / 4',
+        maxWidth: '34rem',
+        marginLeft: 'auto',
+      }}
+      aria-hidden
+    >
+      {/* SVG connection layer */}
+      <svg viewBox="0 0 500 280" width="100%" height="100%" preserveAspectRatio="none" style={{ position: 'absolute', inset: '1rem', width: 'calc(100% - 2rem)', height: 'calc(100% - 2rem)' }}>
+        <defs>
+          <marker id="show-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="rgba(148,163,184,0.7)" />
+          </marker>
+        </defs>
+        <path d={curve(a, b)} fill="none" stroke="rgba(148,163,184,0.5)" strokeWidth="1.3" markerEnd="url(#show-arrow)" />
+        <path d={curve(a, c)} fill="none" stroke="rgba(148,163,184,0.5)" strokeWidth="1.3" markerEnd="url(#show-arrow)" />
+        <path d={curve(c, d)} fill="none" stroke="rgba(148,163,184,0.5)" strokeWidth="1.3" markerEnd="url(#show-arrow)" />
+        <path d={curve(d, e)} fill="none" stroke="rgba(148,163,184,0.5)" strokeWidth="1.3" markerEnd="url(#show-arrow)" />
+        <path d={curve(b, e)} fill="none" stroke="rgba(148,163,184,0.5)" strokeWidth="1.3" markerEnd="url(#show-arrow)" />
+      </svg>
+
+      {/* Cards (also positioned in the 500×280 viewBox space via CSS percentages) */}
+      <div style={{ position: 'absolute', inset: '1rem' }}>
+        {CARDS.map(card => (
+          <div
+            key={card.label}
+            style={{
+              position: 'absolute',
+              left:  `${(card.x / 500) * 100}%`,
+              top:   `${(card.y / 280) * 100}%`,
+              width: `${(card.w / 500) * 100}%`,
+              background: '#161c2e',
+              backgroundImage: `linear-gradient(180deg, ${card.bg}, transparent 65%)`,
+              border: `1px solid ${card.accent}55`,
+              borderRadius: '0.5rem',
+              padding: '0.5rem 0.6rem 0.55rem 0.75rem',
+              boxShadow: '0 4px 14px rgba(0,0,0,0.32)',
+            }}
+          >
+            <div
+              style={{
+                position: 'absolute', top: '0.5rem', bottom: '0.5rem', left: '0.25rem',
+                width: '2px', borderRadius: '999px', background: card.accent, opacity: 0.85,
+              }}
+            />
+            <p
+              style={{
+                fontSize: '0.5rem', fontWeight: 800, letterSpacing: '0.08em',
+                textTransform: 'uppercase', color: card.ink, marginBottom: '0.2rem',
+              }}
+            >
+              {card.label}
+            </p>
+            <p
+              style={{
+                fontSize: '0.72rem', fontWeight: 700, color: '#f4f7fb',
+                letterSpacing: '-0.01em', lineHeight: 1.3,
+              }}
+            >
+              {card.title}
+            </p>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function MockupShell({ children, url = 'app.useideaflow.com' }: { children: React.ReactNode; url?: string }) {
   return (
     <div style={{
@@ -480,6 +585,136 @@ export default async function HomePage() {
               </div>
             </div>
 
+          </PageContainer>
+        </section>
+
+
+        {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            BRAINSTORM SESSIONS — Pro showcase
+        ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+        <section
+          id="sessions"
+          style={{
+            background: P.surface,
+            borderTop: `1px solid ${P.border}`,
+            padding: 'clamp(4.5rem,9vw,7rem) 0',
+          }}
+        >
+          <PageContainer>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                gap: '4rem',
+                alignItems: 'center',
+              }}
+            >
+              {/* Left: copy */}
+              <div style={{ maxWidth: '28rem' }}>
+                <div
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
+                    fontSize: '0.6rem', fontWeight: 800, letterSpacing: '0.1em',
+                    textTransform: 'uppercase',
+                    color: '#c2540a',
+                    background: 'rgba(249,115,22,0.08)',
+                    border: '1px solid rgba(249,115,22,0.22)',
+                    borderRadius: '999px',
+                    padding: '0.2rem 0.55rem',
+                    marginBottom: '1rem',
+                  }}
+                >
+                  <span>✦</span> Pro feature
+                </div>
+
+                <h2
+                  style={{
+                    fontFamily: "'Instrument Serif', serif",
+                    fontStyle: 'italic',
+                    fontSize: 'clamp(1.625rem, 3vw, 2.25rem)',
+                    letterSpacing: '-0.02em',
+                    color: P.ink,
+                    lineHeight: 1.15,
+                    marginBottom: '0.85rem',
+                  }}
+                >
+                  Run guided brainstorming sessions with your team
+                </h2>
+                <p style={{ fontSize: '1rem', lineHeight: 1.65, color: P.slate, marginBottom: '1.5rem' }}>
+                  Turn rough ideas into structured plans using collaborative Sessions.
+                </p>
+
+                <ol
+                  style={{
+                    listStyle: 'none', padding: 0, margin: 0,
+                    display: 'flex', flexDirection: 'column', gap: '0.55rem',
+                    marginBottom: '1.75rem',
+                  }}
+                >
+                  {[
+                    'Define the problem',
+                    'Explore ideas',
+                    'Connect thoughts',
+                    'Prioritize what matters',
+                    'Turn ideas into action',
+                  ].map((step, i) => (
+                    <li
+                      key={step}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: '0.65rem',
+                        fontSize: '0.95rem', color: P.ink,
+                      }}
+                    >
+                      <span
+                        style={{
+                          width: '1.5rem', height: '1.5rem', borderRadius: '999px',
+                          background: 'rgba(249,115,22,0.10)',
+                          color: '#c2540a',
+                          fontSize: '0.7rem', fontWeight: 800,
+                          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                          flexShrink: 0,
+                          border: '1px solid rgba(249,115,22,0.22)',
+                        }}
+                      >
+                        {i + 1}
+                      </span>
+                      {step}
+                    </li>
+                  ))}
+                </ol>
+
+                <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+                  <Link
+                    href={user ? '/dashboard/sessions/new' : '/auth?mode=signup'}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
+                      background: P.dark, color: '#fff',
+                      fontSize: '0.875rem', fontWeight: 700,
+                      padding: '0.7rem 1.15rem', borderRadius: '0.625rem',
+                      textDecoration: 'none',
+                      boxShadow: '0 4px 18px rgba(13,31,53,0.18)',
+                    }}
+                  >
+                    Start a Session →
+                  </Link>
+                  <Link
+                    href="/demo"
+                    style={{
+                      display: 'inline-flex', alignItems: 'center',
+                      fontSize: '0.875rem', fontWeight: 600,
+                      color: P.slate,
+                      padding: '0.7rem 0.95rem', borderRadius: '0.625rem',
+                      textDecoration: 'none',
+                    }}
+                  >
+                    Watch the demo
+                  </Link>
+                </div>
+              </div>
+
+              {/* Right: stylised Session canvas mock */}
+              <SessionShowcase />
+            </div>
           </PageContainer>
         </section>
 
