@@ -1,12 +1,27 @@
 'use client'
 
+/**
+ * DashboardSidebar — the main left rail of every dashboard page.
+ *
+ * Collapsible on desktop (md+). Expanded ~240px / collapsed ~64px. The
+ * collapsed state hides labels, section headers and badges, leaving just
+ * the icons centred in the rail with a title attribute so hover tooltips
+ * still convey meaning. State is persisted in localStorage so the user's
+ * choice survives page reloads.
+ *
+ * The aside owns its width via inline style — the dashboard layout uses
+ * `flexShrink: 0` so the content column reflows whenever this changes.
+ */
+
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { canUseSessions } from '@/lib/plans/planFeatures'
 
-const SIDEBAR_W = 240
-const HEADER_H  = '3.625rem'
+const SIDEBAR_W_EXPANDED  = 240
+const SIDEBAR_W_COLLAPSED = 64
+const LS_KEY              = 'ideaflow:dashboardSidebarCollapsed'
 
 function Ico({ d, d2 }: { d: string; d2?: string }) {
   return (
@@ -36,7 +51,12 @@ const ICONS = {
   signout:    <Ico d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" d2="M16 17l5-5-5-5M21 12H9" />,
 }
 
-function SectionLabel({ children }: { children: React.ReactNode }) {
+function SectionLabel({ children, collapsed }: { children: React.ReactNode; collapsed: boolean }) {
+  if (collapsed) {
+    // Collapsed sections compress to a thin spacing line so the icons retain
+    // visual rhythm without text.
+    return <div style={{ height: '0.4rem' }} aria-hidden />
+  }
   return (
     <p style={{
       fontSize: '0.58rem',
@@ -58,27 +78,35 @@ interface NavLinkProps {
   icon: React.ReactNode
   label: string
   active: boolean
+  collapsed: boolean
   badge?: number
-  proChip?: boolean   // small "Pro" pill, shown when feature is locked
+  proChip?: boolean
 }
 
-function NavLink({ href, icon, label, active, badge, proChip }: NavLinkProps) {
+function NavLink({ href, icon, label, active, collapsed, badge, proChip }: NavLinkProps) {
+  const showBadge   = !active && badge !== undefined && badge > 0
+  const badgeNumber = showBadge ? (badge! > 9 ? '9+' : String(badge)) : null
+
   return (
     <Link
       href={href}
+      title={collapsed ? label : undefined}
+      aria-label={label}
       style={{
+        position: 'relative',
         display: 'flex',
         alignItems: 'center',
-        gap: '0.5rem',
+        justifyContent: collapsed ? 'center' : 'flex-start',
+        gap: collapsed ? 0 : '0.5rem',
         paddingTop: '0.375rem',
         paddingBottom: '0.375rem',
-        paddingRight: '0.625rem',
-        paddingLeft: active ? 'calc(0.625rem - 2px)' : '0.625rem',
+        paddingRight: collapsed ? '0.4rem' : '0.625rem',
+        paddingLeft: collapsed ? '0.4rem' : (active ? 'calc(0.625rem - 2px)' : '0.625rem'),
         borderRadius: '0.5rem',
         textDecoration: 'none',
         background: active ? 'rgba(249,115,22,0.07)' : 'transparent',
         color: active ? '#b84a09' : '#5d667a',
-        borderLeft: active ? '2px solid rgba(249,115,22,0.65)' : '2px solid transparent',
+        borderLeft: !collapsed && active ? '2px solid rgba(249,115,22,0.65)' : '2px solid transparent',
         transition: 'background 0.12s ease, color 0.12s ease',
       }}
       className={active ? '' : 'db-nav-inactive'}
@@ -86,31 +114,61 @@ function NavLink({ href, icon, label, active, badge, proChip }: NavLinkProps) {
       <span style={{ color: active ? '#ea580c' : '#9faab8', display: 'flex', flexShrink: 0 }}>
         {icon}
       </span>
-      <span style={{ fontSize: '0.775rem', fontWeight: active ? 700 : 500, flex: 1, letterSpacing: '-0.01em' }}>
-        {label}
-      </span>
-      {!active && badge !== undefined && badge > 0 && (
-        <span style={{
-          fontSize: '0.55rem', fontWeight: 700,
-          background: '#f97316', color: '#fff',
-          borderRadius: '999px', padding: '0.1rem 0.35rem',
-          minWidth: '1rem', textAlign: 'center',
-        }}>
-          {badge > 9 ? '9+' : badge}
-        </span>
+
+      {!collapsed && (
+        <>
+          <span style={{ fontSize: '0.775rem', fontWeight: active ? 700 : 500, flex: 1, letterSpacing: '-0.01em' }}>
+            {label}
+          </span>
+          {showBadge && (
+            <span style={{
+              fontSize: '0.55rem', fontWeight: 700,
+              background: '#f97316', color: '#fff',
+              borderRadius: '999px', padding: '0.1rem 0.35rem',
+              minWidth: '1rem', textAlign: 'center',
+            }}>
+              {badgeNumber}
+            </span>
+          )}
+          {proChip && (
+            <span style={{
+              fontSize: '0.5rem', fontWeight: 800, letterSpacing: '0.06em',
+              textTransform: 'uppercase',
+              color: '#c2540a',
+              background: 'rgba(249,115,22,0.10)',
+              border: '1px solid rgba(249,115,22,0.22)',
+              borderRadius: '999px',
+              padding: '0.06rem 0.32rem',
+              flexShrink: 0,
+            }}>
+              ✦ Pro
+            </span>
+          )}
+        </>
       )}
-      {proChip && (
-        <span style={{
-          fontSize: '0.5rem', fontWeight: 800, letterSpacing: '0.06em',
-          textTransform: 'uppercase',
-          color: '#c2540a',
-          background: 'rgba(249,115,22,0.10)',
-          border: '1px solid rgba(249,115,22,0.22)',
-          borderRadius: '999px',
-          padding: '0.06rem 0.32rem',
-          flexShrink: 0,
-        }}>
-          ✦ Pro
+
+      {/* Collapsed: tiny corner dot for unread badge so the count cue isn't lost */}
+      {collapsed && showBadge && (
+        <span
+          aria-hidden
+          style={{
+            position: 'absolute', top: '0.3rem', right: '0.3rem',
+            width: '0.45rem', height: '0.45rem', borderRadius: '999px',
+            background: '#f97316',
+          }}
+        />
+      )}
+      {collapsed && proChip && (
+        <span
+          aria-hidden
+          title={`${label} — Pro feature`}
+          style={{
+            position: 'absolute', top: '0.2rem', right: '0.2rem',
+            fontSize: '0.45rem', fontWeight: 800,
+            color: '#c2540a',
+          }}
+        >
+          ✦
         </span>
       )}
     </Link>
@@ -140,6 +198,20 @@ export default function DashboardSidebar({
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
+
+  // Default to expanded — flips on mount if the user previously collapsed it.
+  const [collapsed, setCollapsed] = useState(false)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      const v = window.localStorage.getItem(LS_KEY)
+      if (v === '1') setCollapsed(true)
+    } catch { /* private mode etc. — stay expanded */ }
+  }, [])
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try { window.localStorage.setItem(LS_KEY, collapsed ? '1' : '0') } catch {}
+  }, [collapsed])
 
   const isAdmin = userRole === 'admin'
   const firstName = userName.split(' ')[0] || 'You'
@@ -176,48 +248,90 @@ export default function DashboardSidebar({
         .db-user-card:hover {
           background: rgba(0,0,0,0.03) !important;
         }
+        .db-collapse-btn:hover {
+          background: rgba(0,0,0,0.06) !important;
+          color: #3d4758 !important;
+        }
       `}</style>
 
       <aside
         style={{
-          width: `${SIDEBAR_W}px`,
+          width: `${collapsed ? SIDEBAR_W_COLLAPSED : SIDEBAR_W_EXPANDED}px`,
           flexShrink: 0,
           background: '#faf9f7',
           borderRight: '1px solid rgba(0,0,0,0.06)',
           display: 'flex',
           flexDirection: 'column',
-          padding: '0.75rem 0.625rem 1rem',
+          padding: collapsed ? '0.75rem 0.4rem 1rem' : '0.75rem 0.625rem 1rem',
           overflowY: 'auto',
           overflowX: 'hidden',
+          transition: 'width 0.18s ease, padding 0.18s ease',
         }}
       >
+        {/* ── Collapse toggle ─────────────────────────────── */}
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: collapsed ? 'center' : 'flex-end',
+            marginBottom: '0.45rem',
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => setCollapsed(v => !v)}
+            className="db-collapse-btn"
+            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            style={{
+              width: '1.65rem', height: '1.65rem', borderRadius: '0.4rem',
+              border: 'none', background: 'transparent',
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer', color: '#94a3b8',
+              transition: 'background 0.12s, color 0.12s',
+            }}
+          >
+            <svg
+              width="13" height="13" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" strokeWidth="2.2"
+              strokeLinecap="round" strokeLinejoin="round"
+              style={{ transform: collapsed ? 'rotate(180deg)' : 'none', transition: 'transform 0.18s' }}
+              aria-hidden
+            >
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+          </button>
+        </div>
 
         {/* ─────────────────── Workspace ──────────────────── */}
-        <SectionLabel>Workspace</SectionLabel>
+        <SectionLabel collapsed={collapsed}>Workspace</SectionLabel>
         <nav style={{ display: 'flex', flexDirection: 'column', gap: '1px', marginBottom: '0.25rem' }}>
           <NavLink
             href="/dashboard"
             icon={ICONS.dashboard}
             label="Dashboard"
             active={exact('/dashboard')}
+            collapsed={collapsed}
           />
           <NavLink
             href="/dashboard/flows"
             icon={ICONS.flows}
             label="IdeaFlows"
             active={exact('/dashboard/flows') || under('/dashboard/flows')}
+            collapsed={collapsed}
           />
           <NavLink
             href="/dashboard/ideas"
             icon={ICONS.ideas}
             label="Ideas"
             active={exact('/dashboard/ideas') || under('/dashboard/ideas')}
+            collapsed={collapsed}
           />
           <NavLink
             href="/dashboard/sessions"
             icon={ICONS.sessions}
             label="Sessions"
             active={exact('/dashboard/sessions') || under('/dashboard/sessions')}
+            collapsed={collapsed}
             proChip={!canUseSessions(companyPlan)}
           />
         </nav>
@@ -226,13 +340,14 @@ export default function DashboardSidebar({
         {isAdmin && (
           <>
             <Divider />
-            <SectionLabel>Management</SectionLabel>
+            <SectionLabel collapsed={collapsed}>Management</SectionLabel>
             <nav style={{ display: 'flex', flexDirection: 'column', gap: '1px', marginBottom: '0.25rem' }}>
               <NavLink
                 href="/dashboard/review"
                 icon={ICONS.review}
                 label="Needs attention"
                 active={exact('/dashboard/review') || under('/dashboard/review')}
+                collapsed={collapsed}
                 badge={pendingReviewCount}
               />
               <NavLink
@@ -240,12 +355,14 @@ export default function DashboardSidebar({
                 icon={ICONS.setup}
                 label="Set up IdeaFlow"
                 active={exact('/dashboard/idea-flow') || under('/dashboard/idea-flow')}
+                collapsed={collapsed}
               />
               <NavLink
                 href="/dashboard/analytics"
                 icon={ICONS.analytics}
                 label="Analytics"
                 active={exact('/dashboard/analytics') || under('/dashboard/analytics')}
+                collapsed={collapsed}
               />
             </nav>
           </>
@@ -253,13 +370,14 @@ export default function DashboardSidebar({
 
         {/* ─────────────────── Team ───────────────────────── */}
         <Divider />
-        <SectionLabel>Team</SectionLabel>
+        <SectionLabel collapsed={collapsed}>Team</SectionLabel>
         <nav style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
           <NavLink
             href="/dashboard/members"
             icon={ICONS.members}
             label="Members"
             active={exact('/dashboard/members') || under('/dashboard/members')}
+            collapsed={collapsed}
           />
         </nav>
 
@@ -275,16 +393,19 @@ export default function DashboardSidebar({
             icon={ICONS.settings}
             label="Settings"
             active={exact('/settings') || under('/settings')}
+            collapsed={collapsed}
           />
 
           {/* User card */}
           <div
             className="db-user-card"
+            title={collapsed ? `${userName || firstName} · ${isAdmin ? 'Admin' : 'Member'}` : undefined}
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '0.625rem',
-              padding: '0.5rem 0.625rem',
+              justifyContent: collapsed ? 'center' : 'flex-start',
+              gap: collapsed ? 0 : '0.625rem',
+              padding: collapsed ? '0.4rem' : '0.5rem 0.625rem',
               borderRadius: '0.5rem',
               marginTop: '0.25rem',
               marginBottom: '0.25rem',
@@ -310,25 +431,30 @@ export default function DashboardSidebar({
             >
               {initials}
             </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ fontSize: '0.725rem', fontWeight: 600, color: '#1e2533', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {userName || firstName}
-              </p>
-              <p style={{ fontSize: '0.59rem', color: '#9faab8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {isAdmin ? 'Admin' : 'Member'}
-              </p>
-            </div>
+            {!collapsed && (
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ fontSize: '0.725rem', fontWeight: 600, color: '#1e2533', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {userName || firstName}
+                </p>
+                <p style={{ fontSize: '0.59rem', color: '#9faab8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {isAdmin ? 'Admin' : 'Member'}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Sign out */}
           <button
             onClick={handleSignOut}
             className="db-signout-btn"
+            title={collapsed ? 'Sign out' : undefined}
+            aria-label="Sign out"
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '0.5rem',
-              padding: '0.375rem 0.625rem',
+              justifyContent: collapsed ? 'center' : 'flex-start',
+              gap: collapsed ? 0 : '0.5rem',
+              padding: collapsed ? '0.4rem' : '0.375rem 0.625rem',
               borderRadius: '0.5rem',
               background: 'transparent',
               border: 'none',
@@ -339,7 +465,9 @@ export default function DashboardSidebar({
             }}
           >
             <span style={{ color: '#b0bac8', display: 'flex' }}>{ICONS.signout}</span>
-            <span style={{ fontSize: '0.75rem', fontWeight: 500 }}>Sign out</span>
+            {!collapsed && (
+              <span style={{ fontSize: '0.75rem', fontWeight: 500 }}>Sign out</span>
+            )}
           </button>
         </div>
 

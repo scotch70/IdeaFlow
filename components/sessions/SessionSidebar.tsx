@@ -123,7 +123,7 @@ export default function SessionSidebar({
         })}
       </ol>
 
-      {/* ── Tip card — hidden when collapsed ──────────────────────────────── */}
+      {/* ── Tips — hidden when collapsed ──────────────────────────────────── */}
       {!collapsed && (
         <div
           style={{
@@ -134,11 +134,14 @@ export default function SessionSidebar({
             border: '1px solid rgba(15,23,42,0.06)',
           }}
         >
-          <p style={{ fontSize: '0.62rem', fontWeight: 700, color: '#5d667a', letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: '0.35rem' }}>
-            Tip
+          <p style={{ fontSize: '0.62rem', fontWeight: 700, color: '#5d667a', letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: '0.4rem' }}>
+            Tips
           </p>
-          <p style={{ fontSize: '0.78rem', color: '#3d4758', lineHeight: 1.5 }}>
+          <p style={{ fontSize: '0.76rem', color: '#3d4758', lineHeight: 1.5, marginBottom: '0.5rem' }}>
             Press <kbd style={kbd}>i</kbd> to add an Idea card without leaving the canvas.
+          </p>
+          <p style={{ fontSize: '0.76rem', color: '#3d4758', lineHeight: 1.5 }}>
+            Collapse the sidebars for more canvas space.
           </p>
         </div>
       )}

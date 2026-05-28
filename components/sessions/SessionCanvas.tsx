@@ -3,33 +3,25 @@
 /**
  * SessionCanvas — the dark drawing surface.
  *
- * Holds:
- *   • A subtle dot grid background (CSS gradient) for visual depth without
- *     drawing too much attention to itself.
- *   • An absolutely positioned SVG layer that draws cubic-bezier connections
- *     between card centers. Hovering a connection reveals a small × delete
- *     bubble at its midpoint.
- *   • Cards rendered on top. Each card supports:
- *       – single click → select (shows ring + opens the right-panel editor)
- *       – double click → enter edit mode (focuses title input)
- *       – drag         → reposition (persisted in onPositionEnd)
- *       – hover action bar (Edit / Connect / Duplicate / Delete)
- *   • A floating helper strip pinned to the bottom of the canvas explaining
- *     how to interact, so users — admin and member alike — know what to do.
- *
- * The canvas itself reserves inner padding (CANVAS_INSET) so cards spawned at
- * default positions don't sit under the side panels.
+ *   • Fixed-size container (position: relative, overflow: hidden). No scroll
+ *     bars — cards are clamped to the visible rectangle by the workspace.
+ *   • A ResizeObserver reports the live size up to SessionWorkspace via
+ *     `onMeasure`, which drives card spawn positions, drag clamping and the
+ *     "Reset view" grid layout.
+ *   • Cards are absolutely positioned inside this canvas (not the page).
+ *     framer-motion's `dragConstraints` keeps each card inside the box on
+ *     every frame; `onPositionEnd` clamps as a final safety net.
+ *   • SVG connection layer sits below cards, fat invisible hit area lets
+ *     you click thin lines, hover reveals an × to delete.
+ *   • A floating helper strip at the bottom explains the interactions.
  */
 
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import type { SessionCard, SessionConnection, SessionMember } from '@/types/sessions'
 import { CARD_TYPE_META } from '@/lib/sessions/cardTypes'
+import { CANVAS_INSET, CARD_MIN_H, CARD_W, CanvasSize, isCanvasMeasured } from '@/lib/sessions/layout'
 import { CANVAS_BG, CANVAS_BORDER, CANVAS_DOT, CANVAS_SURFACE } from './SessionWorkspace'
-
-const CARD_W = 232
-const CARD_MIN_H = 108
-export const CANVAS_INSET = 24  // px — padding between canvas edges and cards
 
 interface Props {
   cards:            SessionCard[]
@@ -38,7 +30,9 @@ interface Props {
   connectingFrom:   string | null
   selectedCardId:   string | null
   editingCardId:    string | null
+  canvasSize:       CanvasSize
 
+  onMeasure:          (size: CanvasSize) => void
   onSelectCard:       (id: string | null) => void
   onEditCard:         (id: string | null) => void
   onPositionEnd:      (id: string, x: number, y: number) => void
@@ -50,28 +44,35 @@ interface Props {
   onFinishConnect:    (id: string) => void
   onDeleteConnection: (id: string) => void
   onCancelConnect:    () => void
+  onResetView:        () => void
 }
 
 export default function SessionCanvas({
   cards, connections, members,
   connectingFrom, selectedCardId, editingCardId,
+  canvasSize, onMeasure,
   onSelectCard, onEditCard,
   onPositionEnd, onChangeText, onTogglePriority,
   onDuplicate, onDelete,
   onStartConnect, onFinishConnect, onDeleteConnection, onCancelConnect,
+  onResetView,
 }: Props) {
   const canvasRef = useRef<HTMLDivElement>(null)
-  const [canvasSize, setCanvasSize] = useState({ w: 0, h: 0 })
 
+  // Surface the live size up to the workspace. content-box dimensions only,
+  // so the parent can clamp accurately.
   useLayoutEffect(() => {
     if (!canvasRef.current) return
-    const ro = new ResizeObserver(() => {
-      const r = canvasRef.current!.getBoundingClientRect()
-      setCanvasSize({ w: r.width, h: r.height })
-    })
-    ro.observe(canvasRef.current)
+    const el = canvasRef.current
+    const measure = () => {
+      const r = el.getBoundingClientRect()
+      onMeasure({ w: r.width, h: r.height })
+    }
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(el)
     return () => ro.disconnect()
-  }, [])
+  }, [onMeasure])
 
   // Clicking the empty canvas deselects + cancels any connect-in-progress.
   function handleCanvasMouseDown(e: React.MouseEvent<HTMLDivElement>) {
@@ -81,6 +82,7 @@ export default function SessionCanvas({
   }
 
   const cardById = new Map(cards.map(c => [c.id, c]))
+  const measured = isCanvasMeasured(canvasSize)
 
   return (
     <div
@@ -88,11 +90,11 @@ export default function SessionCanvas({
       onMouseDown={handleCanvasMouseDown}
       style={{
         position: 'relative',
+        overflow: 'hidden',
         background: CANVAS_BG,
         backgroundImage: `radial-gradient(${CANVAS_DOT} 1px, transparent 1px)`,
         backgroundSize: '22px 22px',
         backgroundPosition: '-1px -1px',
-        overflow: 'auto',
         minHeight: 0,
       }}
     >
@@ -123,11 +125,14 @@ export default function SessionCanvas({
         })}
       </svg>
 
-      {/* Cards */}
-      {cards.map(card => (
+      {/* Cards. Only render after we've measured at least once — otherwise the
+          dragConstraints would clamp to a zero-size box and the cards would
+          all snap to (pad, pad). The empty-state placeholder still shows. */}
+      {measured && cards.map(card => (
         <CardOnCanvas
           key={card.id}
           card={card}
+          canvasSize={canvasSize}
           owner={card.created_by ? members[card.created_by] ?? null : null}
           isConnectSource={connectingFrom === card.id}
           isConnectTarget={connectingFrom !== null && connectingFrom !== card.id}
@@ -159,21 +164,21 @@ export default function SessionCanvas({
               Start by adding your first thought
             </p>
             <p style={{ fontSize: '0.85rem', maxWidth: '22rem' }}>
-              Use the Guide panel on the right to add a card — Problem, Idea, Risk, whatever’s in your head.
+              Use the Guide panel on the right to add a card. Collapse the sidebars for more canvas space.
             </p>
           </div>
         </div>
       )}
 
-      {/* Helper strip — always-visible interaction hint */}
+      {/* Helper strip — always-visible interaction hint. Absolutely positioned
+          so it overlays the bottom of the canvas without consuming layout. */}
       <div
         style={{
-          position: 'sticky',
+          position: 'absolute',
           bottom: 12, left: 0, right: 0,
           display: 'flex', justifyContent: 'center',
-          pointerEvents: 'none',
-          marginTop: '-2.75rem',
           padding: '0 1rem',
+          pointerEvents: 'none',
         }}
       >
         <div
@@ -184,11 +189,11 @@ export default function SessionCanvas({
             WebkitBackdropFilter: 'blur(6px)',
             border: '1px solid rgba(255,255,255,0.08)',
             borderRadius: '999px',
-            padding: '0.35rem 0.85rem',
+            padding: '0.4rem 0.85rem',
             color: 'rgba(255,255,255,0.78)',
             fontSize: '0.72rem',
             fontWeight: 500,
-            display: 'flex', alignItems: 'center', gap: '0.5rem',
+            display: 'flex', alignItems: 'center', gap: '0.55rem',
             boxShadow: '0 6px 20px rgba(0,0,0,0.35)',
             flexWrap: 'wrap', justifyContent: 'center',
             maxWidth: '100%',
@@ -209,11 +214,24 @@ export default function SessionCanvas({
             </>
           ) : (
             <>
-              <span><strong style={{ color: '#fff' }}>Double-click</strong> a card to edit</span>
+              <span><strong style={{ color: '#fff' }}>Double-click</strong> to edit</span>
               <Dot />
               <span><strong style={{ color: '#fff' }}>Drag</strong> to move</span>
               <Dot />
-              <span>Use <strong style={{ color: '#fff' }}>Connect</strong> to link ideas</span>
+              <span><strong style={{ color: '#fff' }}>Connect</strong> to link ideas</span>
+              <Dot />
+              <button
+                type="button"
+                onClick={onResetView}
+                style={{
+                  background: 'transparent', border: 'none',
+                  color: '#fbd5b5', cursor: 'pointer',
+                  fontSize: '0.72rem', fontWeight: 700,
+                  padding: 0,
+                  textDecoration: 'underline', textUnderlineOffset: '2px',
+                }}
+              >Reset view</button>
+              <span style={{ color: 'rgba(255,255,255,0.55)' }}>if cards are missing</span>
             </>
           )}
         </div>
@@ -231,6 +249,7 @@ function Dot() {
 interface CardProps {
   card:              SessionCard
   owner:             SessionMember | null
+  canvasSize:        CanvasSize
   isConnectSource:   boolean
   isConnectTarget:   boolean
   isSelected:        boolean
@@ -247,7 +266,8 @@ interface CardProps {
 }
 
 function CardOnCanvas({
-  card, owner, isConnectSource, isConnectTarget, isSelected, isEditing,
+  card, owner, canvasSize,
+  isConnectSource, isConnectTarget, isSelected, isEditing,
   onSelect, onEnterEdit,
   onPositionEnd, onChangeText, onTogglePriority,
   onDuplicate, onDelete, onStartConnect, onFinishConnect,
@@ -257,10 +277,12 @@ function CardOnCanvas({
   const [hover, setHover] = useState(false)
   const titleRef = useRef<HTMLInputElement>(null)
 
+  // Keep the local "drag origin" in sync whenever the card's persisted
+  // position changes (e.g. after Reset view or the resize-clamp effect).
   useLayoutEffect(() => { setPos({ x: card.x, y: card.y }) }, [card.id, card.x, card.y])
 
-  // When isEditing flips on, focus the title input.
-  useEffect(() => {
+  // Focus title when entering edit mode.
+  useLayoutEffect(() => {
     if (isEditing && titleRef.current) {
       titleRef.current.focus()
       titleRef.current.select()
@@ -268,6 +290,13 @@ function CardOnCanvas({
   }, [isEditing])
 
   const starred = card.priority > 0
+
+  // Constraints in drag-offset space (relative to pos). Keeps the card body
+  // inside [pad, canvas - cardSize - pad] on every frame.
+  const dragLeft   = CANVAS_INSET - pos.x
+  const dragRight  = Math.max(0, canvasSize.w - CARD_W     - CANVAS_INSET - pos.x)
+  const dragTop    = CANVAS_INSET - pos.y
+  const dragBottom = Math.max(0, canvasSize.h - CARD_MIN_H - CANVAS_INSET - pos.y)
 
   function handleClick(e: React.MouseEvent) {
     if (isConnectTarget) {
@@ -290,10 +319,15 @@ function CardOnCanvas({
       drag
       dragMomentum={false}
       dragElastic={0}
+      dragConstraints={{ left: dragLeft, right: dragRight, top: dragTop, bottom: dragBottom }}
       onDragEnd={(_, info) => {
+        // Final safety clamp on top of dragConstraints — guards against tiny
+        // rounding errors leaking outside the visible area.
+        const nx = pos.x + info.offset.x
+        const ny = pos.y + info.offset.y
         const next = {
-          x: Math.max(CANVAS_INSET / 2, pos.x + info.offset.x),
-          y: Math.max(CANVAS_INSET / 2, pos.y + info.offset.y),
+          x: Math.min(Math.max(nx, CANVAS_INSET), Math.max(CANVAS_INSET, canvasSize.w - CARD_W     - CANVAS_INSET)),
+          y: Math.min(Math.max(ny, CANVAS_INSET), Math.max(CANVAS_INSET, canvasSize.h - CARD_MIN_H - CANVAS_INSET)),
         }
         setPos(next)
         onPositionEnd(card.id, next.x, next.y)
@@ -352,7 +386,6 @@ function CardOnCanvas({
         >{meta.label}</span>
         <span style={{ flex: 1 }} />
 
-        {/* Hover/selected action bar — Edit / Connect / Duplicate / Delete */}
         {(hover || isSelected) && (
           <div
             style={{
@@ -362,7 +395,6 @@ function CardOnCanvas({
               borderRadius: '0.45rem',
               padding: '0.15rem 0.2rem',
             }}
-            // Don't let action-bar clicks bubble up into the card click handler.
             onMouseDown={e => e.stopPropagation()}
           >
             <ActionIconButton
@@ -449,8 +481,6 @@ function CardOnCanvas({
           letterSpacing: '-0.01em',
           padding: '0.05rem 0',
           fontFamily: 'inherit',
-          // Keep the cursor a grab handle until the card is actually selected
-          // for edit — prevents the cursor from blinking on every card.
           cursor: isEditing ? 'text' : 'inherit',
         }}
       />
@@ -541,7 +571,6 @@ function ActionIconButton({
 // ── Owner avatar ─────────────────────────────────────────────────────────────
 function OwnerAvatar({ member }: { member: SessionMember }) {
   const initials = getInitials(member.fullName)
-  // Deterministic muted color from initials so two people aren't the same hue.
   const seed = (member.fullName ?? member.id).charCodeAt(0)
   const palette = [
     'rgba(249,115,22,0.45)', 'rgba(59,130,246,0.45)', 'rgba(16,185,129,0.45)',
@@ -620,4 +649,3 @@ function ConnectionPath({
     </g>
   )
 }
-

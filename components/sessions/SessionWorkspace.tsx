@@ -35,6 +35,9 @@ import {
   getSession, updateCard, updateSession, updateStep,
 } from '@/lib/sessions/store'
 import { CARD_TYPE_META } from '@/lib/sessions/cardTypes'
+import {
+  CanvasSize, clampToCanvas, gridResetPositions, isCanvasMeasured, nextCardSpawn,
+} from '@/lib/sessions/layout'
 import { getTemplate, STEP_LABEL, STEP_ORDER } from '@/lib/sessions/templates'
 import type {
   CardType, Session, SessionCard, SessionConnection, SessionMember,
@@ -73,6 +76,9 @@ export default function SessionWorkspace({ sessionId, userId }: Props) {
   const [showSummary,      setShowSummary]      = useState(false)
   // Left-sidebar collapse state, persisted across reloads of the same browser.
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  // Measured size of the dark canvas — set by SessionCanvas via onMeasure.
+  // Drives card spawn positions, drag clamping, and the "reset view" grid.
+  const [canvasSize,       setCanvasSize]       = useState<CanvasSize>({ w: 0, h: 0 })
   // The card the user has clicked once — the right Guide panel switches to
   // an inline editor when this is set, and becomes the step guide again
   // when nothing is selected.
@@ -136,16 +142,19 @@ export default function SessionWorkspace({ sessionId, userId }: Props) {
   async function handleAddCard(type: CardType) {
     if (!session) return
     setSaveStatus('saving')
-    // Stagger new cards slightly so they don't pile on top of one another.
-    const offset = cards.length * 18
+    // Spawn inside the visible canvas. Falls back to (0, 0) clamped (which
+    // becomes the pad/pad corner) if the canvas hasn't measured yet — that's
+    // OK because the resize effect below will reshuffle once it does.
+    const spawn = isCanvasMeasured(canvasSize)
+      ? nextCardSpawn(canvasSize, cards.length)
+      : { x: 0, y: 0 }
     const newCard = await createCard({
       userId, sessionId: session.id, type,
-      title:  '',
-      x:      140 + (offset % 280),
-      y:      120 + (offset % 200),
+      title: '',
+      x: spawn.x,
+      y: spawn.y,
     })
     setCards(c => [...c, newCard])
-    // Auto-select + auto-focus title so the user can start typing.
     setSelectedCardId(newCard.id)
     setEditingCardId(newCard.id)
     flashSaved()
@@ -163,9 +172,13 @@ export default function SessionWorkspace({ sessionId, userId }: Props) {
   }
 
   async function handleUpdateCardPosition(id: string, x: number, y: number) {
-    setCards(cs => cs.map(c => c.id === id ? { ...c, x, y } : c))
+    // Clamp here as the final defence — drag constraints inside the canvas
+    // already keep the card visually inside, but a resize during drag or a
+    // rounding error could still let it drift.
+    const cl = isCanvasMeasured(canvasSize) ? clampToCanvas(x, y, canvasSize) : { x, y }
+    setCards(cs => cs.map(c => c.id === id ? { ...c, x: cl.x, y: cl.y } : c))
     setSaveStatus('saving')
-    await updateCard(userId, id, { x, y })
+    await updateCard(userId, id, { x: cl.x, y: cl.y })
     flashSaved()
   }
 
@@ -175,6 +188,53 @@ export default function SessionWorkspace({ sessionId, userId }: Props) {
     await updateCard(userId, id, patch)
     flashSaved()
   }
+
+  // ── Reset view: lay all cards out in a tidy grid inside the canvas ─────────
+  async function handleResetView() {
+    if (!session) return
+    if (!isCanvasMeasured(canvasSize)) return
+    if (cards.length === 0) return
+
+    const positions = gridResetPositions(cards.length, canvasSize)
+    setCards(prev => prev.map((c, i) => positions[i]
+      ? { ...c, x: positions[i].x, y: positions[i].y }
+      : c
+    ))
+    setSaveStatus('saving')
+    await Promise.all(cards.map((c, i) => {
+      const p = positions[i]
+      return p ? updateCard(userId, c.id, { x: p.x, y: p.y }) : Promise.resolve(null)
+    }))
+    flashSaved()
+  }
+
+  // Auto-clamp any out-of-bounds card whenever the canvas resizes (which
+  // includes the first measure after load and any sidebar collapse/expand).
+  // This rescues cards saved with positions that no longer fit — e.g. cards
+  // dragged into the old wider canvas before this fix shipped.
+  useEffect(() => {
+    if (!isCanvasMeasured(canvasSize)) return
+    let didChange = false
+    const next = cards.map(c => {
+      const cl = clampToCanvas(c.x, c.y, canvasSize)
+      if (cl.x === c.x && cl.y === c.y) return c
+      didChange = true
+      return { ...c, x: cl.x, y: cl.y }
+    })
+    if (!didChange) return
+    setCards(next)
+    // Persist the corrections in the background. Avoid awaiting in series —
+    // these are independent updates.
+    for (const c of next) {
+      const original = cards.find(o => o.id === c.id)
+      if (!original) continue
+      if (original.x === c.x && original.y === c.y) continue
+      updateCard(userId, c.id, { x: c.x, y: c.y })
+    }
+    // Intentionally only depends on canvas size + card count; we don't want
+    // every drag-end to retrigger the whole sweep.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canvasSize.w, canvasSize.h, cards.length])
 
   async function handleTogglePriority(id: string) {
     const card = cards.find(c => c.id === id)
@@ -428,6 +488,19 @@ export default function SessionWorkspace({ sessionId, userId }: Props) {
 
         <button
           type="button"
+          onClick={handleResetView}
+          disabled={cards.length === 0 || !isCanvasMeasured(canvasSize)}
+          title="Lay out all cards in a tidy grid inside the canvas"
+          style={{
+            ...topBarButtonStyle(),
+            opacity: (cards.length === 0 || !isCanvasMeasured(canvasSize)) ? 0.5 : 1,
+            cursor:  (cards.length === 0 || !isCanvasMeasured(canvasSize)) ? 'not-allowed' : 'pointer',
+          }}
+        >
+          Reset view
+        </button>
+        <button
+          type="button"
           onClick={() => setShowSummary(true)}
           style={topBarButtonStyle()}
         >
@@ -447,9 +520,10 @@ export default function SessionWorkspace({ sessionId, userId }: Props) {
         style={{
           flex: 1, minHeight: 0,
           display: 'grid',
-          // First column shrinks when the steps sidebar is collapsed, so the
-          // dark canvas claims the freed width automatically.
-          gridTemplateColumns: `${sidebarCollapsed ? '3.5rem' : '15rem'} 1fr 18rem`,
+          // Center column is minmax(0, 1fr) so the canvas grows greedily and
+          // never overflows its parent — both columns can shrink without
+          // the canvas pushing the layout.
+          gridTemplateColumns: `${sidebarCollapsed ? '3.5rem' : '15rem'} minmax(0, 1fr) 19rem`,
           transition: 'grid-template-columns 0.2s ease',
         }}
         className="session-workspace-grid"
@@ -472,6 +546,8 @@ export default function SessionWorkspace({ sessionId, userId }: Props) {
           connectingFrom={connectingFrom}
           selectedCardId={selectedCardId}
           editingCardId={editingCardId}
+          canvasSize={canvasSize}
+          onMeasure={setCanvasSize}
           onSelectCard={setSelectedCardId}
           onEditCard={setEditingCardId}
           onPositionEnd={handleUpdateCardPosition}
@@ -483,6 +559,7 @@ export default function SessionWorkspace({ sessionId, userId }: Props) {
           onFinishConnect={handleFinishConnect}
           onDeleteConnection={handleDeleteConnection}
           onCancelConnect={cancelConnect}
+          onResetView={handleResetView}
         />
 
         <GuidePanel
@@ -517,15 +594,15 @@ export default function SessionWorkspace({ sessionId, userId }: Props) {
         />
       )}
 
-      {/* Responsive guard — collapse the side panels under cards on narrow viewports.
-          On narrow widths the sidebar collapses regardless of the toggle so the canvas
-          stays usable. */}
+      {/* Responsive guard — narrow viewports shrink the side panels so the
+          canvas stays usable. On phone widths the guide collapses to 0 and
+          opens via the right-panel "Back to step" UX. */}
       <style>{`
         @media (max-width: 1100px) {
-          .session-workspace-grid { grid-template-columns: ${sidebarCollapsed ? '3.5rem' : '13rem'} 1fr 16rem !important; }
+          .session-workspace-grid { grid-template-columns: ${sidebarCollapsed ? '3.5rem' : '13rem'} minmax(0, 1fr) 17rem !important; }
         }
         @media (max-width: 880px) {
-          .session-workspace-grid { grid-template-columns: 3.5rem 1fr 0 !important; }
+          .session-workspace-grid { grid-template-columns: 3.5rem minmax(0, 1fr) 0 !important; }
         }
       `}</style>
     </div>
