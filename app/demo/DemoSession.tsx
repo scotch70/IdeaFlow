@@ -61,67 +61,65 @@ const C = {
 // Positions are picked so the eye reads top→bottom-left→right (Problem
 // anchors the top-left, Idea sits beneath it, Risk + Decision flank to the
 // right, Task closes at the bottom). Hand-tuned for the new wider canvas.
+// Six cards laid out in a clean three-column flow (Problem/Audience on top,
+// Cause/Idea in the middle, Decision/Task at the bottom). Titles are short
+// noun phrases, details are one short sentence — the eye should read each
+// card in under two seconds. Risk was removed for clarity; the user can see
+// the same scenario without it.
 const DEMO_CARDS: DemoCard[] = [
   {
     id: 'card-problem', type: 'problem', ...C.problem,
-    title: 'Busy professionals waste time finding reliable help',
-    detail: 'Hours lost vetting freelancers across half-a-dozen platforms.',
+    title: 'Finding reliable freelancers',
+    detail: 'Hours lost vetting across many platforms.',
     x: 64, y: 56,
     owner: 'Sara Kim', ownerColor: 'rgba(249,115,22,0.45)', ownerRole: 'Admin', starred: true,
   },
   {
     id: 'card-audience', type: 'audience', ...C.audience,
-    title: 'Busy professionals & small businesses',
-    detail: 'Founders, ops leads, and indie agencies — $50k+/yr in freelance spend.',
+    title: 'Busy professionals',
+    detail: 'Founders and small-business ops leads.',
     x: 412, y: 56,
     owner: 'James Ortiz', ownerColor: 'rgba(59,130,246,0.45)', ownerRole: 'Member',
   },
   {
     id: 'card-cause', type: 'cause', ...C.cause,
-    title: 'Too many low-quality freelancers',
-    detail: 'Open marketplaces favour volume over signal — vetting falls on the buyer.',
-    x: 64, y: 248,
+    title: 'Volume over quality',
+    detail: 'Open marketplaces leave vetting to the buyer.',
+    x: 64, y: 240,
     owner: 'Priya Shah', ownerColor: 'rgba(167,139,250,0.45)', ownerRole: 'Member',
   },
   {
     id: 'card-idea', type: 'idea', ...C.idea,
-    title: 'Vetted marketplace with reviews',
-    detail: 'Curated supply + structured reviews + verified past work.',
-    x: 412, y: 248,
+    title: 'Vetted marketplace',
+    detail: 'Curated supply with verified past work.',
+    x: 412, y: 240,
     owner: 'Sara Kim', ownerColor: 'rgba(249,115,22,0.45)', ownerRole: 'Admin', starred: true,
   },
   {
-    id: 'card-risk', type: 'risk', ...C.risk,
-    title: 'Chicken-and-egg problem',
-    detail: 'No demand → no supply → no demand. Need a side to seed first.',
-    x: 760, y: 144,
-    owner: 'Marcus Lin', ownerColor: 'rgba(16,185,129,0.45)', ownerRole: 'Member',
-  },
-  {
     id: 'card-decision', type: 'decision', ...C.decision,
-    title: 'Start with a niche market',
-    detail: 'Pilot in B2B legal admin work — defined buyers, repeatable scope.',
-    x: 760, y: 340,
+    title: 'Start with a niche',
+    detail: 'Pilot in B2B legal admin work.',
+    x: 760, y: 240,
     owner: 'Sara Kim', ownerColor: 'rgba(249,115,22,0.45)', ownerRole: 'Admin', starred: true,
   },
   {
     id: 'card-task', type: 'task', ...C.task,
     title: 'Interview 10 users',
-    detail: 'Talk to 10 legal-ops leads next week — confirm pain + price ceiling.',
-    x: 412, y: 448,
+    detail: 'Confirm pain + price ceiling this week.',
+    x: 412, y: 424,
     owner: 'James Ortiz', ownerColor: 'rgba(59,130,246,0.45)', ownerRole: 'Member',
   },
 ]
 
 interface DemoConnection { from: string; to: string }
+// Four clean lines so the flow reads left→right, top→bottom without crossings.
+// Problem → Audience (top row), Problem → Cause → Idea → Decision → Task.
 const DEMO_CONNECTIONS: DemoConnection[] = [
   { from: 'card-problem',  to: 'card-audience' },
   { from: 'card-problem',  to: 'card-cause'    },
   { from: 'card-cause',    to: 'card-idea'     },
-  { from: 'card-idea',     to: 'card-risk'     },
   { from: 'card-idea',     to: 'card-decision' },
   { from: 'card-decision', to: 'card-task'     },
-  { from: 'card-audience', to: 'card-idea'     },
 ]
 
 const DEMO_STEPS = [
@@ -140,13 +138,29 @@ const STEP_HELPER: Record<string, string> = {
   action:     'Turn the best ideas into next steps.',
 }
 
+// "How this session works" — the new right-panel explainer. Lives above the
+// activity feed so first-time users get the framing before the social proof.
+const HOW_IT_WORKS = [
+  'Start with a Problem — make the question concrete.',
+  'Add Idea cards, then link the related ones together.',
+  'Star the best ideas and turn them into Tasks.',
+]
+
+// Activity trimmed to 3 items — premium feel without overwhelming a new user.
 const DEMO_ACTIVITY = [
-  { who: 'Sara Kim',     initials: 'SK', color: 'rgba(249,115,22,0.45)', what: 'starred',     target: 'Vetted marketplace with reviews', when: 'just now'  },
-  { who: 'James Ortiz',  initials: 'JO', color: 'rgba(59,130,246,0.45)', what: 'added',       target: 'Audience card',                    when: '2 min ago' },
-  { who: 'Priya Shah',   initials: 'PS', color: 'rgba(167,139,250,0.45)', what: 'connected',  target: 'Cause → Idea',                     when: '8 min ago' },
-  { who: 'Marcus Lin',   initials: 'ML', color: 'rgba(16,185,129,0.45)', what: 'added',       target: 'Risk card',                        when: '14 min ago' },
-  { who: 'Sara Kim',     initials: 'SK', color: 'rgba(249,115,22,0.45)', what: 'completed',   target: 'Step 2 — Explore',                 when: '32 min ago' },
-  { who: 'James Ortiz',  initials: 'JO', color: 'rgba(59,130,246,0.45)', what: 'added',       target: 'Task card — Interview 10 users',   when: '1h ago'    },
+  { who: 'Sara Kim',    initials: 'SK', color: 'rgba(249,115,22,0.45)',  what: 'starred',     target: 'Vetted marketplace',         when: 'just now'  },
+  { who: 'Priya Shah',  initials: 'PS', color: 'rgba(167,139,250,0.45)', what: 'connected',   target: 'Cause → Idea',               when: '8 min ago' },
+  { who: 'James Ortiz', initials: 'JO', color: 'rgba(59,130,246,0.45)',  what: 'added',       target: 'Task — Interview 10 users',  when: '1h ago'    },
+]
+
+// Friendly numbered steps shown in the intro strip above the workspace.
+// Reads in under 5 seconds — exactly the user-comprehension target.
+const SESSION_INTRO_STEPS = [
+  'Define the problem',
+  'Add ideas',
+  'Connect related thoughts',
+  'Choose priorities',
+  'Turn them into tasks',
 ]
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -180,10 +194,68 @@ export default function DemoSession() {
         fontFamily: 'inherit',
       }}
     >
+      {/* ── Intro strip — explains what a Session is in one sentence + 5 steps ── */}
       <div
         style={{
-          height: 'calc(100vh - 3.625rem - 2.4rem - 3.5rem - 1.4rem)',
-          minHeight: 620,
+          background: '#fff',
+          border: '1px solid rgba(15,23,42,0.08)',
+          borderRadius: '0.75rem',
+          padding: '0.8rem 1rem 0.85rem',
+          marginBottom: '0.75rem',
+          boxShadow: '0 1px 3px rgba(6,14,38,0.04)',
+          display: 'flex',
+          alignItems: 'center', gap: '1rem',
+          flexWrap: 'wrap',
+        }}
+      >
+        <div style={{ flex: '1 1 16rem', minWidth: 0 }}>
+          <p style={{ fontSize: '0.58rem', fontWeight: 700, color: '#c2540a', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
+            ✦ How Sessions work
+          </p>
+          <p style={{ fontSize: '0.875rem', color: '#0d1f35', fontWeight: 600, letterSpacing: '-0.01em', lineHeight: 1.4 }}>
+            A Session guides your team from a rough idea to clear next steps.
+          </p>
+        </div>
+        <ol
+          style={{
+            listStyle: 'none', padding: 0, margin: 0,
+            display: 'flex', alignItems: 'center', gap: '0.4rem',
+            flexWrap: 'wrap', flex: '2 1 32rem', minWidth: 0,
+          }}
+        >
+          {SESSION_INTRO_STEPS.map((step, i) => (
+            <li
+              key={step}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
+                fontSize: '0.78rem', color: '#3d4758',
+                background: 'rgba(15,23,42,0.04)',
+                border: '1px solid rgba(15,23,42,0.06)',
+                borderRadius: '999px',
+                padding: '0.3rem 0.65rem 0.3rem 0.3rem',
+              }}
+            >
+              <span
+                style={{
+                  width: '1.2rem', height: '1.2rem', borderRadius: '999px',
+                  background: '#0d1f35', color: '#fff',
+                  fontSize: '0.62rem', fontWeight: 800,
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+              >
+                {i + 1}
+              </span>
+              {step}
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      <div
+        style={{
+          height: 'calc(100vh - 3.625rem - 2.4rem - 3.5rem - 1.4rem - 4.5rem)',
+          minHeight: 560,
           borderRadius: '1rem',
           border: '1px solid rgba(15,23,42,0.10)',
           overflow: 'hidden',
@@ -278,33 +350,35 @@ export default function DemoSession() {
           <p style={{ fontSize: '0.58rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#9faab8', padding: '0 0.4rem', marginBottom: '0.55rem' }}>
             Session steps
           </p>
-          <ol style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+          <ol style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '3px' }}>
             {DEMO_STEPS.map((s, idx) => (
               <li key={s.key}>
                 <div
                   style={{
                     display: 'flex', alignItems: 'center', gap: '0.6rem',
-                    padding: '0.55rem 0.6rem',
-                    paddingLeft: s.active ? 'calc(0.6rem - 2px)' : '0.6rem',
+                    padding: s.active ? '0.65rem 0.6rem' : '0.55rem 0.6rem',
+                    paddingLeft: s.active ? 'calc(0.6rem - 3px)' : '0.6rem',
                     borderRadius: '0.55rem',
-                    background: s.active ? 'rgba(249,115,22,0.08)' : 'transparent',
-                    borderLeft: s.active ? '2px solid rgba(249,115,22,0.65)' : '2px solid transparent',
+                    background: s.active ? 'rgba(249,115,22,0.12)' : 'transparent',
+                    borderLeft: s.active ? '3px solid #f97316' : '3px solid transparent',
                     color: s.active ? '#b84a09' : s.done ? '#9faab8' : '#3d4758',
+                    boxShadow: s.active ? '0 1px 0 rgba(249,115,22,0.10)' : 'none',
                   }}
                 >
                   <span
                     style={{
                       flexShrink: 0,
-                      width: '1.45rem', height: '1.45rem', borderRadius: '999px',
+                      width: '1.6rem', height: '1.6rem', borderRadius: '999px',
                       display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: '0.65rem', fontWeight: 800,
+                      fontSize: '0.7rem', fontWeight: 800,
                       background: s.done
                         ? 'rgba(16,185,129,0.14)'
                         : s.active
-                          ? 'rgba(249,115,22,0.16)'
+                          ? '#f97316'
                           : 'rgba(15,23,42,0.05)',
-                      color: s.done ? '#059669' : s.active ? '#b84a09' : '#64748b',
+                      color: s.done ? '#059669' : s.active ? '#fff' : '#64748b',
                       border: s.done ? '1px solid rgba(16,185,129,0.30)' : '1px solid transparent',
+                      boxShadow: s.active ? '0 4px 12px rgba(249,115,22,0.30)' : 'none',
                     }}
                   >
                     {s.done ? '✓' : idx + 1}
@@ -312,9 +386,14 @@ export default function DemoSession() {
                   <span style={{ fontSize: '0.82rem', fontWeight: s.active ? 700 : 600, letterSpacing: '-0.01em', flex: 1, textDecoration: s.done && !s.active ? 'line-through' : 'none' }}>
                     Step {idx + 1} — {s.label}
                   </span>
+                  {s.active && (
+                    <span style={{ fontSize: '0.55rem', fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#fff', background: '#f97316', borderRadius: '999px', padding: '0.12rem 0.4rem' }}>
+                      Now
+                    </span>
+                  )}
                 </div>
                 {s.active && (
-                  <p style={{ padding: '0 0.7rem 0.7rem', paddingLeft: 'calc(0.6rem + 1.45rem + 0.6rem - 2px)', fontSize: '0.74rem', color: '#5d667a', lineHeight: 1.5 }}>
+                  <p style={{ padding: '0 0.7rem 0.7rem', paddingLeft: 'calc(0.6rem + 1.6rem + 0.6rem - 3px)', fontSize: '0.74rem', color: '#5d667a', lineHeight: 1.5, marginTop: '0.15rem' }}>
                     {STEP_HELPER[s.key]}
                   </p>
                 )}
@@ -471,26 +550,66 @@ export default function DemoSession() {
           </div>
         </div>
 
-        {/* Right: team activity */}
+        {/* Right: explainer + slim activity feed */}
         <aside
           style={{
             background: '#fff',
             borderLeft: '1px solid rgba(0,0,0,0.06)',
             padding: '0.95rem 0.95rem 1.1rem',
             overflowY: 'auto',
+            display: 'flex', flexDirection: 'column',
           }}
         >
-          <p style={{ fontSize: '0.58rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#9faab8', marginBottom: '0.65rem' }}>
-            Team activity
+          {/* How this session works — leads the panel so newcomers get the
+              framing before any social-proof signals. */}
+          <p style={{ fontSize: '0.58rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#9faab8', marginBottom: '0.5rem' }}>
+            How this session works
           </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            {DEMO_ACTIVITY.map((a, i) => (
-              <div key={i} style={{ display: 'flex', gap: '0.55rem', alignItems: 'flex-start' }}>
+          <ol
+            style={{
+              listStyle: 'none', padding: 0, margin: 0,
+              display: 'flex', flexDirection: 'column', gap: '0.55rem',
+              marginBottom: '1.25rem',
+            }}
+          >
+            {HOW_IT_WORKS.map((step, i) => (
+              <li
+                key={step}
+                style={{
+                  display: 'flex', gap: '0.55rem', alignItems: 'flex-start',
+                  fontSize: '0.8rem', color: '#3d4758', lineHeight: 1.5,
+                }}
+              >
                 <span
                   style={{
-                    width: '1.4rem', height: '1.4rem', borderRadius: '999px',
+                    flexShrink: 0, marginTop: '0.1rem',
+                    width: '1.25rem', height: '1.25rem', borderRadius: '999px',
+                    background: 'rgba(249,115,22,0.10)', color: '#c2540a',
+                    fontSize: '0.62rem', fontWeight: 800,
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    border: '1px solid rgba(249,115,22,0.20)',
+                  }}
+                >
+                  {i + 1}
+                </span>
+                <span>{step}</span>
+              </li>
+            ))}
+          </ol>
+
+          {/* Slim activity feed — three items, sized down so it reads as
+              "the team is moving" without competing with the explainer. */}
+          <p style={{ fontSize: '0.58rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#9faab8', marginBottom: '0.5rem' }}>
+            Recent activity
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.55rem' }}>
+            {DEMO_ACTIVITY.map((a, i) => (
+              <div key={i} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <span
+                  style={{
+                    width: '1.25rem', height: '1.25rem', borderRadius: '999px',
                     background: a.color, color: '#fff',
-                    fontSize: '0.55rem', fontWeight: 800,
+                    fontSize: '0.52rem', fontWeight: 800,
                     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                     flexShrink: 0,
                   }}
@@ -498,31 +617,33 @@ export default function DemoSession() {
                   {a.initials}
                 </span>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontSize: '0.78rem', color: '#3d4758', lineHeight: 1.45 }}>
-                    <strong style={{ color: '#0d1f35', fontWeight: 700 }}>{a.who}</strong>{' '}
+                  <p style={{ fontSize: '0.72rem', color: '#3d4758', lineHeight: 1.4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <strong style={{ color: '#0d1f35', fontWeight: 700 }}>{a.who.split(' ')[0]}</strong>{' '}
                     <span style={{ color: '#5d667a' }}>{a.what}</span>{' '}
                     <span style={{ color: '#0d1f35', fontWeight: 600 }}>{a.target}</span>
                   </p>
-                  <p style={{ fontSize: '0.68rem', color: '#9faab8', marginTop: '0.1rem' }}>{a.when}</p>
+                  <p style={{ fontSize: '0.62rem', color: '#9faab8', marginTop: '0.05rem' }}>{a.when}</p>
                 </div>
               </div>
             ))}
           </div>
 
+          {/* Pro upsell — kept at the very bottom of the panel. */}
+          <div style={{ flex: 1 }} />
           <div
             style={{
-              marginTop: '1.3rem',
-              padding: '0.85rem',
+              marginTop: '1.1rem',
+              padding: '0.75rem 0.85rem 0.85rem',
               borderRadius: '0.6rem',
               border: '1px solid rgba(249,115,22,0.22)',
               background: 'rgba(249,115,22,0.04)',
             }}
           >
-            <p style={{ fontSize: '0.72rem', fontWeight: 700, color: '#c2540a', letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: '0.4rem' }}>
+            <p style={{ fontSize: '0.62rem', fontWeight: 700, color: '#c2540a', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '0.35rem' }}>
               ✦ Pro feature
             </p>
-            <p style={{ fontSize: '0.78rem', color: '#3d4758', lineHeight: 1.5, marginBottom: '0.65rem' }}>
-              Sessions are part of IdeaFlow Pro. Run unlimited brainstorming sessions with your team.
+            <p style={{ fontSize: '0.76rem', color: '#3d4758', lineHeight: 1.5, marginBottom: '0.65rem' }}>
+              Run unlimited Sessions with your team.
             </p>
             <Link
               href="/settings#billing"

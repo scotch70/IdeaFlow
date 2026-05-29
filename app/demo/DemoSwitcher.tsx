@@ -16,9 +16,9 @@ import DemoWorkspace from './DemoWorkspace'
 type Tab = 'session' | 'ideaflow'
 
 export default function DemoSwitcher() {
-  // IdeaFlow workspace is the default demo. Brainstorm Session is one
-  // click away and carries a Pro chip so it still reads as the premium tier.
-  const [tab, setTab] = useState<Tab>('ideaflow')
+  // Brainstorm Session is the flagship Pro feature — explicitly the default
+  // so first-time visitors land on it. IdeaFlow workspace is one click away.
+  const [tab, setTab] = useState<Tab>('session')
 
   return (
     <>
@@ -31,15 +31,15 @@ export default function DemoSwitcher() {
           gap: '0.45rem',
         }}
       >
-        <TabButton active={tab === 'ideaflow'} onClick={() => setTab('ideaflow')}>
-          IdeaFlow workspace
-        </TabButton>
         <TabButton
           active={tab === 'session'}
           onClick={() => setTab('session')}
           chip="Pro"
         >
           ✦ Brainstorm Session
+        </TabButton>
+        <TabButton active={tab === 'ideaflow'} onClick={() => setTab('ideaflow')}>
+          IdeaFlow workspace
         </TabButton>
       </div>
 

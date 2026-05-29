@@ -1,286 +1,317 @@
 import Link from 'next/link'
-import LogoMark from '@/components/LogoMark'
+import PageContainer from '@/components/PageContainer'
 import SiteHeader from '@/components/SiteHeader'
-
-const NAV_CONTAINER = 'mx-auto w-full max-w-7xl px-6 lg:px-10'
+import ContactForm from './ContactForm'
 
 export const metadata = {
   title: 'Contact — IdeaFlow',
-  description: 'Get in touch to see how IdeaFlow can work for your team.',
+  description: 'Get in touch about IdeaFlow, pricing, or Brainstorm Sessions.',
+}
+
+// Warm-ivory palette — kept inline so the page matches the landing page exactly.
+const P = {
+  bg:      '#fbfaf7',
+  raised:  '#f0ede8',
+  surface: '#ffffff',
+  ink:     '#1f2330',
+  slate:   '#5d667a',
+  faint:   '#b8c0ce',
+  border:  '#e7e2d8',
+  accent:  '#c98b5f',
+  dark:    '#13162a',
 }
 
 export default function ContactPage() {
   return (
     <>
-    <SiteHeader />
-    <main style={{ minHeight: '100vh', fontFamily: "'DM Sans', sans-serif" }}>
+      <SiteHeader />
 
-      {/* ── Hero ── */}
-      <section
-        style={{
-          background: '#ffffff',
-          position: 'relative',
-          overflow: 'hidden',
-          padding: '5rem 0 4rem',
-          borderBottom: '1px solid rgba(26,107,191,0.08)',
-        }}
-      >
-        {/* Subtle ambient blobs */}
-        <div aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none',
-          background: 'radial-gradient(ellipse 55% 60% at 10% 90%, rgba(249,115,22,0.06) 0%, transparent 60%), radial-gradient(ellipse 50% 50% at 85% 10%, rgba(26,107,191,0.05) 0%, transparent 55%)',
-        }} />
+      <main style={{ background: P.bg, minHeight: '100vh' }}>
 
-        <div className={NAV_CONTAINER} style={{ position: 'relative', zIndex: 1 }}>
-          {/* Badge */}
-          <span style={{
-            display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
-            background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.18)',
-            borderRadius: '2rem', padding: '0.3rem 0.85rem',
-            fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.14em',
-            textTransform: 'uppercase', color: '#ea580c', marginBottom: '1.4rem',
-          }}>
-            Get in touch
-          </span>
-
-          <h1 style={{
-            fontFamily: "'DM Serif Display', serif",
-            fontSize: 'clamp(2rem, 5vw, 3.25rem)',
-            color: '#0d1f35',
-            lineHeight: 1.15,
-            letterSpacing: '-0.02em',
-            marginBottom: '1rem',
-          }}>
-            Let&apos;s talk about<br />
-            <span style={{
-              background: 'linear-gradient(90deg, #f97316 0%, #ea580c 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-            }}>your team&apos;s ideas</span>
-          </h1>
-
-          <p style={{
-            fontSize: '1.05rem',
-            lineHeight: 1.7,
-            color: '#5a7fa8',
-            maxWidth: '30rem',
-          }}>
-            Interested in seeing how IdeaFlow could work for your organisation?
-            Reach out and we&apos;ll get back to you within one business day.
-          </p>
-        </div>
-      </section>
-
-      {/* ── Two-column contact + info ── */}
-      <section style={{ padding: '4rem 0' }}>
-        <div className={NAV_CONTAINER}>
-          <div style={{ display: 'grid', gap: '2rem', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))' }}>
-
-            {/* Contact card */}
-            <div style={{
-              borderRadius: '1.25rem',
-              border: '1px solid rgba(26,107,191,0.11)',
-              background: '#fff',
-              boxShadow: '0 4px 24px rgba(6,14,38,0.07)',
-              padding: '2rem',
-            }}>
-              <div style={{
-                width: '2.75rem', height: '2.75rem', borderRadius: '0.75rem',
-                background: 'rgba(249,115,22,0.09)', border: '1px solid rgba(249,115,22,0.16)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                marginBottom: '1.25rem',
-              }}>
-                <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#f06800" strokeWidth={1.8}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-              </div>
-
-              <h2 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0d1f35', marginBottom: '0.4rem', letterSpacing: '-0.01em' }}>
-                Send us an email
-              </h2>
-              <p style={{ fontSize: '0.875rem', color: '#5a7fa8', lineHeight: 1.65, marginBottom: '1.5rem' }}>
-                We read every message. No auto-responders — just a direct line to the team.
-              </p>
-
-              <p style={{ fontSize: '0.875rem', fontWeight: 600, color: '#0d1f35', marginBottom: '1.25rem' }}>
-                ideaflow@appstimize.nl
-              </p>
-
-              <a
-                href="mailto:ideaflow@appstimize.nl?subject=IdeaFlow%20Demo%20Request&body=Hi%2C%0A%0AI'm%20interested%20in%20IdeaFlow%20for%20my%20company.%0A%0ACompany%20name%3A%0ATeam%20size%3A%0AWhat%20we%20want%20to%20improve%3A%0A"
+        {/* ── Hero ──────────────────────────────────────────────────────── */}
+        <section
+          style={{
+            background: P.bg,
+            padding: 'clamp(3.5rem, 7vw, 5.5rem) 0 clamp(2rem, 4vw, 3rem)',
+          }}
+        >
+          <PageContainer>
+            <div style={{ maxWidth: '34rem' }}>
+              <p
                 style={{
-                  display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
-                  background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
-                  color: '#fff', fontWeight: 700, fontSize: '0.875rem',
-                  borderRadius: '0.625rem', padding: '0.625rem 1.25rem',
-                  textDecoration: 'none', letterSpacing: '-0.01em',
+                  fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.12em',
+                  textTransform: 'uppercase', color: P.faint, marginBottom: '0.75rem',
                 }}
               >
-                Open email
-                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
-              </a>
-            </div>
-
-            {/* What to include card */}
-            <div style={{
-              borderRadius: '1.25rem',
-              border: '1px solid rgba(26,107,191,0.11)',
-              background: '#fff',
-              boxShadow: '0 4px 24px rgba(6,14,38,0.07)',
-              padding: '2rem',
-            }}>
-              <div style={{
-                width: '2.75rem', height: '2.75rem', borderRadius: '0.75rem',
-                background: 'rgba(26,107,191,0.08)', border: '1px solid rgba(26,107,191,0.15)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                marginBottom: '1.25rem',
-              }}>
-                <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#1a6bbf" strokeWidth={1.8}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-              </div>
-
-              <h2 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0d1f35', marginBottom: '0.4rem', letterSpacing: '-0.01em' }}>
-                What to include
-              </h2>
-              <p style={{ fontSize: '0.875rem', color: '#5a7fa8', lineHeight: 1.65, marginBottom: '1.5rem' }}>
-                A little context helps me give you a useful reply right away.
+                Contact
               </p>
-
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.7rem' }}>
-                {[
-                  { icon: '🏢', label: 'Company name & industry' },
-                  { icon: '👥', label: 'Team size (rough estimate)' },
-                  { icon: '💡', label: 'What you want to improve' },
-                  { icon: '📅', label: 'Your preferred timeline' },
-                ].map(({ icon, label }) => (
-                  <li key={label} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.875rem', color: '#0d1f35' }}>
-                    <span style={{ fontSize: '1rem', flexShrink: 0 }}>{icon}</span>
-                    {label}
-                  </li>
-                ))}
-              </ul>
+              <h1
+                style={{
+                  fontFamily: "'Instrument Serif', serif",
+                  fontStyle: 'italic',
+                  fontSize: 'clamp(2rem, 4.5vw, 3rem)',
+                  letterSpacing: '-0.02em',
+                  color: P.ink,
+                  lineHeight: 1.15,
+                  marginBottom: '0.85rem',
+                }}
+              >
+                Get in touch
+              </h1>
+              <p style={{ fontSize: '1rem', lineHeight: 1.7, color: P.slate }}>
+                Have a question about IdeaFlow, pricing, or Brainstorm Sessions?
+                We&apos;d love to hear from you.
+              </p>
             </div>
+          </PageContainer>
+        </section>
 
-          </div>
-        </div>
-      </section>
-
-      {/* ── FAQ ── */}
-      <section style={{ paddingBottom: '5rem' }}>
-        <div className={NAV_CONTAINER}>
-          <p style={{
-            fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.18em',
-            textTransform: 'uppercase', color: '#1a6bbf', marginBottom: '0.6rem',
-          }}>
-            Common questions
-          </p>
-          <h2 style={{
-            fontFamily: "'DM Serif Display', serif",
-            fontSize: 'clamp(1.5rem, 3vw, 2rem)',
-            color: '#0d1f35', letterSpacing: '-0.02em', marginBottom: '2.5rem',
-          }}>
-            Answers before you ask
-          </h2>
-
-          <div style={{ display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))' }}>
-            {[
-              {
-                q: 'How long does it take to get started?',
-                a: 'Most teams are up and running within a day. You create your workspace, invite your team with a code, and you\'re live.',
-              },
-              {
-                q: 'Is IdeaFlow free to start?',
-                a: 'Yes — IdeaFlow has a free plan you can use with no time limit. No credit card needed to get started.',
-              },
-              {
-                q: 'How big does my team need to be?',
-                a: 'IdeaFlow works great for teams as small as 5 and organisations with thousands of employees alike.',
-              },
-              {
-                q: 'Is my company\'s data kept private?',
-                a: 'Absolutely. Each workspace is fully isolated. Your ideas never leave your organisation\'s account.',
-              },
-            ].map(({ q, a }) => (
+        {/* ── Form + side card ──────────────────────────────────────────── */}
+        <section style={{ background: P.bg, padding: '0 0 clamp(4rem, 8vw, 6rem)' }}>
+          <PageContainer>
+            <div
+              style={{
+                display: 'grid',
+                gap: '1.25rem',
+                gridTemplateColumns: 'minmax(0, 1.6fr) minmax(260px, 1fr)',
+                alignItems: 'start',
+              }}
+              className="contact-grid"
+            >
+              {/* Form card */}
               <div
-                key={q}
                 style={{
+                  background: P.surface,
+                  border: `1px solid ${P.border}`,
                   borderRadius: '1rem',
-                  border: '1px solid rgba(26,107,191,0.11)',
-                  background: '#f4f8fc',
-                  padding: '1.5rem',
+                  padding: 'clamp(1.25rem, 2.5vw, 1.75rem)',
+                  boxShadow: '0 4px 24px rgba(6,14,38,0.04)',
                 }}
               >
-                <p style={{ fontSize: '0.9rem', fontWeight: 700, color: '#0d1f35', marginBottom: '0.5rem', lineHeight: 1.4 }}>{q}</p>
-                <p style={{ fontSize: '0.875rem', color: '#5a7fa8', lineHeight: 1.65 }}>{a}</p>
+                <h2
+                  style={{
+                    fontSize: '1rem', fontWeight: 700, color: P.ink,
+                    letterSpacing: '-0.01em', marginBottom: '0.3rem',
+                  }}
+                >
+                  Send us a message
+                </h2>
+                <p
+                  style={{
+                    fontSize: '0.85rem', color: P.slate, lineHeight: 1.55,
+                    marginBottom: '1.4rem',
+                  }}
+                >
+                  We read every note. Replies usually land in your inbox within one business day.
+                </p>
+                <ContactForm />
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
-      {/* ── Bottom CTA strip ── */}
-      <section
-        style={{
-          background: '#f8faff',
-          padding: '4rem 0',
-          textAlign: 'center',
-          position: 'relative',
-          overflow: 'hidden',
-          borderTop: '1px solid rgba(26,107,191,0.08)',
-        }}
-      >
-        <div aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none',
-          background: 'radial-gradient(ellipse 50% 80% at 50% 50%, rgba(249,115,22,0.06) 0%, transparent 65%)',
-        }} />
-        <div className={NAV_CONTAINER} style={{ position: 'relative', zIndex: 1 }}>
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.25rem' }}>
-            <div style={{ filter: 'drop-shadow(0 4px 16px rgba(240,104,0,0.28))' }}>
-              <LogoMark size={44} />
+              {/* Side card */}
+              <div
+                style={{
+                  background: P.surface,
+                  border: `1px solid ${P.border}`,
+                  borderRadius: '1rem',
+                  padding: '1.6rem 1.5rem',
+                  boxShadow: '0 4px 24px rgba(6,14,38,0.04)',
+                }}
+              >
+                <p
+                  style={{
+                    fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.12em',
+                    textTransform: 'uppercase', color: P.faint, marginBottom: '0.6rem',
+                  }}
+                >
+                  What we can help with
+                </p>
+                <h3
+                  style={{
+                    fontSize: '0.95rem', fontWeight: 700, color: P.ink,
+                    letterSpacing: '-0.01em', lineHeight: 1.35, marginBottom: '1rem',
+                  }}
+                >
+                  Anything about IdeaFlow.
+                </h3>
+                <ul
+                  style={{
+                    listStyle: 'none', padding: 0, margin: 0,
+                    display: 'flex', flexDirection: 'column', gap: '0.7rem',
+                  }}
+                >
+                  {[
+                    { title: 'Product questions',   detail: 'How features work, what fits your team.' },
+                    { title: 'Brainstorm Sessions', detail: 'The Pro guided brainstorming workspace.' },
+                    { title: 'Pricing',             detail: 'Plans, billing, and what counts as members.' },
+                    { title: 'Workspace setup',     detail: 'Onboarding, invites, and admin questions.' },
+                  ].map(({ title, detail }) => (
+                    <li
+                      key={title}
+                      style={{
+                        display: 'flex', gap: '0.6rem', alignItems: 'flex-start',
+                        padding: '0.55rem 0',
+                        borderTop: `1px solid ${P.border}`,
+                      }}
+                    >
+                      <span
+                        aria-hidden
+                        style={{
+                          flexShrink: 0, marginTop: '0.3rem',
+                          width: '6px', height: '6px', borderRadius: '999px',
+                          background: P.accent,
+                        }}
+                      />
+                      <div style={{ minWidth: 0 }}>
+                        <p style={{ fontSize: '0.875rem', fontWeight: 700, color: P.ink, letterSpacing: '-0.01em' }}>
+                          {title}
+                        </p>
+                        <p style={{ fontSize: '0.78rem', color: P.slate, lineHeight: 1.5, marginTop: '0.1rem' }}>
+                          {detail}
+                        </p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+
+                <div
+                  style={{
+                    marginTop: '1.25rem', paddingTop: '1rem',
+                    borderTop: `1px solid ${P.border}`,
+                    fontSize: '0.78rem', color: P.slate, lineHeight: 1.5,
+                  }}
+                >
+                  Prefer email?{' '}
+                  <a
+                    href="mailto:ideaflow@appstimize.nl"
+                    style={{ color: P.ink, fontWeight: 600, textDecoration: 'underline', textUnderlineOffset: '2px' }}
+                  >
+                    ideaflow@appstimize.nl
+                  </a>
+                </div>
+              </div>
             </div>
-          </div>
-          <h2 style={{
-            fontFamily: "'DM Serif Display', serif",
-            fontSize: 'clamp(1.5rem, 3vw, 2rem)',
-            color: '#0d1f35', letterSpacing: '-0.02em', marginBottom: '0.75rem',
-          }}>
-            Ready to surface your team&apos;s best ideas?
-          </h2>
-          <p style={{ fontSize: '0.95rem', color: '#5a7fa8', marginBottom: '2rem' }}>
-            Get started in minutes — no credit card required.
-          </p>
-          <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Link
-              href="/join"
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
-                background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
-                color: '#fff', fontWeight: 700, fontSize: '0.925rem',
-                borderRadius: '0.625rem', padding: '0.75rem 1.5rem',
-                textDecoration: 'none', letterSpacing: '-0.01em',
-              }}
-            >
-              Start for free →
-            </Link>
-            <Link
-              href="/"
-              style={{
-                display: 'inline-flex', alignItems: 'center',
-                background: '#ffffff', border: '1px solid rgba(26,107,191,0.20)',
-                color: '#2c4a6e', fontWeight: 600, fontSize: '0.925rem',
-                borderRadius: '0.625rem', padding: '0.75rem 1.5rem',
-                textDecoration: 'none',
-              }}
-            >
-              ← Back to home
-            </Link>
-          </div>
-        </div>
-      </section>
+          </PageContainer>
+        </section>
 
-    </main>
+        {/* ── FAQ ───────────────────────────────────────────────────────── */}
+        <section style={{ background: P.surface, borderTop: `1px solid ${P.border}`, padding: 'clamp(3.5rem, 7vw, 5.5rem) 0' }}>
+          <PageContainer>
+            <div style={{ maxWidth: '32rem', marginBottom: '2.25rem' }}>
+              <p
+                style={{
+                  fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.12em',
+                  textTransform: 'uppercase', color: P.faint, marginBottom: '0.75rem',
+                }}
+              >
+                Common questions
+              </p>
+              <h2
+                style={{
+                  fontFamily: "'Instrument Serif', serif", fontStyle: 'italic',
+                  fontSize: 'clamp(1.625rem, 3vw, 2.25rem)',
+                  letterSpacing: '-0.02em', color: P.ink, lineHeight: 1.15,
+                }}
+              >
+                Answers before you ask
+              </h2>
+            </div>
+
+            <div style={{ display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))' }}>
+              {[
+                {
+                  q: 'How long does it take to get started?',
+                  a: 'Most teams are up and running within a day. Create your workspace, invite the team with a code, and you’re live.',
+                },
+                {
+                  q: 'Is IdeaFlow free to start?',
+                  a: 'Yes — there’s a free plan with no time limit. No credit card needed to get started.',
+                },
+                {
+                  q: 'What are Brainstorm Sessions?',
+                  a: 'Sessions are the Pro guided brainstorming workspace — Define, Explore, Connect, Prioritize, Action. One session per topic.',
+                },
+                {
+                  q: 'Is my company’s data kept private?',
+                  a: 'Every workspace is fully isolated. Your sessions and ideas never leave your organisation’s account.',
+                },
+              ].map(({ q, a }) => (
+                <div
+                  key={q}
+                  style={{
+                    borderRadius: '0.9rem',
+                    border: `1px solid ${P.border}`,
+                    background: P.bg,
+                    padding: '1.25rem 1.25rem 1.35rem',
+                  }}
+                >
+                  <p style={{ fontSize: '0.9rem', fontWeight: 700, color: P.ink, marginBottom: '0.45rem', lineHeight: 1.4 }}>
+                    {q}
+                  </p>
+                  <p style={{ fontSize: '0.85rem', color: P.slate, lineHeight: 1.6 }}>
+                    {a}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </PageContainer>
+        </section>
+
+        {/* ── Bottom CTA ────────────────────────────────────────────────── */}
+        <section style={{ background: P.raised, borderTop: `1px solid ${P.border}`, padding: 'clamp(3.5rem, 7vw, 5rem) 0' }}>
+          <PageContainer>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1.5rem', flexWrap: 'wrap' }}>
+              <div style={{ maxWidth: '30rem' }}>
+                <h2
+                  style={{
+                    fontFamily: "'Instrument Serif', serif", fontStyle: 'italic',
+                    fontSize: 'clamp(1.5rem, 2.6vw, 2rem)',
+                    letterSpacing: '-0.02em', color: P.ink, lineHeight: 1.2,
+                    marginBottom: '0.5rem',
+                  }}
+                >
+                  Ready to start brainstorming?
+                </h2>
+                <p style={{ fontSize: '0.95rem', color: P.slate, lineHeight: 1.6 }}>
+                  Free plan, no credit card. Upgrade to Pro for Brainstorm Sessions when you’re ready.
+                </p>
+              </div>
+              <div style={{ display: 'flex', gap: '0.55rem', flexWrap: 'wrap' }}>
+                <Link
+                  href="/auth?mode=signup"
+                  style={{
+                    display: 'inline-flex', alignItems: 'center',
+                    background: P.dark, color: '#fff',
+                    fontSize: '0.9rem', fontWeight: 700,
+                    padding: '0.7rem 1.2rem', borderRadius: '0.625rem',
+                    textDecoration: 'none',
+                    boxShadow: '0 4px 18px rgba(13,22,42,0.18)',
+                  }}
+                >
+                  Start free →
+                </Link>
+                <Link
+                  href="/"
+                  style={{
+                    display: 'inline-flex', alignItems: 'center',
+                    background: P.surface, border: `1px solid ${P.border}`,
+                    color: P.ink, fontSize: '0.9rem', fontWeight: 600,
+                    padding: '0.7rem 1.1rem', borderRadius: '0.625rem',
+                    textDecoration: 'none',
+                  }}
+                >
+                  ← Back to home
+                </Link>
+              </div>
+            </div>
+          </PageContainer>
+        </section>
+
+        <style>{`
+          @media (max-width: 720px) {
+            .contact-grid { grid-template-columns: 1fr !important; }
+          }
+        `}</style>
+      </main>
     </>
   )
 }

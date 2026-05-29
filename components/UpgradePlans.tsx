@@ -31,21 +31,17 @@ const STANDARD_FEATURES = [
   'Participation reports',
 ]
 
-// Sessions get the ✦ marker so the eye picks them out as the headline value.
-// Generic carry-over capabilities get the standard ✓. AI is intentionally
-// not in this list — it lives as a single muted line below the features so
-// the card never reads as an AI product.
+// Shortened so the Pro card vertical length matches Free and Standard.
+// The longer marketing copy stays on the landing #sessions section instead.
 type ProFeature = { icon: '✦' | '✓'; text: string }
 const PRO_FEATURES: ProFeature[] = [
   { icon: '✓', text: 'Everything in Standard' },
-  { icon: '✦', text: 'Unlimited Brainstorm Sessions' },
-  { icon: '✦', text: 'Collaborative idea canvases' },
-  { icon: '✦', text: 'Guided thinking workflows' },
-  { icon: '✦', text: 'Team brainstorming' },
-  { icon: '✦', text: 'Visual idea mapping' },
-  { icon: '✦', text: 'Session summaries & action plans' },
-  { icon: '✦', text: 'Priority support' },
-  { icon: '✓', text: 'Up to 100 workspace members' },
+  { icon: '✦', text: 'Unlimited Sessions' },
+  { icon: '✦', text: 'Team idea canvases' },
+  { icon: '✦', text: 'Guided workflows' },
+  { icon: '✦', text: 'Session summaries' },
+  { icon: '✦', text: 'Action plans' },
+  { icon: '✓', text: 'Up to 100 members' },
 ]
 
 export default function UpgradePlans({ compact = false, currentPlan }: UpgradePlansProps) {
@@ -235,10 +231,10 @@ export default function UpgradePlans({ compact = false, currentPlan }: UpgradePl
         }} />
 
         <div style={{ position: 'relative', paddingTop: currentPlan === 'pro' ? 0 : '0.6rem' }}>
-          {/* Headline badge — the Pro plan IS Sessions. */}
+          {/* Headline badge — short to match Standard's "Most popular" pill. */}
           <div
             style={{
-              display: 'inline-flex', alignItems: 'center', gap: '0.35rem',
+              display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
               fontSize: '0.58rem', fontWeight: 800, letterSpacing: '0.08em',
               textTransform: 'uppercase',
               color: '#fdba74',
@@ -246,10 +242,10 @@ export default function UpgradePlans({ compact = false, currentPlan }: UpgradePl
               border: '1px solid rgba(249,115,22,0.32)',
               borderRadius: '999px',
               padding: '0.22rem 0.6rem',
-              marginBottom: '0.65rem',
+              marginBottom: '0.5rem',
             }}
           >
-            <span>✦</span> Brainstorm Sessions
+            <span>✦</span> Sessions
           </div>
           <p style={{
             fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.1em',
@@ -264,19 +260,10 @@ export default function UpgradePlans({ compact = false, currentPlan }: UpgradePl
           }}>
             €99<span style={{ fontSize: '0.8rem', fontWeight: 500, color: 'rgba(255,255,255,0.3)' }}>/yr</span>
           </p>
-          <p
-            style={{
-              fontSize: '0.8rem', color: 'rgba(255,255,255,0.65)',
-              marginTop: '0.5rem', lineHeight: 1.5,
-              maxWidth: '20rem',
-            }}
-          >
-            Guided brainstorming for teams that turn messy thoughts into clear direction.
+          <p style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.55)', marginTop: '0.4rem' }}>
+            Guided brainstorming for teams.
           </p>
         </div>
-
-        {/* Mini canvas preview */}
-        <SessionThumbnail />
 
         <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.35rem', position: 'relative' }}>
           {PRO_FEATURES.map((f, i) => {
@@ -354,53 +341,3 @@ export default function UpgradePlans({ compact = false, currentPlan }: UpgradePl
   )
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// SessionThumbnail — small SVG mock of the dark canvas with three coloured
-// cards and connectors. Communicates "visual brainstorming surface" at a
-// glance, well below the price + headline so the eye reads top-down.
-// ─────────────────────────────────────────────────────────────────────────────
-function SessionThumbnail() {
-  return (
-    <div
-      aria-hidden
-      style={{
-        position: 'relative',
-        height: '88px',
-        borderRadius: '0.6rem',
-        background: '#0e1320',
-        backgroundImage: 'radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1px)',
-        backgroundSize: '12px 12px',
-        backgroundPosition: '-1px -1px',
-        border: '1px solid rgba(255,255,255,0.08)',
-        overflow: 'hidden',
-      }}
-    >
-      <svg viewBox="0 0 240 88" width="100%" height="100%" preserveAspectRatio="none" style={{ position: 'absolute', inset: 0 }}>
-        {/* Connection lines */}
-        <path d="M 56 28 C 80 28, 100 56, 124 56" fill="none" stroke="rgba(148,163,184,0.45)" strokeWidth="1" />
-        <path d="M 56 28 C 100 28, 140 28, 184 32" fill="none" stroke="rgba(148,163,184,0.45)" strokeWidth="1" />
-        <path d="M 124 56 C 150 56, 170 56, 184 56" fill="none" stroke="rgba(148,163,184,0.45)" strokeWidth="1" />
-
-        {/* Cards */}
-        <g>
-          <rect x="16" y="18" width="46" height="22" rx="4" fill="rgba(249,115,22,0.10)" stroke="rgba(249,115,22,0.55)" strokeWidth="0.8" />
-          <rect x="20" y="22" width="14" height="3" rx="1.5" fill="rgba(253,186,116,0.85)" />
-          <rect x="20" y="28" width="34" height="2" rx="1" fill="rgba(255,255,255,0.45)" />
-          <rect x="20" y="32" width="24" height="2" rx="1" fill="rgba(255,255,255,0.30)" />
-        </g>
-        <g>
-          <rect x="100" y="46" width="46" height="22" rx="4" fill="rgba(16,185,129,0.10)" stroke="rgba(16,185,129,0.55)" strokeWidth="0.8" />
-          <rect x="104" y="50" width="14" height="3" rx="1.5" fill="rgba(110,231,183,0.85)" />
-          <rect x="104" y="56" width="34" height="2" rx="1" fill="rgba(255,255,255,0.45)" />
-          <rect x="104" y="60" width="22" height="2" rx="1" fill="rgba(255,255,255,0.30)" />
-        </g>
-        <g>
-          <rect x="178" y="22" width="46" height="22" rx="4" fill="rgba(167,139,250,0.10)" stroke="rgba(167,139,250,0.55)" strokeWidth="0.8" />
-          <rect x="182" y="26" width="14" height="3" rx="1.5" fill="rgba(196,181,253,0.85)" />
-          <rect x="182" y="32" width="34" height="2" rx="1" fill="rgba(255,255,255,0.45)" />
-          <rect x="182" y="36" width="20" height="2" rx="1" fill="rgba(255,255,255,0.30)" />
-        </g>
-      </svg>
-    </div>
-  )
-}

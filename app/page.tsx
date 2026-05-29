@@ -988,29 +988,27 @@ export default async function HomePage() {
                       border: '1px solid rgba(249,115,22,0.32)',
                       display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
                     }}>
-                      <span>✦</span> Brainstorm Sessions
+                      <span>✦</span> Sessions
                     </span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.375rem', marginBottom: '0.25rem' }}>
                     <p style={{ fontSize: '2.5rem', fontWeight: 700, color: 'rgba(255,255,255,0.96)', letterSpacing: '-0.04em', lineHeight: 1 }}>€99</p>
                     <p style={{ fontSize: '0.875rem', fontWeight: 500, color: 'rgba(255,255,255,0.35)' }}>/year</p>
                   </div>
-                  <p style={{ fontSize: '0.825rem', color: 'rgba(255,255,255,0.50)', lineHeight: 1.5, maxWidth: '20rem' }}>
-                    Guided brainstorming for teams that turn messy thoughts into clear direction.
+                  <p style={{ fontSize: '0.825rem', color: 'rgba(255,255,255,0.50)' }}>
+                    Guided brainstorming for teams.
                   </p>
                 </div>
 
-                <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: '1.5rem', marginBottom: '1rem', display: 'flex', flexDirection: 'column', gap: '0.7rem', flex: 1, position: 'relative' }}>
+                <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: '1.5rem', marginBottom: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', flex: 1, position: 'relative' }}>
                   {([
-                    { label: 'Everything in Standard',          icon: '✓' as const },
-                    { label: 'Unlimited Brainstorm Sessions',   icon: '✦' as const },
-                    { label: 'Collaborative idea canvases',     icon: '✦' as const },
-                    { label: 'Guided thinking workflows',       icon: '✦' as const },
-                    { label: 'Team brainstorming',              icon: '✦' as const },
-                    { label: 'Visual idea mapping',             icon: '✦' as const },
-                    { label: 'Session summaries & action plans',icon: '✦' as const },
-                    { label: 'Priority support',                icon: '✦' as const },
-                    { label: 'Up to 100 workspace members',     icon: '✓' as const },
+                    { label: 'Everything in Standard',    icon: '✓' as const },
+                    { label: 'Unlimited Sessions',        icon: '✦' as const },
+                    { label: 'Team idea canvases',        icon: '✦' as const },
+                    { label: 'Guided workflows',          icon: '✦' as const },
+                    { label: 'Session summaries',         icon: '✦' as const },
+                    { label: 'Action plans',              icon: '✦' as const },
+                    { label: 'Up to 100 members',         icon: '✓' as const },
                   ]).map(({ label, icon }, i) => {
                     const isFirst    = i === 0
                     const isSessions = icon === '✦'
