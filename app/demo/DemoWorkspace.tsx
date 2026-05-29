@@ -765,18 +765,27 @@ export default function DemoWorkspace() {
     <>
       {styleBlock}
 
-      {/* ── Constrained container ───────────────────────────────────────── */}
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '1.25rem 1.5rem 2.5rem', fontFamily: 'inherit' }}>
+      {/* ── Constrained container — width + padding matched to DemoSession
+            so the two /demo tabs render at identical visual size. ────────── */}
+      <div
+        style={{
+          maxWidth: 1400,
+          margin: '0 auto',
+          padding: 'clamp(0.75rem, 1.5vw, 1.4rem) clamp(0.75rem, 2vw, 1.75rem) 2.25rem',
+          fontFamily: 'inherit',
+        }}
+      >
 
-        {/* ── Framed workspace app ────────────────────────────────────────── */}
+        {/* ── Framed workspace app — height + framing matched to DemoSession ── */}
         <div style={{
           display: 'flex',
-          height: 'calc(100vh - 3.625rem - 2.4rem - 3.75rem)',
-          minHeight: 480,
+          height: 'calc(100vh - 3.625rem - 2.4rem - 3.5rem - 1.4rem)',
+          minHeight: 620,
           borderRadius: '1rem',
-          border: '1px solid rgba(26,107,191,0.12)',
+          border: '1px solid rgba(15,23,42,0.10)',
           overflow: 'hidden',
-          boxShadow: '0 4px 32px rgba(6,14,38,0.07), 0 1px 4px rgba(6,14,38,0.04)',
+          background: '#fff',
+          boxShadow: '0 12px 48px rgba(6,14,38,0.10), 0 1px 4px rgba(6,14,38,0.05)',
         }}>
 
           {/* ── Sidebar ─────────────────────────────────────────────────── */}

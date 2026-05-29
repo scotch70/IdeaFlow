@@ -978,43 +978,58 @@ export default async function HomePage() {
                 }} />
 
                 <div style={{ marginBottom: '1rem', position: 'relative' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '1rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
                     <p style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.40)' }}>Pro</p>
                     <span style={{
-                      fontSize: '0.58rem', fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase',
-                      color: 'rgba(249,115,22,0.95)',
+                      fontSize: '0.58rem', fontWeight: 800, letterSpacing: '0.07em', textTransform: 'uppercase',
+                      color: 'rgba(253,186,116,0.95)',
                       background: 'rgba(249,115,22,0.14)',
-                      borderRadius: '999px', padding: '0.15rem 0.5rem',
-                      border: '1px solid rgba(249,115,22,0.25)',
+                      borderRadius: '999px', padding: '0.15rem 0.55rem',
+                      border: '1px solid rgba(249,115,22,0.32)',
+                      display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
                     }}>
-                      ✦ AI-powered
+                      <span>✦</span> Brainstorm Sessions
                     </span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.375rem', marginBottom: '0.25rem' }}>
                     <p style={{ fontSize: '2.5rem', fontWeight: 700, color: 'rgba(255,255,255,0.96)', letterSpacing: '-0.04em', lineHeight: 1 }}>€99</p>
                     <p style={{ fontSize: '0.875rem', fontWeight: 500, color: 'rgba(255,255,255,0.35)' }}>/year</p>
                   </div>
-                  <p style={{ fontSize: '0.825rem', color: 'rgba(255,255,255,0.35)' }}>Everything in Standard, plus AI that turns raw feedback into clear priorities</p>
+                  <p style={{ fontSize: '0.825rem', color: 'rgba(255,255,255,0.50)', lineHeight: 1.5, maxWidth: '20rem' }}>
+                    Guided brainstorming for teams that turn messy thoughts into clear direction.
+                  </p>
                 </div>
 
-                <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: '1.5rem', marginBottom: '1.75rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', flex: 1, position: 'relative' }}>
+                <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: '1.5rem', marginBottom: '1rem', display: 'flex', flexDirection: 'column', gap: '0.7rem', flex: 1, position: 'relative' }}>
                   {([
-                    { label: 'Everything in Standard',      ai: false },
-                    { label: 'AI workspace summaries',       ai: true  },
-                    { label: 'Executive AI reports',         ai: true  },
-                    { label: 'AI action recommendations',    ai: true  },
-                    { label: 'PDF executive exports',        ai: true  },
-                    { label: 'Workspace Pulse & trends',     ai: true  },
-                    { label: 'Up to 100 workspace members',  ai: false },
-                  ] as { label: string; ai: boolean }[]).map(({ label, ai }, i) => (
-                    <div key={label} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.625rem', fontSize: '0.875rem', color: i === 0 ? 'rgba(255,255,255,0.30)' : ai ? 'rgba(186,230,253,0.85)' : 'rgba(255,255,255,0.70)', fontStyle: i === 0 ? 'italic' : 'normal' }}>
-                      <span style={{ flexShrink: 0, marginTop: '0.15rem', fontSize: '0.8rem', color: ai ? 'rgba(249,115,22,0.7)' : i === 0 ? 'rgba(255,255,255,0.18)' : 'rgba(99,179,237,0.6)' }}>
-                        {ai ? '✦' : '✓'}
-                      </span>
-                      {label}
-                    </div>
-                  ))}
+                    { label: 'Everything in Standard',          icon: '✓' as const },
+                    { label: 'Unlimited Brainstorm Sessions',   icon: '✦' as const },
+                    { label: 'Collaborative idea canvases',     icon: '✦' as const },
+                    { label: 'Guided thinking workflows',       icon: '✦' as const },
+                    { label: 'Team brainstorming',              icon: '✦' as const },
+                    { label: 'Visual idea mapping',             icon: '✦' as const },
+                    { label: 'Session summaries & action plans',icon: '✦' as const },
+                    { label: 'Priority support',                icon: '✦' as const },
+                    { label: 'Up to 100 workspace members',     icon: '✓' as const },
+                  ]).map(({ label, icon }, i) => {
+                    const isFirst    = i === 0
+                    const isSessions = icon === '✦'
+                    return (
+                      <div key={label} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.625rem', fontSize: '0.875rem', color: isFirst ? 'rgba(255,255,255,0.40)' : 'rgba(255,255,255,0.82)', fontStyle: isFirst ? 'italic' : 'normal' }}>
+                        <span style={{ flexShrink: 0, marginTop: '0.15rem', fontSize: '0.8rem', color: isSessions ? 'rgba(253,186,116,0.85)' : 'rgba(99,179,237,0.7)' }}>
+                          {icon}
+                        </span>
+                        {label}
+                      </div>
+                    )
+                  })}
                 </div>
+
+                {/* AI — single muted line below the bullets so it never reads as the headline */}
+                <p style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.32)', display: 'inline-flex', alignItems: 'center', gap: '0.35rem', marginBottom: '1.25rem' }}>
+                  <span style={{ color: 'rgba(255,255,255,0.20)', fontSize: '0.72rem' }}>+</span>
+                  Optional AI helpers
+                </p>
 
                 {!user ? (
                   <Link href="/auth?mode=signup" style={{
