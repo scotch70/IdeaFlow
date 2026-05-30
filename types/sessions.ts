@@ -8,13 +8,14 @@
 export const SESSION_STATUSES = ['active', 'finished', 'archived'] as const
 export type SessionStatus = typeof SESSION_STATUSES[number]
 
+// Thinking frameworks. Old session rows with legacy template_type values
+// (e.g. 'startup-idea') still load — getTemplate() falls back to 'freeform'.
 export const TEMPLATE_TYPES = [
-  'startup-idea',
-  'product-feature',
-  'marketing-campaign',
-  'content-planning',
+  'starbursting',
+  'swot',
+  'decision-matrix',
+  'customer-discovery',
   'problem-solving',
-  'decision-making',
   'freeform',
 ] as const
 export type TemplateType = typeof TEMPLATE_TYPES[number]

@@ -10,15 +10,15 @@
  */
 
 import { useState } from 'react'
-import DemoSession from './DemoSession'
+import DemoStarbursting from './DemoStarbursting'
 import DemoWorkspace from './DemoWorkspace'
 
 type Tab = 'session' | 'ideaflow'
 
 export default function DemoSwitcher() {
-  // Brainstorm Session is the flagship Pro feature — explicitly the default
-  // so first-time visitors land on it. IdeaFlow workspace is one click away.
-  const [tab, setTab] = useState<Tab>('session')
+  // IdeaFlow remains the core product, so the workspace demo is the default
+  // tab. The Guided Thinking Session is the premium layer one click away.
+  const [tab, setTab] = useState<Tab>('ideaflow')
 
   return (
     <>
@@ -31,19 +31,19 @@ export default function DemoSwitcher() {
           gap: '0.45rem',
         }}
       >
+        <TabButton active={tab === 'ideaflow'} onClick={() => setTab('ideaflow')}>
+          IdeaFlow Workspace
+        </TabButton>
         <TabButton
           active={tab === 'session'}
           onClick={() => setTab('session')}
           chip="Pro"
         >
-          ✦ Brainstorm Session
-        </TabButton>
-        <TabButton active={tab === 'ideaflow'} onClick={() => setTab('ideaflow')}>
-          IdeaFlow workspace
+          ✦ Guided Thinking Session
         </TabButton>
       </div>
 
-      {tab === 'session' ? <DemoSession /> : <DemoWorkspace />}
+      {tab === 'session' ? <DemoStarbursting /> : <DemoWorkspace />}
     </>
   )
 }

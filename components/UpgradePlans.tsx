@@ -3,17 +3,14 @@
 /**
  * UpgradePlans — the Standard + Pro plan cards.
  *
- * Pro is positioned around Brainstorm Sessions — the team-focused, guided
- * brainstorming workspace. Standard remains the "professional team
- * collaboration" tier for admins who don't need Sessions but want full
- * analytics and member management.
+ * Pro is positioned around Guided Thinking Sessions — proven frameworks
+ * (Starbursting, SWOT, Decision Matrix, Customer Discovery, Problem Solving)
+ * rather than a generic brainstorming canvas. Standard remains the
+ * "professional team collaboration" tier for admins who don't need
+ * frameworks but want full analytics and member management.
  *
- * Pro card carries:
- *   • A "Most popular for teams" badge
- *   • A canvas thumbnail preview (small SVG mock of a session) so the value
- *     prop is visual, not just bullets
- *   • Feature bullets that lead with Brainstorm Sessions, not AI
- *   • AI helpers are listed but explicitly secondary ("optional")
+ * The Pro card lists frameworks first; AI lives as one muted line below
+ * the bullets so the card never reads as an AI product.
  */
 
 interface UpgradePlansProps {
@@ -31,16 +28,17 @@ const STANDARD_FEATURES = [
   'Participation reports',
 ]
 
-// Shortened so the Pro card vertical length matches Free and Standard.
-// The longer marketing copy stays on the landing #sessions section instead.
+// Pro is positioned around Guided Thinking Sessions — proven frameworks
+// (Starbursting, SWOT, Decision Matrix, …) rather than a generic canvas.
 type ProFeature = { icon: '✦' | '✓'; text: string }
 const PRO_FEATURES: ProFeature[] = [
   { icon: '✓', text: 'Everything in Standard' },
-  { icon: '✦', text: 'Unlimited Sessions' },
-  { icon: '✦', text: 'Team idea canvases' },
-  { icon: '✦', text: 'Guided workflows' },
-  { icon: '✦', text: 'Session summaries' },
-  { icon: '✦', text: 'Action plans' },
+  { icon: '✦', text: 'Starbursting Sessions' },
+  { icon: '✦', text: 'SWOT Analysis' },
+  { icon: '✦', text: 'Decision Frameworks' },
+  { icon: '✦', text: 'Guided Workflows' },
+  { icon: '✦', text: 'Session Summaries' },
+  { icon: '✦', text: 'Action Plans' },
   { icon: '✓', text: 'Up to 100 members' },
 ]
 
@@ -231,7 +229,7 @@ export default function UpgradePlans({ compact = false, currentPlan }: UpgradePl
         }} />
 
         <div style={{ position: 'relative', paddingTop: currentPlan === 'pro' ? 0 : '0.6rem' }}>
-          {/* Headline badge — short to match Standard's "Most popular" pill. */}
+          {/* Headline badge — names the Pro promise: guided thinking, not AI. */}
           <div
             style={{
               display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
@@ -245,7 +243,7 @@ export default function UpgradePlans({ compact = false, currentPlan }: UpgradePl
               marginBottom: '0.5rem',
             }}
           >
-            <span>✦</span> Sessions
+            <span>✦</span> Guided Thinking Sessions
           </div>
           <p style={{
             fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.1em',
@@ -260,8 +258,8 @@ export default function UpgradePlans({ compact = false, currentPlan }: UpgradePl
           }}>
             €99<span style={{ fontSize: '0.8rem', fontWeight: 500, color: 'rgba(255,255,255,0.3)' }}>/yr</span>
           </p>
-          <p style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.55)', marginTop: '0.4rem' }}>
-            Guided brainstorming for teams.
+          <p style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.55)', marginTop: '0.4rem', lineHeight: 1.5 }}>
+            Structured frameworks for brainstorming, planning and decisions.
           </p>
         </div>
 

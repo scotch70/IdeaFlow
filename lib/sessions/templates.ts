@@ -1,10 +1,19 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Session templates
+// Guided Thinking Frameworks — the new shape of Sessions.
 //
-// Each template defines the 5 guided steps (Define → Action Plan) and a
-// per-step prompt + tip set rendered in the right-hand GuidePanel. Templates
-// also suggest a starter card the user can spawn with one click — this is
-// the only "AI-ish" feel that's truly required for the MVP.
+// Sessions are no longer "pick a topic, get a blank canvas". Instead the user
+// picks a thinking method that gives the session structure from the start.
+// Each framework keeps the same 5-step backbone (Define → Action plan) so the
+// rest of the workspace UI continues to work, but the per-step copy is now
+// framework-specific and grounded in proven thinking techniques.
+//
+// Frameworks shipped here:
+//   1. Starbursting        — flagship, central topic + 6 question spokes
+//   2. SWOT Analysis       — Strengths / Weaknesses / Opportunities / Threats
+//   3. Decision Matrix     — score options across weighted criteria
+//   4. Customer Discovery  — probe a customer segment's pains and goals
+//   5. Problem Solving     — root cause → candidate solutions
+//   6. Freeform Canvas     — blank canvas, escape hatch for unstructured work
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { TemplateType, StepKey, CardType } from '@/types/sessions'
@@ -23,16 +32,15 @@ export const STEP_LABEL: Record<StepKey, string> = {
 
 /**
  * One-line plain-English summary of what each step is for. Shown in the
- * collapsible sidebar under the active step so the user understands the
- * meaning at a glance — without having to read the longer per-template
- * prompt in the right Guide panel.
+ * collapsible sidebar under the active step so users understand the meaning
+ * at a glance, without reading the longer per-framework prompts.
  */
 export const STEP_HELPER: Record<StepKey, string> = {
-  define:     'Clarify what you are solving — the problem, the audience, the goal.',
-  explore:    'Add many rough ideas without judging them.',
-  connect:    'Link related thoughts together.',
+  define:     'Clarify what you are solving — the topic, the audience, the goal.',
+  explore:    'Open up the space — add ideas, angles, and questions.',
+  connect:    'Link related thoughts so the structure starts to emerge.',
   prioritize: 'Choose what matters most.',
-  action:     'Turn the best ideas into next steps.',
+  action:     'Turn the best ideas into concrete next steps.',
 }
 
 export interface StepGuide {
@@ -48,69 +56,75 @@ export interface SessionTemplate {
   name:         string
   emoji:        string
   description:  string
+  /** What the user will have when they finish — concrete, not hand-wavy. */
+  sampleOutcome: string
+  /** Rough minutes to completion — sets expectation up-front. */
+  estimateMinutes: number
+  /** Featured frameworks render with a subtle "Featured" highlight on the picker. */
+  featured?:    boolean
   steps:        Record<StepKey, StepGuide>
 }
 
 // ── Reusable guide blocks ────────────────────────────────────────────────────
 const DEFAULT_CONNECT: StepGuide = {
   title:     'Link related thoughts',
-  prompt:    'Drag from one card to another to draw a connection. Which ideas, risks, or causes belong together?',
+  prompt:    'Draw connections between related cards. Which ideas, causes, or angles belong together?',
   tips:      [
-    'Connect each Idea back to the Problem it solves.',
-    'Group Causes that contribute to the same Pain Point.',
     'Don’t over-connect — clarity beats completeness.',
+    'Group cards that explore the same theme close together.',
   ],
   suggested: [],
 }
 
 const DEFAULT_PRIORITIZE: StepGuide = {
   title:     'Rank by impact',
-  prompt:    'Star the cards that matter most. Aim for 1–3 “must-do” ideas, not ten.',
+  prompt:    'Star the cards that matter most. Aim for 1–3 “must-do” items, not ten.',
   tips:      [
-    'Ask: if we could only do one of these, which would have the biggest impact?',
-    'Move winning cards to the centre of the canvas.',
-    'Use Risk cards to challenge top ideas before locking them in.',
+    'Ask: if we could only do one of these, which has the biggest impact?',
+    'Use Risk cards to stress-test your top picks before locking them in.',
   ],
   suggested: ['decision'],
 }
 
 const DEFAULT_ACTION: StepGuide = {
   title:     'Turn ideas into next steps',
-  prompt:    'For each prioritized idea, add Task cards. Each task should be small enough to start tomorrow.',
+  prompt:    'For each prioritized item, add Task cards small enough to start tomorrow.',
   tips:      [
-    'Use verbs: “Draft…”, “Interview…”, “Ship…”',
+    'Use verbs: "Draft…", "Interview…", "Ship…"',
     'Assign a tentative owner in the card content if it helps.',
-    'When you finish, Export to save the action plan.',
   ],
   suggested: ['task'],
 }
 
-// ── Templates ────────────────────────────────────────────────────────────────
+// ── Frameworks ───────────────────────────────────────────────────────────────
 
 export const TEMPLATES: SessionTemplate[] = [
   {
-    type:        'startup-idea',
-    name:        'Startup Idea',
-    emoji:       '🚀',
-    description: 'Pressure-test a startup idea end-to-end — problem, audience, why now, risks.',
+    type:           'starbursting',
+    name:           'Starbursting',
+    emoji:          '✦',
+    description:    'Explore a topic from every angle — Who, What, When, Where, Why, How.',
+    sampleOutcome:  'A complete 360° view of the topic with the key questions surfaced and answered.',
+    estimateMinutes: 20,
+    featured:       true,
     steps: {
       define: {
-        title:  'What is the idea, in one sentence?',
-        prompt: 'Write the problem you’re solving and who you’re solving it for.',
+        title:  'Name the central topic',
+        prompt: 'In one short phrase, what are you exploring? Example: "Launch IdeaFlow Pro".',
         tips:   [
-          'If you can’t name the audience, the idea is too broad.',
-          'Lead with the pain, not the product.',
+          'Keep it concrete — a decision, a launch, a problem.',
+          'You can rename the topic any time from the central card.',
         ],
-        suggested: ['problem', 'audience'],
+        suggested: ['problem'],
       },
       explore: {
-        title:  'Why now? Why this?',
-        prompt: 'Brainstorm causes, alternatives, and the unique angle. What’s changed in the world that makes this possible?',
+        title:  'Answer the six questions',
+        prompt: 'For each spoke (Who, What, When, Where, Why, How) capture the most important answers.',
         tips:   [
-          'List 3 competitors and what they get wrong.',
-          'Note any “unfair advantages” you have.',
+          'Aim for 1–3 answers per spoke. Quality over quantity.',
+          'It’s OK to leave one spoke lighter than the others.',
         ],
-        suggested: ['cause', 'idea', 'risk'],
+        suggested: ['idea', 'audience'],
       },
       connect:    DEFAULT_CONNECT,
       prioritize: DEFAULT_PRIORITIZE,
@@ -118,79 +132,100 @@ export const TEMPLATES: SessionTemplate[] = [
     },
   },
   {
-    type:        'product-feature',
-    name:        'Product Feature',
-    emoji:       '✨',
-    description: 'Plan a new feature: who it’s for, what problem it solves, and what to build first.',
+    type:           'swot',
+    name:           'SWOT Analysis',
+    emoji:          '⊞',
+    description:    'Map Strengths, Weaknesses, Opportunities, and Threats for a decision.',
+    sampleOutcome:  'A balanced view of internal capabilities and external forces around the decision.',
+    estimateMinutes: 15,
     steps: {
       define: {
-        title:  'What feature, for whom?',
-        prompt: 'State the feature in one line and the user it serves.',
-        tips:   ['Pin the user job-to-be-done, not the UI.'],
-        suggested: ['problem', 'audience'],
+        title:  'What are you analysing?',
+        prompt: 'State the decision, project, or product you’re weighing.',
+        tips:   ['Be specific — "Launch in Germany" beats "International expansion".'],
+        suggested: ['problem', 'decision'],
       },
       explore: {
-        title:  'Variations and trade-offs',
-        prompt: 'Sketch 3 different ways to solve this. What does each give up?',
-        tips:   ['Include a “do nothing” option to clarify cost of inaction.'],
+        title:  'Strengths, Weaknesses, Opportunities, Threats',
+        prompt: 'Add cards in each quadrant. Strengths and Weaknesses are internal; Opportunities and Threats are external.',
+        tips:   [
+          'Be honest about weaknesses — that’s where the real insight is.',
+          'Threats often hint at the next big opportunity.',
+        ],
+        suggested: ['idea', 'risk', 'cause'],
+      },
+      connect:    DEFAULT_CONNECT,
+      prioritize: DEFAULT_PRIORITIZE,
+      action:     DEFAULT_ACTION,
+    },
+  },
+  {
+    type:           'decision-matrix',
+    name:           'Decision Matrix',
+    emoji:          '⚖',
+    description:    'Score options across weighted criteria to find the clear winner.',
+    sampleOutcome:  'A ranked list of options with reasoning the team can stand behind.',
+    estimateMinutes: 15,
+    steps: {
+      define: {
+        title:  'List the options',
+        prompt: 'Add a card per option you’re choosing between. Then list the criteria you care about.',
+        tips:   ['Don’t skip "do nothing" — it’s a real option.'],
+        suggested: ['idea', 'decision'],
+      },
+      explore: {
+        title:  'Score each option',
+        prompt: 'Walk each criterion and rate each option (1–5). Note your reasoning in the card.',
+        tips:   ['Weight the criteria that matter most before scoring.'],
         suggested: ['idea', 'risk'],
       },
       connect:    DEFAULT_CONNECT,
-      prioritize: DEFAULT_PRIORITIZE,
+      prioritize: {
+        title:     'Pick the winner',
+        prompt:    'Star the option with the strongest score. Add a Decision card to lock it in.',
+        tips:      ['If two options tie, your criteria are probably wrong.'],
+        suggested: ['decision'],
+      },
       action:     DEFAULT_ACTION,
     },
   },
   {
-    type:        'marketing-campaign',
-    name:        'Marketing Campaign',
-    emoji:       '📣',
-    description: 'Shape a campaign’s audience, message, channels, and what success looks like.',
+    type:           'customer-discovery',
+    name:           'Customer Discovery',
+    emoji:          '◎',
+    description:    'Probe a customer segment — pains, goals, and existing solutions.',
+    sampleOutcome:  'Validated assumptions about a specific customer, ready to test in interviews.',
+    estimateMinutes: 25,
     steps: {
       define: {
-        title:  'Audience and outcome',
-        prompt: 'Who is the campaign for and what do you want them to do?',
-        tips:   ['Be specific: “mid-market HR leaders” beats “businesses”.'],
+        title:  'Pin the customer',
+        prompt: 'One audience card. Be specific: "mid-market HR leaders", not "businesses".',
+        tips:   ['Anyone you can’t name is too generic.'],
         suggested: ['audience', 'problem'],
       },
       explore: {
-        title:  'Channels, hooks, and proof',
-        prompt: 'Brainstorm channels, headlines, and the proof you’ll lead with.',
-        tips:   ['One strong hook beats five weak ones.'],
-        suggested: ['idea', 'cause'],
+        title:  'Pains, goals, current alternatives',
+        prompt: 'Add Pain Point cards for what they struggle with, Idea cards for goals, and Cause cards for what they use today.',
+        tips:   ['Walk through their day — what makes them sigh, what makes them smile.'],
+        suggested: ['pain', 'cause', 'idea'],
       },
       connect:    DEFAULT_CONNECT,
       prioritize: DEFAULT_PRIORITIZE,
-      action:     DEFAULT_ACTION,
+      action:     {
+        title:     'Plan the interviews',
+        prompt:    'Add Task cards for the 5–10 people you should talk to next week.',
+        tips:      ['Use names if you have them.'],
+        suggested: ['task'],
+      },
     },
   },
   {
-    type:        'content-planning',
-    name:        'Content Planning',
-    emoji:       '✍️',
-    description: 'Build a content slate: pillars, audiences, formats, and what to ship first.',
-    steps: {
-      define: {
-        title:  'Topic and reader',
-        prompt: 'What’s the central topic and who is reading it?',
-        tips:   ['Pin one reader. Generic content reaches no one.'],
-        suggested: ['audience', 'problem'],
-      },
-      explore: {
-        title:  'Angles and formats',
-        prompt: 'Brainstorm headlines, formats (essay, video, thread), and adjacent angles.',
-        tips:   ['Each angle should make a clear claim a reader can disagree with.'],
-        suggested: ['idea'],
-      },
-      connect:    DEFAULT_CONNECT,
-      prioritize: DEFAULT_PRIORITIZE,
-      action:     DEFAULT_ACTION,
-    },
-  },
-  {
-    type:        'problem-solving',
-    name:        'Problem Solving',
-    emoji:       '🧩',
-    description: 'Untangle a hairy problem — surface causes, audiences, and candidate solutions.',
+    type:           'problem-solving',
+    name:           'Problem Solving',
+    emoji:          '◇',
+    description:    'Trace a problem to its root causes and brainstorm fixes.',
+    sampleOutcome:  'A clear root cause plus 3 prioritised candidate solutions.',
+    estimateMinutes: 20,
     steps: {
       define: {
         title:  'State the problem',
@@ -199,9 +234,9 @@ export const TEMPLATES: SessionTemplate[] = [
         suggested: ['problem', 'audience', 'pain'],
       },
       explore: {
-        title:  'Causes and possible fixes',
-        prompt: 'List underlying causes, then brainstorm a wide set of possible fixes.',
-        tips:   ['Aim for quantity here — 10 ideas, not 2.'],
+        title:  'Find the causes, then the fixes',
+        prompt: 'List underlying causes first. Only then brainstorm a wide set of possible fixes.',
+        tips:   ['Aim for 10 ideas at first — quantity, then editing.'],
         suggested: ['cause', 'idea', 'risk'],
       },
       connect:    DEFAULT_CONNECT,
@@ -210,38 +245,12 @@ export const TEMPLATES: SessionTemplate[] = [
     },
   },
   {
-    type:        'decision-making',
-    name:        'Decision Making',
-    emoji:       '⚖️',
-    description: 'Make a tough call: lay out options, trade-offs, risks, and pick one.',
-    steps: {
-      define: {
-        title:  'What’s the decision?',
-        prompt: 'State the choice clearly. Why does it need to be made now?',
-        tips:   ['If “do nothing” is a real option, name it.'],
-        suggested: ['problem', 'decision'],
-      },
-      explore: {
-        title:  'Options and consequences',
-        prompt: 'Add each option as a card. For each, what’s the risk and the upside?',
-        tips:   ['Be honest about second-order effects.'],
-        suggested: ['idea', 'risk'],
-      },
-      connect:    DEFAULT_CONNECT,
-      prioritize: {
-        title:     'Score the options',
-        prompt:    'Star your top option. Use Risk cards to stress-test it.',
-        tips:      ['Best decision = most robust under bad cases, not just best in the best case.'],
-        suggested: ['decision'],
-      },
-      action:     DEFAULT_ACTION,
-    },
-  },
-  {
-    type:        'freeform',
-    name:        'Freeform Session',
-    emoji:       '🌿',
-    description: 'A blank canvas. No prompts, no rules — just space to think.',
+    type:           'freeform',
+    name:           'Freeform Canvas',
+    emoji:          '◯',
+    description:    'A blank canvas. Bring your own structure.',
+    sampleOutcome:  'An open visual map of whatever’s in your head.',
+    estimateMinutes: 0,   // 0 = "open-ended"
     steps: {
       define: {
         title:  'Start anywhere',
@@ -265,6 +274,11 @@ export const TEMPLATES: SessionTemplate[] = [
 export const TEMPLATE_BY_TYPE: Record<TemplateType, SessionTemplate> =
   TEMPLATES.reduce((acc, t) => { acc[t.type] = t; return acc }, {} as Record<TemplateType, SessionTemplate>)
 
-export function getTemplate(type: TemplateType): SessionTemplate {
-  return TEMPLATE_BY_TYPE[type] ?? TEMPLATE_BY_TYPE['freeform']
+/**
+ * Look up a template by type. Returns the freeform template for any
+ * unknown / legacy value (e.g. old 'startup-idea' rows still in the DB),
+ * so old sessions continue to load without crashing.
+ */
+export function getTemplate(type: TemplateType | string): SessionTemplate {
+  return (TEMPLATE_BY_TYPE as Record<string, SessionTemplate>)[type] ?? TEMPLATE_BY_TYPE['freeform']
 }

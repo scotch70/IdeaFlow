@@ -638,10 +638,10 @@ export default async function HomePage() {
                     marginBottom: '0.85rem',
                   }}
                 >
-                  Run guided brainstorming sessions with your team
+                  Turn ideas into decisions with guided thinking
                 </h2>
                 <p style={{ fontSize: '1rem', lineHeight: 1.65, color: P.slate, marginBottom: '1.5rem' }}>
-                  Turn rough ideas into structured plans using collaborative Sessions.
+                  Sessions guide your team through proven thinking frameworks — Starbursting, SWOT, Decision Matrix — so every brainstorm ends with a clear next step.
                 </p>
 
                 <ol
@@ -988,27 +988,28 @@ export default async function HomePage() {
                       border: '1px solid rgba(249,115,22,0.32)',
                       display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
                     }}>
-                      <span>✦</span> Sessions
+                      <span>✦</span> Guided Thinking Sessions
                     </span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.375rem', marginBottom: '0.25rem' }}>
                     <p style={{ fontSize: '2.5rem', fontWeight: 700, color: 'rgba(255,255,255,0.96)', letterSpacing: '-0.04em', lineHeight: 1 }}>€99</p>
                     <p style={{ fontSize: '0.875rem', fontWeight: 500, color: 'rgba(255,255,255,0.35)' }}>/year</p>
                   </div>
-                  <p style={{ fontSize: '0.825rem', color: 'rgba(255,255,255,0.50)' }}>
-                    Guided brainstorming for teams.
+                  <p style={{ fontSize: '0.825rem', color: 'rgba(255,255,255,0.50)', lineHeight: 1.5 }}>
+                    Structured frameworks for brainstorming, planning and decisions.
                   </p>
                 </div>
 
                 <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: '1.5rem', marginBottom: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', flex: 1, position: 'relative' }}>
                   {([
-                    { label: 'Everything in Standard',    icon: '✓' as const },
-                    { label: 'Unlimited Sessions',        icon: '✦' as const },
-                    { label: 'Team idea canvases',        icon: '✦' as const },
-                    { label: 'Guided workflows',          icon: '✦' as const },
-                    { label: 'Session summaries',         icon: '✦' as const },
-                    { label: 'Action plans',              icon: '✦' as const },
-                    { label: 'Up to 100 members',         icon: '✓' as const },
+                    { label: 'Everything in Standard',  icon: '✓' as const },
+                    { label: 'Starbursting Sessions',   icon: '✦' as const },
+                    { label: 'SWOT Analysis',           icon: '✦' as const },
+                    { label: 'Decision Frameworks',     icon: '✦' as const },
+                    { label: 'Guided Workflows',        icon: '✦' as const },
+                    { label: 'Session Summaries',       icon: '✦' as const },
+                    { label: 'Action Plans',            icon: '✦' as const },
+                    { label: 'Up to 100 members',       icon: '✓' as const },
                   ]).map(({ label, icon }, i) => {
                     const isFirst    = i === 0
                     const isSessions = icon === '✦'
