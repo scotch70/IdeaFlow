@@ -9,7 +9,16 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const CARD_W       = 232
-export const CARD_MIN_H   = 108
+/**
+ * The visual height a card occupies for layout math — clamp boundaries,
+ * connection-line endpoints, and grid spacing all use this. Cards may render
+ * slightly taller when they have detail + owner metadata, but the value is
+ * sized to match the typical body (title + 2 lines + owner row) so connection
+ * lines still land on the card visually.
+ */
+export const CARD_H       = 140
+/** Kept as a back-compat alias. Old call sites that pass CARD_MIN_H still work. */
+export const CARD_MIN_H   = CARD_H
 /** Distance reserved between the canvas edge and any card. */
 export const CANVAS_INSET = 24
 /** Gap between cards in the "Reset view" grid layout. */
@@ -36,7 +45,7 @@ function clamp(v: number, lo: number, hi: number): number {
  */
 export function clampToCanvas(
   x: number, y: number, canvas: CanvasSize,
-  cardW: number = CARD_W, cardH: number = CARD_MIN_H,
+  cardW: number = CARD_W, cardH: number = CARD_H,
 ): { x: number; y: number } {
   const pad  = CANVAS_INSET
   const maxX = Math.max(pad, canvas.w - cardW - pad)
@@ -52,8 +61,8 @@ export function clampToCanvas(
 export function nextCardSpawn(canvas: CanvasSize, index: number): { x: number; y: number } {
   const jitterX = (index % 5) * 18
   const jitterY = (index % 4) * 14
-  const cx = canvas.w / 2 - CARD_W     / 2 + jitterX
-  const cy = canvas.h / 2 - CARD_MIN_H / 2 + jitterY
+  const cx = canvas.w / 2 - CARD_W / 2 + jitterX
+  const cy = canvas.h / 2 - CARD_H / 2 + jitterY
   return clampToCanvas(cx, cy, canvas)
 }
 
@@ -65,7 +74,7 @@ export function nextCardSpawn(canvas: CanvasSize, index: number): { x: number; y
 export function gridResetPositions(count: number, canvas: CanvasSize): Array<{ x: number; y: number }> {
   if (count <= 0) return []
   const pad  = CANVAS_INSET
-  const rowH = CARD_MIN_H + 64  // extra room so the textarea + metadata don't overlap the next row
+  const rowH = CARD_H + RESET_GAP   // exactly one card + gap per row, no overlap
   const cols = Math.max(1, Math.floor((canvas.w - pad * 2 + RESET_GAP) / (CARD_W + RESET_GAP)))
 
   const out: Array<{ x: number; y: number }> = []

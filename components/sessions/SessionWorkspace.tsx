@@ -557,10 +557,17 @@ export default function SessionWorkspace({ sessionId, userId }: Props) {
         </button>
         <button
           type="button"
-          onClick={() => setShowSummary(true)}
+          onClick={() => {
+            // Open the print-ready HTML in a new tab — same pattern as the
+            // /api/reports/summary export. The page auto-fires window.print()
+            // and the user picks "Save as PDF". No client-side PDF dep needed.
+            if (typeof window !== 'undefined') {
+              window.open(`/api/sessions/${session.id}/export`, '_blank', 'noopener')
+            }
+          }}
           style={topBarButtonStyle()}
         >
-          Export
+          Export PDF
         </button>
         <button
           type="button"

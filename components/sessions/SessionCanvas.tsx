@@ -4,24 +4,35 @@
  * SessionCanvas — the dark drawing surface.
  *
  *   • Fixed-size container (position: relative, overflow: hidden). No scroll
- *     bars — cards are clamped to the visible rectangle by the workspace.
+ *     bars — cards are clamped to the visible rectangle.
  *   • A ResizeObserver reports the live size up to SessionWorkspace via
- *     `onMeasure`, which drives card spawn positions, drag clamping and the
- *     "Reset view" grid layout.
- *   • Cards are absolutely positioned inside this canvas (not the page).
- *     framer-motion's `dragConstraints` keeps each card inside the box on
- *     every frame; `onPositionEnd` clamps as a final safety net.
- *   • SVG connection layer sits below cards, fat invisible hit area lets
- *     you click thin lines, hover reveals an × to delete.
- *   • A floating helper strip at the bottom explains the interactions.
+ *     `onMeasure`, which drives card spawn positions and the "Reset view" grid.
+ *   • Cards are absolutely positioned inside this canvas. Each card uses
+ *     framer-motion's `drag` prop; its visual movement happens inside
+ *     framer-motion via a transform — no React rerender per frame.
+ *   • A `liveDrag` state on the canvas tracks the current drag offset of the
+ *     one card being moved. The SVG connection layer reads from `liveDrag` so
+ *     lines follow the card in real time. Other cards do NOT rerender during
+ *     drag (CardOnCanvas is memoised on its inputs).
+ *   • Persisted position writes happen once, on drag end (fire-and-forget so
+ *     the UI never pauses).
+ *
+ * The canvas is also responsible for displaying cards at clamped positions
+ * even before the parent's auto-correct effect catches up — saved positions
+ * outside the visible area are visually re-anchored at the inset corner so
+ * nothing ever renders out of bounds.
  */
 
-import { useLayoutEffect, useRef, useState } from 'react'
+import { memo, useLayoutEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import type { SessionCard, SessionConnection, SessionMember } from '@/types/sessions'
 import { cardChipLabel, CARD_TYPE_META } from '@/lib/sessions/cardTypes'
-import { CANVAS_INSET, CARD_MIN_H, CARD_W, CanvasSize, isCanvasMeasured } from '@/lib/sessions/layout'
+import {
+  CANVAS_INSET, CARD_H, CARD_W, CanvasSize, clampToCanvas, isCanvasMeasured,
+} from '@/lib/sessions/layout'
 import { CANVAS_BG, CANVAS_BORDER, CANVAS_DOT, CANVAS_SURFACE } from './SessionWorkspace'
+
+// ─── Props ───────────────────────────────────────────────────────────────────
 
 interface Props {
   cards:            SessionCard[]
@@ -31,7 +42,6 @@ interface Props {
   selectedCardId:   string | null
   editingCardId:    string | null
   canvasSize:       CanvasSize
-  /** Whether the right Guide panel is collapsed — drives the empty-state copy. */
   guideCollapsed:   boolean
 
   onMeasure:          (size: CanvasSize) => void
@@ -49,6 +59,8 @@ interface Props {
   onResetView:        () => void
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+
 export default function SessionCanvas({
   cards, connections, members,
   connectingFrom, selectedCardId, editingCardId,
@@ -61,8 +73,7 @@ export default function SessionCanvas({
 }: Props) {
   const canvasRef = useRef<HTMLDivElement>(null)
 
-  // Surface the live size up to the workspace. content-box dimensions only,
-  // so the parent can clamp accurately.
+  // ── Resize observer surfaces the live size up to the workspace ──────────
   useLayoutEffect(() => {
     if (!canvasRef.current) return
     const el = canvasRef.current
@@ -76,6 +87,13 @@ export default function SessionCanvas({
     return () => ro.disconnect()
   }, [onMeasure])
 
+  // ── Live drag offset for ONE card at a time ─────────────────────────────
+  // Updated on framer-motion's onDrag handler (~60 fps). Cleared on drag end.
+  // Drives the SVG connection-line endpoints so lines follow the card in
+  // real time without forcing the dragging card itself to rerender — motion
+  // handles the visual translate internally.
+  const [liveDrag, setLiveDrag] = useState<{ id: string; dx: number; dy: number } | null>(null)
+
   // Clicking the empty canvas deselects + cancels any connect-in-progress.
   function handleCanvasMouseDown(e: React.MouseEvent<HTMLDivElement>) {
     if (e.target !== e.currentTarget) return
@@ -83,8 +101,27 @@ export default function SessionCanvas({
     onCancelConnect()
   }
 
-  const cardById = new Map(cards.map(c => [c.id, c]))
+  // ── Helpers used by both the cards and the line layer ───────────────────
   const measured = isCanvasMeasured(canvasSize)
+
+  // Render-time clamp — guarantees nothing visually shows out of bounds even
+  // before the parent's auto-correct effect persists the fix.
+  function safePos(card: SessionCard): { x: number; y: number } {
+    if (!measured) return { x: card.x, y: card.y }
+    return clampToCanvas(card.x, card.y, canvasSize)
+  }
+
+  /** Effective top-left of a card, accounting for live drag offset. */
+  function effectivePos(card: SessionCard): { x: number; y: number } {
+    const base = safePos(card)
+    if (liveDrag && liveDrag.id === card.id) {
+      return { x: base.x + liveDrag.dx, y: base.y + liveDrag.dy }
+    }
+    return base
+  }
+
+  // Build a quick lookup so the connection layer doesn't pay O(n²).
+  const cardById = new Map(cards.map(c => [c.id, c]))
 
   return (
     <div
@@ -100,11 +137,10 @@ export default function SessionCanvas({
         minHeight: 0,
       }}
     >
-      {/* SVG connection layer */}
+      {/* ── SVG connection layer — sits below cards via z-order in the DOM ── */}
       <svg
-        width={canvasSize.w}
-        height={canvasSize.h}
-        style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}
+        width="100%" height="100%"
+        style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'visible' }}
       >
         <defs>
           <marker id="conn-arrow" viewBox="0 0 10 10" refX="9" refY="5"
@@ -116,45 +152,50 @@ export default function SessionCanvas({
           const a = cardById.get(c.source_card_id)
           const b = cardById.get(c.target_card_id)
           if (!a || !b) return null
+          const ap = effectivePos(a)
+          const bp = effectivePos(b)
           return (
             <ConnectionPath
               key={c.id}
-              ax={a.x + CARD_W / 2} ay={a.y + CARD_MIN_H / 2}
-              bx={b.x + CARD_W / 2} by={b.y + CARD_MIN_H / 2}
+              ax={ap.x + CARD_W / 2} ay={ap.y + CARD_H / 2}
+              bx={bp.x + CARD_W / 2} by={bp.y + CARD_H / 2}
               onDelete={() => onDeleteConnection(c.id)}
             />
           )
         })}
       </svg>
 
-      {/* Cards. Only render after we've measured at least once — otherwise the
-          dragConstraints would clamp to a zero-size box and the cards would
-          all snap to (pad, pad). The empty-state placeholder still shows. */}
-      {measured && cards.map(card => (
-        <CardOnCanvas
-          key={card.id}
-          card={card}
-          canvasSize={canvasSize}
-          owner={card.created_by ? members[card.created_by] ?? null : null}
-          isConnectSource={connectingFrom === card.id}
-          isConnectTarget={connectingFrom !== null && connectingFrom !== card.id}
-          isSelected={selectedCardId === card.id}
-          isEditing={editingCardId === card.id}
-          onSelect={onSelectCard}
-          onEnterEdit={onEditCard}
-          onPositionEnd={onPositionEnd}
-          onChangeText={onChangeText}
-          onTogglePriority={onTogglePriority}
-          onDuplicate={onDuplicate}
-          onDelete={onDelete}
-          onStartConnect={onStartConnect}
-          onFinishConnect={onFinishConnect}
-        />
-      ))}
+      {/* ── Cards — only rendered after the canvas has measured at least once.
+            Each gets clamped pos so we never paint out of bounds. ─────────── */}
+      {measured && cards.map(card => {
+        const safe = safePos(card)
+        return (
+          <CardOnCanvas
+            key={card.id}
+            card={card}
+            safeX={safe.x}
+            safeY={safe.y}
+            canvasSize={canvasSize}
+            owner={card.created_by ? members[card.created_by] ?? null : null}
+            isConnectSource={connectingFrom === card.id}
+            isConnectTarget={connectingFrom !== null && connectingFrom !== card.id}
+            isSelected={selectedCardId === card.id}
+            isEditing={editingCardId === card.id}
+            onSelect={onSelectCard}
+            onEnterEdit={onEditCard}
+            onLiveDrag={setLiveDrag}
+            onPositionEnd={onPositionEnd}
+            onChangeText={onChangeText}
+            onTogglePriority={onTogglePriority}
+            onDuplicate={onDuplicate}
+            onDelete={onDelete}
+            onStartConnect={onStartConnect}
+            onFinishConnect={onFinishConnect}
+          />
+        )
+      })}
 
-      {/* Empty state — first-time users see this. The right Guide panel is
-          already explaining the current step; here we name the very next
-          click so there is no "blank canvas" moment. */}
+      {/* ── Empty state ─────────────────────────────────────────────────────── */}
       {cards.length === 0 && (
         <div
           style={{
@@ -192,14 +233,11 @@ export default function SessionCanvas({
         </div>
       )}
 
-      {/* Helper strip — always-visible interaction hint. Absolutely positioned
-          so it overlays the bottom of the canvas without consuming layout. */}
+      {/* ── Bottom helper strip ─────────────────────────────────────────────── */}
       <div
         style={{
-          position: 'absolute',
-          bottom: 12, left: 0, right: 0,
-          display: 'flex', justifyContent: 'center',
-          padding: '0 1rem',
+          position: 'absolute', bottom: 12, left: 0, right: 0,
+          display: 'flex', justifyContent: 'center', padding: '0 1rem',
           pointerEvents: 'none',
         }}
       >
@@ -272,12 +310,17 @@ interface CardProps {
   card:              SessionCard
   owner:             SessionMember | null
   canvasSize:        CanvasSize
+  /** Clamped persisted position — what we render the card at when not dragging. */
+  safeX:             number
+  safeY:             number
   isConnectSource:   boolean
   isConnectTarget:   boolean
   isSelected:        boolean
   isEditing:         boolean
   onSelect:          (id: string) => void
   onEnterEdit:       (id: string | null) => void
+  /** Reports the live drag offset to the canvas while a drag is in progress. */
+  onLiveDrag:        (drag: { id: string; dx: number; dy: number } | null) => void
   onPositionEnd:     (id: string, x: number, y: number) => void
   onChangeText:      (id: string, patch: { title?: string; content?: string }) => void
   onTogglePriority:  (id: string) => void
@@ -287,21 +330,33 @@ interface CardProps {
   onFinishConnect:   (id: string) => void
 }
 
-function CardOnCanvas({
-  card, owner, canvasSize,
+// Memo guard: only rerender if something the card actually displays changed.
+// Crucially: nothing in this list changes during a drag of *another* card, so
+// non-dragging cards stay stable while liveDrag updates at 60fps.
+function cardPropsEqual(a: CardProps, b: CardProps): boolean {
+  if (a.card !== b.card) return false
+  if (a.safeX !== b.safeX || a.safeY !== b.safeY) return false
+  if (a.isSelected !== b.isSelected) return false
+  if (a.isEditing  !== b.isEditing)  return false
+  if (a.isConnectSource !== b.isConnectSource) return false
+  if (a.isConnectTarget !== b.isConnectTarget) return false
+  if (a.canvasSize.w !== b.canvasSize.w || a.canvasSize.h !== b.canvasSize.h) return false
+  if (a.owner !== b.owner) return false
+  // Callbacks come from stable closures in the parent (SessionWorkspace
+  // top-level functions); reference equality is enough.
+  return true
+}
+
+const CardOnCanvas = memo(function CardOnCanvas({
+  card, owner, canvasSize, safeX, safeY,
   isConnectSource, isConnectTarget, isSelected, isEditing,
-  onSelect, onEnterEdit,
+  onSelect, onEnterEdit, onLiveDrag,
   onPositionEnd, onChangeText, onTogglePriority,
   onDuplicate, onDelete, onStartConnect, onFinishConnect,
 }: CardProps) {
   const meta = CARD_TYPE_META[card.type]
-  const [pos, setPos] = useState({ x: card.x, y: card.y })
   const [hover, setHover] = useState(false)
   const titleRef = useRef<HTMLInputElement>(null)
-
-  // Keep the local "drag origin" in sync whenever the card's persisted
-  // position changes (e.g. after Reset view or the resize-clamp effect).
-  useLayoutEffect(() => { setPos({ x: card.x, y: card.y }) }, [card.id, card.x, card.y])
 
   // Focus title when entering edit mode.
   useLayoutEffect(() => {
@@ -313,12 +368,15 @@ function CardOnCanvas({
 
   const starred = card.priority > 0
 
-  // Constraints in drag-offset space (relative to pos). Keeps the card body
-  // inside [pad, canvas - cardSize - pad] on every frame.
-  const dragLeft   = CANVAS_INSET - pos.x
-  const dragRight  = Math.max(0, canvasSize.w - CARD_W     - CANVAS_INSET - pos.x)
-  const dragTop    = CANVAS_INSET - pos.y
-  const dragBottom = Math.max(0, canvasSize.h - CARD_MIN_H - CANVAS_INSET - pos.y)
+  // ── Drag constraints in motion-offset space ─────────────────────────────
+  // framer-motion lets a `drag` element accept a `{left,right,top,bottom}`
+  // object whose values are relative to its origin position. We compute
+  // these from the clamped position so the card cannot leave the canvas
+  // viewport during the drag itself — clamp on every frame, not just end.
+  const dragLeft   = CANVAS_INSET - safeX
+  const dragRight  = Math.max(0, canvasSize.w - CARD_W - CANVAS_INSET - safeX)
+  const dragTop    = CANVAS_INSET - safeY
+  const dragBottom = Math.max(0, canvasSize.h - CARD_H - CANVAS_INSET - safeY)
 
   function handleClick(e: React.MouseEvent) {
     if (isConnectTarget) {
@@ -342,16 +400,20 @@ function CardOnCanvas({
       dragMomentum={false}
       dragElastic={0}
       dragConstraints={{ left: dragLeft, right: dragRight, top: dragTop, bottom: dragBottom }}
+      onDragStart={() => onLiveDrag({ id: card.id, dx: 0, dy: 0 })}
+      onDrag={(_, info) => {
+        // Throttle: framer-motion already coalesces to rAF; no extra work needed.
+        onLiveDrag({ id: card.id, dx: info.offset.x, dy: info.offset.y })
+      }}
       onDragEnd={(_, info) => {
-        // Final safety clamp on top of dragConstraints — guards against tiny
-        // rounding errors leaking outside the visible area.
-        const nx = pos.x + info.offset.x
-        const ny = pos.y + info.offset.y
-        const next = {
-          x: Math.min(Math.max(nx, CANVAS_INSET), Math.max(CANVAS_INSET, canvasSize.w - CARD_W     - CANVAS_INSET)),
-          y: Math.min(Math.max(ny, CANVAS_INSET), Math.max(CANVAS_INSET, canvasSize.h - CARD_MIN_H - CANVAS_INSET)),
-        }
-        setPos(next)
+        // Final clamp on top of dragConstraints — guards against tiny rounding
+        // errors leaking outside the visible area. Then commit ONCE.
+        const nx = safeX + info.offset.x
+        const ny = safeY + info.offset.y
+        const next = clampToCanvas(nx, ny, canvasSize)
+        onLiveDrag(null)
+        // Fire-and-forget — the parent's setCards + updateCard are async; we
+        // don't await here so the drag-end animation is never blocked.
         onPositionEnd(card.id, next.x, next.y)
       }}
       onClick={handleClick}
@@ -360,10 +422,10 @@ function CardOnCanvas({
       onMouseLeave={() => setHover(false)}
       style={{
         position: 'absolute',
-        top: pos.y,
-        left: pos.x,
+        top: safeY,
+        left: safeX,
         width: CARD_W,
-        minHeight: CARD_MIN_H,
+        minHeight: CARD_H,
         background: CANVAS_SURFACE,
         backgroundImage: `linear-gradient(180deg, ${meta.bg}, transparent 65%)`,
         border: isConnectSource
@@ -384,19 +446,18 @@ function CardOnCanvas({
             ? '0 0 0 4px rgba(249,115,22,0.18), 0 6px 18px rgba(0,0,0,0.45)'
             : '0 4px 18px rgba(0,0,0,0.32)',
         zIndex: isSelected ? 5 : isConnectSource ? 4 : 2,
+        // Hint the compositor — drag transforms stay smooth.
+        willChange: 'transform',
       }}
       whileDrag={{ scale: 1.02, cursor: 'grabbing', zIndex: 10 }}
     >
-      {/* Accent stripe */}
       <div
         style={{
           position: 'absolute', top: '0.7rem', bottom: '0.7rem', left: '0.35rem',
-          width: '3px', borderRadius: '999px', background: meta.accent,
-          opacity: 0.85,
+          width: '3px', borderRadius: '999px', background: meta.accent, opacity: 0.85,
         }}
       />
 
-      {/* Header row: type chip + (hover) action bar */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.35rem' }}>
         <span
           style={{
@@ -404,7 +465,6 @@ function CardOnCanvas({
             color: meta.ink, background: meta.bg,
             border: `1px solid ${meta.accent}33`,
             padding: '0.12rem 0.4rem', borderRadius: '999px',
-            // Custom labels can be longer than the built-in names; clip with ellipsis.
             maxWidth: '8.5rem',
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
           }}
@@ -483,7 +543,7 @@ function CardOnCanvas({
         )}
       </div>
 
-      {/* Title input */}
+      {/* Title */}
       <input
         ref={titleRef}
         value={card.title}
@@ -510,7 +570,7 @@ function CardOnCanvas({
         }}
       />
 
-      {/* Optional content textarea */}
+      {/* Detail */}
       <textarea
         value={card.content ?? ''}
         placeholder={isSelected ? 'Add detail (optional)' : ''}
@@ -533,7 +593,7 @@ function CardOnCanvas({
         }}
       />
 
-      {/* Owner avatar + subtle role hint */}
+      {/* Owner */}
       {owner && (
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.45rem' }}>
           <OwnerAvatar member={owner} />
@@ -544,7 +604,7 @@ function CardOnCanvas({
       )}
     </motion.div>
   )
-}
+}, cardPropsEqual)
 
 function ActionIconButton({
   icon, onClick, label, active = false, danger = false,
