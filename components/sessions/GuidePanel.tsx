@@ -1,69 +1,89 @@
 'use client'
 
 /**
- * GuidePanel — right rail. Two modes:
+ * GuidePanel — the right rail.
  *
- *   mode="step"  — default. Shows the prompt + tips for the current step,
- *                  the Add Card grid, and the subtle AI helpers.
- *   mode="card"  — visible when a card on the canvas is selected. Shows
- *                  inline editor for Type / Title / Details / Priority,
- *                  plus subtle metadata (Created by, Last edited).
+ * Three visible states:
+ *   1. Collapsed (~56px)  — vertical icon strip with the chevron + Add Card
+ *      + Selected Card icons. Tooltips name each control. Click any icon to
+ *      expand back to the matching mode.
+ *   2. Expanded, no card selected — "Add a card" form:
+ *      Step 1 — pick a type (chips + Custom)
+ *      Step 2 — fill in Title / Details (and a Type name when Custom)
+ *      One "Add card" button creates the card on the canvas.
+ *   3. Expanded, card selected — Edit mode: Type / Custom label / Title /
+ *      Details / Priority + Duplicate + Delete + "Back to guide".
  *
- * The "subtle AI" promise: helpers live at the bottom under a small label,
- * never the headline. Headline is always the human prompt or the selected
- * card's title.
+ * Collapsed state is persisted to localStorage by the parent workspace
+ * (key: ideaflow:sessionsGuideCollapsed) and passed in as a prop.
+ *
+ * The previous "click a type → card pops onto canvas" pattern is gone. Now
+ * card creation is a deliberate two-step act, but type chips remember the
+ * last pick so power users still feel fast.
  */
 
-import { CARD_TYPES_ORDERED, CARD_TYPE_META } from '@/lib/sessions/cardTypes'
+import { useEffect, useState } from 'react'
+import { cardChipLabel, CARD_TYPES_ORDERED, CARD_TYPE_META } from '@/lib/sessions/cardTypes'
 import type { StepGuide } from '@/lib/sessions/templates'
 import type { CardType, SessionCard, SessionMember, StepKey } from '@/types/sessions'
 
 interface Props {
-  mode:    'step' | 'card'
-  stepKey: StepKey
-  guide:   StepGuide
+  mode:       'step' | 'card'
+  collapsed:  boolean
+  stepKey:    StepKey
+  guide:      StepGuide
 
   // Card-mode props
   selectedCard:    SessionCard | null
   members:         Record<string, SessionMember>
   onDeselect:      () => void
-  onChangeCardType: (id: string, type: CardType) => void
-  onChangeCardText: (id: string, patch: { title?: string; content?: string }) => void
-  onTogglePriority: (id: string) => void
-  onDuplicateCard:  (id: string) => void
-  onDeleteCard:     (id: string) => void
+  onChangeCardType:        (id: string, type: CardType, customLabel?: string | null) => void
+  onChangeCardCustomLabel: (id: string, label: string) => void
+  onChangeCardText:        (id: string, patch: { title?: string; content?: string }) => void
+  onTogglePriority:        (id: string) => void
+  onDuplicateCard:         (id: string) => void
+  onDeleteCard:            (id: string) => void
 
-  // Step-mode props
-  onAddCard:        (type: CardType) => void
-  onSuggestAngles:  () => void
-  onFindDuplicates: () => void
-  onSummarize:      () => void
+  // Add-form
+  onCreateCard:     (args: { type: CardType; title: string; content: string; customLabel?: string }) => void
+
+  // Panel controls
+  onToggleCollapse: () => void
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+
 export default function GuidePanel(props: Props) {
+  // Collapsed = vertical icon strip. Clicking the Add or Selected icon
+  // expands and switches to the relevant mode in one click.
+  if (props.collapsed) {
+    return <CollapsedRail {...props} />
+  }
+
   return (
     <aside
       style={{
         background: '#fff',
         borderLeft: '1px solid rgba(0,0,0,0.06)',
-        padding: '0.95rem 0.95rem 1.1rem',
+        padding: '0.85rem 0.95rem 1.1rem',
         display: 'flex', flexDirection: 'column',
         overflowY: 'auto',
         minHeight: 0,
       }}
     >
-      {/* Panel header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.7rem' }}>
+      {/* Panel header — title + collapse chevron + optional Back-to-guide */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.75rem' }}>
         <p style={{ fontSize: '0.58rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#9faab8' }}>
-          Guide
+          {props.mode === 'card' ? 'Edit card' : 'Add a card'}
         </p>
+        <span style={{ flex: 1 }} />
         {props.mode === 'card' && (
           <button
             type="button"
             onClick={props.onDeselect}
-            aria-label="Close card editor"
+            aria-label="Back to add a card"
             style={{
-              fontSize: '0.7rem', fontWeight: 700,
+              fontSize: '0.68rem', fontWeight: 700,
               background: 'transparent', border: 'none',
               color: '#94a3b8', cursor: 'pointer',
               padding: '0.2rem 0.4rem', borderRadius: '0.35rem',
@@ -71,135 +91,248 @@ export default function GuidePanel(props: Props) {
             onMouseEnter={e => { e.currentTarget.style.background = 'rgba(15,23,42,0.05)' }}
             onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
           >
-            ← Back to step
+            ← Back
           </button>
         )}
+        <CollapseButton onClick={props.onToggleCollapse} collapsed={false} />
       </div>
 
       {props.mode === 'card' && props.selectedCard
         ? <CardEditor {...props} selectedCard={props.selectedCard} />
-        : <StepGuideView {...props} />}
+        : <AddCardForm {...props} />}
     </aside>
   )
 }
 
-// ─── Step guide mode ─────────────────────────────────────────────────────────
-function StepGuideView({
-  stepKey, guide, onAddCard, onSuggestAngles, onFindDuplicates, onSummarize,
-}: Props) {
-  const suggested = new Set<CardType>(guide.suggested)
-  const orderedTypes: CardType[] = [
-    ...CARD_TYPES_ORDERED.filter(t => suggested.has(t)),
-    ...CARD_TYPES_ORDERED.filter(t => !suggested.has(t)),
-  ]
-
+// ─── Collapsed rail ──────────────────────────────────────────────────────────
+function CollapsedRail(props: Props) {
   return (
-    <>
-      <p style={{ fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#9faab8', marginBottom: '0.3rem' }}>
-        Step · {stepKey}
-      </p>
-      <h2 style={{ fontSize: '1rem', fontWeight: 800, color: '#0d1f35', letterSpacing: '-0.01em', marginBottom: '0.45rem', lineHeight: 1.3 }}>
-        {guide.title}
-      </h2>
-      <p style={{ fontSize: '0.85rem', color: '#3d4758', lineHeight: 1.55, marginBottom: '0.95rem' }}>
-        {guide.prompt}
-      </p>
+    <aside
+      style={{
+        background: '#fff',
+        borderLeft: '1px solid rgba(0,0,0,0.06)',
+        padding: '0.85rem 0.4rem',
+        display: 'flex', flexDirection: 'column',
+        alignItems: 'center', gap: '0.5rem',
+        overflowY: 'auto',
+        minHeight: 0,
+      }}
+    >
+      <CollapseButton onClick={props.onToggleCollapse} collapsed />
+      <div style={{ height: '0.4rem' }} aria-hidden />
 
-      {guide.tips.length > 0 && (
-        <ul style={{ listStyle: 'none', padding: 0, margin: 0, marginBottom: '1.1rem', display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
-          {guide.tips.map(t => (
-            <li
-              key={t}
-              style={{
-                display: 'flex', gap: '0.5rem', alignItems: 'flex-start',
-                fontSize: '0.78rem', color: '#5d667a', lineHeight: 1.5,
-              }}
-            >
-              <span style={{ flexShrink: 0, marginTop: '0.45rem', width: '4px', height: '4px', borderRadius: '50%', background: '#c8d6e5' }} />
-              {t}
-            </li>
-          ))}
-        </ul>
-      )}
+      <RailIconButton
+        label={props.selectedCard ? 'Edit selected card' : 'Add a card'}
+        active
+        onClick={props.onToggleCollapse}
+      >
+        {props.selectedCard ? (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 20h9" />
+            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
+          </svg>
+        ) : (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+        )}
+      </RailIconButton>
 
-      <div
+      <div style={{ flex: 1 }} />
+
+      <p
         style={{
-          padding: '0.85rem 0.85rem 0.95rem',
-          borderRadius: '0.7rem',
-          background: 'rgba(15,23,42,0.025)',
-          border: '1px solid rgba(15,23,42,0.06)',
-          marginBottom: '1.1rem',
+          writingMode: 'vertical-rl', transform: 'rotate(180deg)',
+          fontSize: '0.55rem', fontWeight: 700, letterSpacing: '0.12em',
+          textTransform: 'uppercase', color: '#b8c0ce',
+          padding: '0.4rem 0',
         }}
       >
-        <p style={{ fontSize: '0.65rem', fontWeight: 700, color: '#5d667a', letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: '0.55rem' }}>
-          Add a card
+        Guide
+      </p>
+    </aside>
+  )
+}
+
+// ─── Add card form (expanded, no card selected) ──────────────────────────────
+function AddCardForm({
+  stepKey, guide, onCreateCard,
+}: Props) {
+  // Remember the last type so power users don't have to re-pick every time.
+  const [type, setType]               = useState<CardType>(guide.suggested[0] ?? 'idea')
+  const [customLabel, setCustomLabel] = useState('')
+  const [title, setTitle]             = useState('')
+  const [content, setContent]         = useState('')
+  const [error, setError]             = useState('')
+
+  // When the user navigates to a step whose suggested types differ, prefer
+  // the first suggested type — keeps the form aligned with the framework.
+  // Don't override if they've already started typing.
+  useEffect(() => {
+    if (title.trim() || content.trim()) return
+    const next = guide.suggested[0]
+    if (next && next !== type) setType(next)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stepKey])
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (type === 'custom' && !customLabel.trim()) {
+      setError('Give your custom type a name first.')
+      return
+    }
+    if (!title.trim()) {
+      setError('Add a short title.')
+      return
+    }
+    onCreateCard({
+      type,
+      title:       title.trim(),
+      content:     content.trim(),
+      customLabel: type === 'custom' ? customLabel.trim() : undefined,
+    })
+    // Reset the title + content; keep the type so the user can add another
+    // similar card without re-picking.
+    setTitle('')
+    setContent('')
+    setError('')
+  }
+
+  const suggested = new Set<CardType>(guide.suggested)
+  const orderedTypes = CARD_TYPES_ORDERED   // 'custom' is appended at the end
+
+  return (
+    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+      {/* Step framing — keeps the user grounded in the framework's current step */}
+      <div>
+        <p style={{ fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#9faab8', marginBottom: '0.25rem' }}>
+          Step · {stepKey}
         </p>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.35rem' }}>
+        <p style={{ fontSize: '0.92rem', fontWeight: 800, color: '#0d1f35', letterSpacing: '-0.01em', lineHeight: 1.3 }}>
+          {guide.title}
+        </p>
+        <p style={{ fontSize: '0.8rem', color: '#5d667a', lineHeight: 1.55, marginTop: '0.25rem' }}>
+          {guide.prompt}
+        </p>
+      </div>
+
+      {/* Step 1 — type */}
+      <div>
+        <FieldLabel n={1}>Choose type</FieldLabel>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.3rem' }}>
           {orderedTypes.map(t => {
-            const meta = CARD_TYPE_META[t]
+            const m = CARD_TYPE_META[t]
+            const active = t === type
             const isSuggested = suggested.has(t)
             return (
               <button
                 key={t}
                 type="button"
-                onClick={() => onAddCard(t)}
+                onClick={() => { setType(t); setError('') }}
                 style={{
                   display: 'flex', alignItems: 'center', gap: '0.4rem',
                   padding: '0.4rem 0.5rem',
                   borderRadius: '0.45rem',
-                  border: isSuggested
-                    ? `1px solid ${meta.accent}55`
-                    : '1px solid rgba(15,23,42,0.08)',
-                  background: isSuggested ? `${meta.accent}10` : '#fff',
+                  border: active
+                    ? `1px solid ${m.accent}`
+                    : isSuggested
+                      ? `1px solid ${m.accent}55`
+                      : '1px solid rgba(15,23,42,0.08)',
+                  background: active ? `${m.accent}18` : (isSuggested ? `${m.accent}10` : '#fff'),
                   cursor: 'pointer', fontFamily: 'inherit',
-                  fontSize: '0.74rem', fontWeight: 600,
+                  fontSize: '0.74rem', fontWeight: active ? 700 : 600,
                   color: '#0d1f35', textAlign: 'left',
                   transition: 'background 0.1s, border-color 0.1s',
                 }}
-                onMouseEnter={e => { e.currentTarget.style.background = `${meta.accent}18` }}
-                onMouseLeave={e => { e.currentTarget.style.background = isSuggested ? `${meta.accent}10` : '#fff' }}
               >
-                <span style={{ width: '7px', height: '7px', borderRadius: '999px', background: meta.accent, flexShrink: 0 }} />
-                {meta.label}
+                <span style={{ width: '7px', height: '7px', borderRadius: '999px', background: m.accent, flexShrink: 0 }} />
+                {m.label}
               </button>
             )
           })}
         </div>
       </div>
 
-      {/* AI helpers — subtle, bottom */}
-      <div style={{ marginTop: 'auto', paddingTop: '0.5rem' }}>
-        <p style={{ fontSize: '0.58rem', fontWeight: 700, color: '#9faab8', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-          <span style={{ fontSize: '0.65rem', color: '#c2540a' }}>✦</span>
-          AI helpers — optional
-        </p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.32rem' }}>
-          <AIHelperButton onClick={onSuggestAngles}>Suggest 3 angles</AIHelperButton>
-          <AIHelperButton onClick={onFindDuplicates}>Find duplicates</AIHelperButton>
-          <AIHelperButton onClick={onSummarize}>Summarize session</AIHelperButton>
-        </div>
+      {/* Step 2 — details (custom name appears when type='custom') */}
+      <div>
+        <FieldLabel n={2}>Add details</FieldLabel>
+        {type === 'custom' && (
+          <div style={{ marginBottom: '0.55rem' }}>
+            <SubLabel>Type name</SubLabel>
+            <input
+              value={customLabel}
+              onChange={e => { setCustomLabel(e.target.value); setError('') }}
+              placeholder="e.g. Opportunity, Competitor, Assumption…"
+              maxLength={40}
+              style={inputStyle}
+            />
+          </div>
+        )}
+        <SubLabel>Title</SubLabel>
+        <input
+          value={title}
+          onChange={e => { setTitle(e.target.value); setError('') }}
+          placeholder="Short headline for this card"
+          style={inputStyle}
+        />
+        <SubLabel style={{ marginTop: '0.55rem' }}>Details (optional)</SubLabel>
+        <textarea
+          value={content}
+          onChange={e => setContent(e.target.value)}
+          placeholder="A line or two of context"
+          rows={3}
+          style={{ ...inputStyle, resize: 'vertical', minHeight: '4rem' }}
+        />
       </div>
-    </>
+
+      {error && (
+        <p style={{ fontSize: '0.75rem', color: '#b91c1c' }}>{error}</p>
+      )}
+
+      <button
+        type="submit"
+        style={{
+          display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem',
+          background: '#0d1f35', color: '#fff',
+          fontSize: '0.85rem', fontWeight: 700,
+          padding: '0.6rem 0.95rem', borderRadius: '0.55rem',
+          border: 'none', cursor: 'pointer',
+          fontFamily: 'inherit',
+          boxShadow: '0 4px 14px rgba(13,31,53,0.18)',
+        }}
+      >
+        + Add card
+      </button>
+
+      <p style={{ fontSize: '0.7rem', color: '#9faab8', textAlign: 'center', marginTop: '-0.25rem' }}>
+        Collapse panels for more canvas space.
+      </p>
+    </form>
   )
 }
 
-// ─── Card editor mode ────────────────────────────────────────────────────────
+// ─── Card editor (expanded, card selected) ───────────────────────────────────
 function CardEditor({
   selectedCard, members,
-  onChangeCardType, onChangeCardText, onTogglePriority,
-  onDuplicateCard, onDeleteCard,
+  onChangeCardType, onChangeCardCustomLabel, onChangeCardText,
+  onTogglePriority, onDuplicateCard, onDeleteCard,
 }: Props & { selectedCard: SessionCard }) {
-  const meta   = CARD_TYPE_META[selectedCard.type]
-  const owner  = selectedCard.created_by ? members[selectedCard.created_by] : null
+  const meta    = CARD_TYPE_META[selectedCard.type]
+  const owner   = selectedCard.created_by ? members[selectedCard.created_by] : null
   const starred = selectedCard.priority > 0
 
   return (
-    <>
-      <p style={{ fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: meta.accent, marginBottom: '0.3rem' }}>
-        Edit card
+    <div>
+      <p style={{ fontSize: '0.85rem', fontWeight: 700, color: meta.accent, letterSpacing: '-0.01em', marginBottom: '0.15rem' }}>
+        {cardChipLabel(selectedCard)}
+      </p>
+      <p style={{ fontSize: '0.72rem', color: '#9faab8', marginBottom: '0.95rem' }}>
+        Editing one card. Click empty canvas to deselect.
       </p>
 
-      {/* Type selector */}
+      {/* Type */}
       <FieldLabel>Type</FieldLabel>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.3rem', marginBottom: '0.85rem' }}>
         {CARD_TYPES_ORDERED.map(t => {
@@ -227,6 +360,20 @@ function CardEditor({
           )
         })}
       </div>
+
+      {/* Custom label — only when type='custom' */}
+      {selectedCard.type === 'custom' && (
+        <>
+          <FieldLabel>Custom label</FieldLabel>
+          <input
+            value={selectedCard.custom_label ?? ''}
+            onChange={e => onChangeCardCustomLabel(selectedCard.id, e.target.value)}
+            placeholder="Opportunity, Competitor, …"
+            maxLength={40}
+            style={{ ...inputStyle, marginBottom: '0.65rem' }}
+          />
+        </>
+      )}
 
       {/* Title */}
       <FieldLabel>Title</FieldLabel>
@@ -271,7 +418,7 @@ function CardEditor({
         {starred ? 'Starred — high priority' : 'Mark as priority'}
       </button>
 
-      {/* Created by + last edited — subtle metadata */}
+      {/* Subtle metadata */}
       <div
         style={{
           marginTop: '1rem',
@@ -291,13 +438,9 @@ function CardEditor({
         <MetaRow label="Last edited" value={formatTime(selectedCard.updated_at)} />
       </div>
 
-      {/* Bottom actions */}
+      {/* Actions */}
       <div style={{ display: 'flex', gap: '0.45rem', marginTop: '1rem' }}>
-        <button
-          type="button"
-          onClick={() => onDuplicateCard(selectedCard.id)}
-          style={smallButton()}
-        >
+        <button type="button" onClick={() => onDuplicateCard(selectedCard.id)} style={smallButton()}>
           Duplicate
         </button>
         <span style={{ flex: 1 }} />
@@ -314,19 +457,55 @@ function CardEditor({
           Delete
         </button>
       </div>
-    </>
+    </div>
   )
 }
 
 // ─── Bits ────────────────────────────────────────────────────────────────────
 
-function FieldLabel({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
+function FieldLabel({ children, n, style }: { children: React.ReactNode; n?: number; style?: React.CSSProperties }) {
+  return (
+    <div
+      style={{
+        display: 'flex', alignItems: 'center', gap: '0.4rem',
+        marginBottom: '0.4rem',
+        ...style,
+      }}
+    >
+      {n !== undefined && (
+        <span
+          aria-hidden
+          style={{
+            width: '1.05rem', height: '1.05rem', borderRadius: '999px',
+            background: 'rgba(249,115,22,0.10)',
+            color: '#c2540a',
+            fontSize: '0.62rem', fontWeight: 800,
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            border: '1px solid rgba(249,115,22,0.22)',
+          }}
+        >
+          {n}
+        </span>
+      )}
+      <p
+        style={{
+          fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.1em',
+          textTransform: 'uppercase', color: '#9faab8',
+        }}
+      >
+        {children}
+      </p>
+    </div>
+  )
+}
+
+function SubLabel({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
   return (
     <p
       style={{
-        fontSize: '0.58rem', fontWeight: 700, letterSpacing: '0.1em',
-        textTransform: 'uppercase', color: '#9faab8',
-        marginBottom: '0.3rem',
+        fontSize: '0.62rem', fontWeight: 700, color: '#9faab8',
+        letterSpacing: '0.04em', textTransform: 'uppercase',
+        marginBottom: '0.25rem',
         ...style,
       }}
     >
@@ -366,35 +545,62 @@ function smallButton(): React.CSSProperties {
   }
 }
 
-function AIHelperButton({ children, onClick }: { children: React.ReactNode; onClick: () => void }) {
+function CollapseButton({ onClick, collapsed }: { onClick: () => void; collapsed: boolean }) {
   return (
     <button
       type="button"
       onClick={onClick}
+      aria-label={collapsed ? 'Expand guide panel' : 'Collapse guide panel'}
+      title={collapsed ? 'Expand' : 'Collapse'}
       style={{
-        display: 'flex', alignItems: 'center', gap: '0.4rem',
-        width: '100%', textAlign: 'left',
-        padding: '0.42rem 0.55rem',
-        borderRadius: '0.45rem',
-        background: 'transparent',
-        border: '1px solid rgba(15,23,42,0.08)',
-        color: '#5d667a',
-        fontSize: '0.76rem', fontWeight: 600,
-        cursor: 'pointer', fontFamily: 'inherit',
-        transition: 'background 0.1s, color 0.1s, border-color 0.1s',
+        width: '1.65rem', height: '1.65rem', borderRadius: '0.4rem',
+        border: 'none', background: 'transparent',
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+        cursor: 'pointer', color: '#94a3b8',
+        transition: 'background 0.12s, color 0.12s',
       }}
-      onMouseEnter={e => {
-        e.currentTarget.style.background = 'rgba(249,115,22,0.05)'
-        e.currentTarget.style.color = '#0d1f35'
-        e.currentTarget.style.borderColor = 'rgba(249,115,22,0.25)'
-      }}
-      onMouseLeave={e => {
-        e.currentTarget.style.background = 'transparent'
-        e.currentTarget.style.color = '#5d667a'
-        e.currentTarget.style.borderColor = 'rgba(15,23,42,0.08)'
-      }}
+      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(15,23,42,0.06)' }}
+      onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
     >
-      <span style={{ fontSize: '0.7rem', color: '#c2540a' }}>✦</span>
+      <svg
+        width="13" height="13" viewBox="0 0 24 24"
+        fill="none" stroke="currentColor" strokeWidth="2.2"
+        strokeLinecap="round" strokeLinejoin="round"
+        style={{ transform: collapsed ? 'none' : 'rotate(180deg)', transition: 'transform 0.18s' }}
+        aria-hidden
+      >
+        <polyline points="15 18 9 12 15 6" />
+      </svg>
+    </button>
+  )
+}
+
+function RailIconButton({
+  children, onClick, label, active = false,
+}: {
+  children: React.ReactNode
+  onClick:  () => void
+  label:    string
+  active?:  boolean
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      title={label}
+      style={{
+        width: '2.25rem', height: '2.25rem', borderRadius: '0.5rem',
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+        background: active ? 'rgba(249,115,22,0.12)' : 'transparent',
+        border: active ? '1px solid rgba(249,115,22,0.28)' : '1px solid rgba(15,23,42,0.08)',
+        color: active ? '#c2540a' : '#5d667a',
+        cursor: 'pointer',
+        transition: 'background 0.12s, color 0.12s',
+      }}
+      onMouseEnter={e => { if (!active) e.currentTarget.style.background = 'rgba(15,23,42,0.05)' }}
+      onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'transparent' }}
+    >
       {children}
     </button>
   )

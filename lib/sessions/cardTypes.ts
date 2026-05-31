@@ -29,8 +29,22 @@ export const CARD_TYPE_META: Record<CardType, CardTypeMeta> = {
   risk:     { type: 'risk',     label: 'Risk',       accent: '#f59e0b', ink: '#fcd34d', bg: 'rgba(245,158,11,0.07)',  hint: 'What could go wrong' },
   decision: { type: 'decision', label: 'Decision',   accent: '#06b6d4', ink: '#67e8f9', bg: 'rgba(6,182,212,0.07)',   hint: 'A locked-in choice' },
   task:     { type: 'task',     label: 'Task',       accent: '#94a3b8', ink: '#cbd5e1', bg: 'rgba(148,163,184,0.08)', hint: 'A concrete next step' },
+  // Custom is intentionally neutral — the user's `custom_label` becomes the
+  // chip text at render time, so the metadata here is only the visual styling.
+  custom:   { type: 'custom',   label: 'Custom',     accent: '#7c93b3', ink: '#cbd5e1', bg: 'rgba(124,147,179,0.07)', hint: 'Your own category' },
+}
+
+/**
+ * Returns the chip text for a card. Falls back to the built-in meta label
+ * unless the card carries a custom_label (and is type='custom').
+ */
+export function cardChipLabel(c: { type: CardType; custom_label: string | null }): string {
+  if (c.type === 'custom' && c.custom_label && c.custom_label.trim()) {
+    return c.custom_label.trim()
+  }
+  return CARD_TYPE_META[c.type].label
 }
 
 export const CARD_TYPES_ORDERED: CardType[] = [
-  'problem', 'audience', 'pain', 'cause', 'idea', 'risk', 'decision', 'task',
+  'problem', 'audience', 'pain', 'cause', 'idea', 'risk', 'decision', 'task', 'custom',
 ]

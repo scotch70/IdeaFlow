@@ -125,10 +125,14 @@ export default function SessionsList({ userId, companyId }: Props) {
                   <p style={{ fontSize: '0.9rem', fontWeight: 700, color: '#0d1f35', letterSpacing: '-0.01em', lineHeight: 1.3, marginBottom: '0.6rem', minHeight: '1.2em' }}>
                     {s.title || 'Untitled session'}
                   </p>
-                  {/* Mini canvas thumbnail — deterministic per-session so each
-                      card has its own little identity without us needing to
-                      query the actual cards table on the list page. */}
-                  <SessionMiniThumbnail seed={s.id} marginBottom="0.55rem" />
+                  {/* Finished sessions show the persisted Top Insight line so
+                      the list reads as a list of outcomes, not just a list of
+                      titles. In-progress sessions keep the canvas thumbnail. */}
+                  {s.status === 'finished' && s.summary ? (
+                    <FinishedSummaryPreview summary={s.summary} />
+                  ) : (
+                    <SessionMiniThumbnail seed={s.id} marginBottom="0.55rem" />
+                  )}
                   <p style={{ fontSize: '0.7rem', color: '#9faab8' }}>
                     Updated {relativeTime(s.updated_at)}
                   </p>
@@ -201,6 +205,57 @@ export default function SessionsList({ userId, companyId }: Props) {
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+/**
+ * Pull the Top insight line out of the persisted summary markdown so finished
+ * cards in the list read as "I know what we decided", not just "I made a thing".
+ * Markdown shape is fixed in SessionSummaryCard.summaryMarkdown().
+ */
+function FinishedSummaryPreview({ summary }: { summary: string }) {
+  const insight = (() => {
+    const idx = summary.indexOf('## Top insight')
+    if (idx === -1) return null
+    const after = summary.slice(idx + '## Top insight'.length).trim()
+    const firstLine = after.split('\n')[0]?.trim() ?? ''
+    if (!firstLine || firstLine.startsWith('_')) return null
+    // Strip bold + em-dash details — show just the headline part.
+    const stripped = firstLine.replace(/\*\*/g, '').split('—')[0]?.trim()
+    return stripped || null
+  })()
+
+  if (!insight) {
+    return (
+      <p style={{ fontSize: '0.72rem', color: '#9faab8', fontStyle: 'italic', marginBottom: '0.55rem' }}>
+        Session finished — no insights captured.
+      </p>
+    )
+  }
+
+  return (
+    <div
+      style={{
+        marginBottom: '0.55rem',
+        padding: '0.5rem 0.6rem',
+        borderRadius: '0.45rem',
+        background: 'rgba(249,115,22,0.06)',
+        border: '1px solid rgba(249,115,22,0.18)',
+      }}
+    >
+      <p style={{ fontSize: '0.55rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#c2540a', marginBottom: '0.15rem' }}>
+        Top insight
+      </p>
+      <p
+        style={{
+          fontSize: '0.78rem', color: '#3d4758', fontWeight: 600, lineHeight: 1.4,
+          overflow: 'hidden', display: '-webkit-box',
+          WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+        }}
+      >
+        {insight}
+      </p>
     </div>
   )
 }

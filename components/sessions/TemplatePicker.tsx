@@ -22,6 +22,7 @@ import { TEMPLATES } from '@/lib/sessions/templates'
 import {
   createCard, createConnection, createSession,
 } from '@/lib/sessions/store'
+import { trackSessionEvent } from '@/lib/analytics/sessions'
 import type { CardType, SessionCard, TemplateType } from '@/types/sessions'
 
 interface Props {
@@ -83,6 +84,11 @@ export default function TemplatePicker({ userId, companyId }: Props) {
       if (templateType === 'starbursting') {
         await seedStarbursting(userId, session.id)
       }
+
+      trackSessionEvent('session_created', {
+        sessionId:    session.id,
+        templateType: session.template_type,
+      })
 
       router.push(`/dashboard/sessions/${session.id}`)
     } catch {
@@ -174,33 +180,43 @@ export default function TemplatePicker({ userId, companyId }: Props) {
               </p>
             </div>
 
-            <p style={{ fontSize: '0.82rem', color: '#5d667a', lineHeight: 1.5, marginBottom: '0.7rem' }}>
+            <p style={{ fontSize: '0.82rem', color: '#5d667a', lineHeight: 1.5, marginBottom: '0.8rem' }}>
               {t.description}
             </p>
 
-            {/* Sample outcome — concrete, what the user gets */}
-            <p
+            {/* Outcome + time — the two answers every new user needs:
+                "What will I get?" and "How long will it take?"  */}
+            <dl
               style={{
-                fontSize: '0.72rem', color: '#3d4758', lineHeight: 1.5,
+                margin: 0, marginBottom: '0.9rem',
                 background: 'rgba(15,23,42,0.025)',
-                border: '1px solid rgba(15,23,42,0.05)',
-                borderRadius: '0.45rem',
-                padding: '0.5rem 0.6rem',
-                marginBottom: '0.85rem',
+                border: '1px solid rgba(15,23,42,0.06)',
+                borderRadius: '0.5rem',
+                padding: '0.6rem 0.7rem 0.5rem',
+                fontSize: '0.74rem', lineHeight: 1.5,
               }}
             >
-              <span style={{ color: '#9faab8', fontSize: '0.58rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginRight: '0.35rem' }}>
-                You’ll have
-              </span>
-              {t.sampleOutcome}
-            </p>
+              <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.35rem' }}>
+                <dt style={{ flexShrink: 0, color: '#9faab8', fontSize: '0.55rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', minWidth: '3.6rem', paddingTop: '0.18rem' }}>
+                  Outcome
+                </dt>
+                <dd style={{ margin: 0, color: '#3d4758' }}>
+                  {t.sampleOutcome}
+                </dd>
+              </div>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <dt style={{ flexShrink: 0, color: '#9faab8', fontSize: '0.55rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', minWidth: '3.6rem', paddingTop: '0.18rem' }}>
+                  Time
+                </dt>
+                <dd style={{ margin: 0, color: '#3d4758', fontWeight: 600 }}>
+                  {t.estimateMinutes > 0 ? `~${t.estimateMinutes} minutes` : 'Open-ended'}
+                </dd>
+              </div>
+            </dl>
 
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
-              <p style={{ fontSize: '0.66rem', color: '#9faab8', letterSpacing: '0.04em', textTransform: 'uppercase', fontWeight: 600 }}>
-                {t.estimateMinutes > 0 ? `~${t.estimateMinutes} min` : 'Open-ended'}
-              </p>
-              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: isBusy ? '#9faab8' : (isFeatured ? '#c2540a' : '#0d1f35') }}>
-                {isBusy ? 'Creating…' : (isFeatured ? 'Start →' : 'Start →')}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+              <span style={{ fontSize: '0.82rem', fontWeight: 700, color: isBusy ? '#9faab8' : (isFeatured ? '#c2540a' : '#0d1f35') }}>
+                {isBusy ? 'Creating…' : 'Start session →'}
               </span>
             </div>
           </button>

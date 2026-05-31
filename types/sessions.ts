@@ -29,6 +29,7 @@ export const CARD_TYPES = [
   'risk',
   'decision',
   'task',
+  'custom',
 ] as const
 export type CardType = typeof CARD_TYPES[number]
 
@@ -53,6 +54,8 @@ export interface SessionCard {
   id:          string
   session_id:  string
   type:        CardType
+  /** User-defined label shown on the chip when type='custom'. Null otherwise. */
+  custom_label: string | null
   title:       string
   content:     string | null
   x:           number

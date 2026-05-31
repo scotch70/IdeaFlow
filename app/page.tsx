@@ -334,7 +334,7 @@ export default async function HomePage() {
                     marginBottom: '1.25rem',
                   }}
                 >
-                  Stop sending surveys.<br />Start collecting ideas with IdeaFlow.
+                  Turn ideas into decisions.
                 </h1>
 
                 <p
@@ -344,10 +344,10 @@ export default async function HomePage() {
                     lineHeight: 1.75,
                     color: P.slate,
                     marginBottom: '2.25rem',
-                    maxWidth: '26rem',
+                    maxWidth: '28rem',
                   }}
                 >
-                  Most team feedback gets lost in meetings and Slack threads. IdeaFlow gives everyone a voice, ranks ideas by vote, and shows you exactly what matters most.
+                  IdeaFlow gives your team one place to share ideas, rank them by vote, and run guided thinking sessions that end with clear next steps — not another stuck Slack thread.
                 </p>
 
                 <div

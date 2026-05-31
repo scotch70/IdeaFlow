@@ -176,27 +176,30 @@ export async function deleteSession(_userId: string, sessionId: string): Promise
 // ── Cards ────────────────────────────────────────────────────────────────────
 
 export async function createCard(args: {
-  userId:    string
-  sessionId: string
-  type:      CardType
-  title?:    string
-  content?:  string | null
-  x?:        number
-  y?:        number
+  userId:       string
+  sessionId:    string
+  type:         CardType
+  title?:       string
+  content?:     string | null
+  x?:           number
+  y?:           number
+  /** Required when type='custom'; ignored otherwise. */
+  customLabel?: string | null
 }): Promise<SessionCard> {
   const { data, error } = await db()
     .from('session_cards')
     .insert({
-      session_id: args.sessionId,
-      type:       args.type,
-      title:      args.title   ?? '',
-      content:    args.content ?? null,
-      x:          args.x ?? 80 + Math.random() * 200,
-      y:          args.y ?? 80 + Math.random() * 200,
-      priority:   0,
+      session_id:   args.sessionId,
+      type:         args.type,
+      title:        args.title   ?? '',
+      content:      args.content ?? null,
+      x:            args.x ?? 80 + Math.random() * 200,
+      y:            args.y ?? 80 + Math.random() * 200,
+      priority:     0,
+      custom_label: args.type === 'custom' ? (args.customLabel ?? null) : null,
       // Attribute the card to whoever is creating it. Falls back to null so
       // the row still inserts cleanly even if userId is somehow empty.
-      created_by: args.userId || null,
+      created_by:   args.userId || null,
     })
     .select()
     .single()
@@ -217,19 +220,20 @@ export async function duplicateCard(args: {
   source:    SessionCard
 }): Promise<SessionCard> {
   return createCard({
-    userId:    args.userId,
-    sessionId: args.sessionId,
-    type:      args.source.type,
-    title:     args.source.title ? `${args.source.title} (copy)` : '',
-    content:   args.source.content,
-    x:         args.source.x + 32,
-    y:         args.source.y + 32,
+    userId:      args.userId,
+    sessionId:   args.sessionId,
+    type:        args.source.type,
+    title:       args.source.title ? `${args.source.title} (copy)` : '',
+    content:     args.source.content,
+    x:           args.source.x + 32,
+    y:           args.source.y + 32,
+    customLabel: args.source.custom_label,
   })
 }
 
 export async function updateCard(
   _userId: string, cardId: string,
-  patch: Partial<Pick<SessionCard, 'title' | 'content' | 'x' | 'y' | 'priority' | 'type'>>,
+  patch: Partial<Pick<SessionCard, 'title' | 'content' | 'x' | 'y' | 'priority' | 'type' | 'custom_label'>>,
 ): Promise<SessionCard | null> {
   if (Object.keys(patch).length === 0) {
     const { data } = await db().from('session_cards').select('*').eq('id', cardId).maybeSingle()

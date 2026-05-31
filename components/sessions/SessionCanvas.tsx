@@ -19,7 +19,7 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import type { SessionCard, SessionConnection, SessionMember } from '@/types/sessions'
-import { CARD_TYPE_META } from '@/lib/sessions/cardTypes'
+import { cardChipLabel, CARD_TYPE_META } from '@/lib/sessions/cardTypes'
 import { CANVAS_INSET, CARD_MIN_H, CARD_W, CanvasSize, isCanvasMeasured } from '@/lib/sessions/layout'
 import { CANVAS_BG, CANVAS_BORDER, CANVAS_DOT, CANVAS_SURFACE } from './SessionWorkspace'
 
@@ -31,6 +31,8 @@ interface Props {
   selectedCardId:   string | null
   editingCardId:    string | null
   canvasSize:       CanvasSize
+  /** Whether the right Guide panel is collapsed — drives the empty-state copy. */
+  guideCollapsed:   boolean
 
   onMeasure:          (size: CanvasSize) => void
   onSelectCard:       (id: string | null) => void
@@ -50,7 +52,7 @@ interface Props {
 export default function SessionCanvas({
   cards, connections, members,
   connectingFrom, selectedCardId, editingCardId,
-  canvasSize, onMeasure,
+  canvasSize, guideCollapsed, onMeasure,
   onSelectCard, onEditCard,
   onPositionEnd, onChangeText, onTogglePriority,
   onDuplicate, onDelete,
@@ -150,21 +152,41 @@ export default function SessionCanvas({
         />
       ))}
 
-      {/* Empty state */}
+      {/* Empty state — first-time users see this. The right Guide panel is
+          already explaining the current step; here we name the very next
+          click so there is no "blank canvas" moment. */}
       {cards.length === 0 && (
         <div
           style={{
             position: 'absolute', inset: 0,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             pointerEvents: 'none',
+            padding: '0 1.5rem',
           }}
         >
-          <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.55)' }}>
-            <p style={{ fontSize: '1.1rem', fontWeight: 700, color: 'rgba(255,255,255,0.85)', marginBottom: '0.35rem', letterSpacing: '-0.01em' }}>
-              Start by adding your first thought
+          <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.55)', maxWidth: '24rem' }}>
+            <div
+              aria-hidden
+              style={{
+                width: '2.5rem', height: '2.5rem',
+                borderRadius: '999px',
+                background: 'rgba(249,115,22,0.16)',
+                border: '1px solid rgba(249,115,22,0.32)',
+                color: '#fdba74',
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '1.05rem',
+                marginBottom: '0.75rem',
+              }}
+            >
+              ✦
+            </div>
+            <p style={{ fontSize: '1.1rem', fontWeight: 700, color: 'rgba(255,255,255,0.92)', marginBottom: '0.35rem', letterSpacing: '-0.01em' }}>
+              {guideCollapsed
+                ? 'Expand the guide panel to add a card.'
+                : 'Choose a card type on the right and add your first idea.'}
             </p>
-            <p style={{ fontSize: '0.85rem', maxWidth: '22rem' }}>
-              Use the Guide panel on the right to add a card. Collapse the sidebars for more canvas space.
+            <p style={{ fontSize: '0.85rem', lineHeight: 1.55 }}>
+              Pick a type, write a title, hit <strong style={{ color: 'rgba(255,255,255,0.85)' }}>Add card</strong>. Your session starts the moment you do.
             </p>
           </div>
         </div>
@@ -382,8 +404,11 @@ function CardOnCanvas({
             color: meta.ink, background: meta.bg,
             border: `1px solid ${meta.accent}33`,
             padding: '0.12rem 0.4rem', borderRadius: '999px',
+            // Custom labels can be longer than the built-in names; clip with ellipsis.
+            maxWidth: '8.5rem',
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
           }}
-        >{meta.label}</span>
+        >{cardChipLabel(card)}</span>
         <span style={{ flex: 1 }} />
 
         {(hover || isSelected) && (

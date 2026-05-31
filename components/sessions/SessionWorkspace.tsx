@@ -28,7 +28,7 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   createCard, createConnection, deleteCard, deleteConnection,
   duplicateCard,
@@ -38,6 +38,7 @@ import { CARD_TYPE_META } from '@/lib/sessions/cardTypes'
 import {
   CanvasSize, clampToCanvas, gridResetPositions, isCanvasMeasured, nextCardSpawn,
 } from '@/lib/sessions/layout'
+import { trackSessionEvent } from '@/lib/analytics/sessions'
 import { getTemplate, STEP_LABEL, STEP_ORDER } from '@/lib/sessions/templates'
 import type {
   CardType, Session, SessionCard, SessionConnection, SessionMember,
@@ -76,6 +77,9 @@ export default function SessionWorkspace({ sessionId, userId }: Props) {
   const [showSummary,      setShowSummary]      = useState(false)
   // Left-sidebar collapse state, persisted across reloads of the same browser.
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  // Right Guide-panel collapse state, also persisted. Independent so the
+  // user can collapse one side without losing the other.
+  const [guideCollapsed,   setGuideCollapsed]   = useState(false)
   // Measured size of the dark canvas — set by SessionCanvas via onMeasure.
   // Drives card spawn positions, drag clamping, and the "reset view" grid.
   const [canvasSize,       setCanvasSize]       = useState<CanvasSize>({ w: 0, h: 0 })
@@ -107,6 +111,19 @@ export default function SessionWorkspace({ sessionId, userId }: Props) {
     try { window.localStorage.setItem('ideaflow:sessions:sidebarCollapsed', sidebarCollapsed ? '1' : '0') } catch {}
   }, [sidebarCollapsed])
 
+  // Same pattern for the right Guide panel.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      const v = window.localStorage.getItem('ideaflow:sessionsGuideCollapsed')
+      if (v === '1') setGuideCollapsed(true)
+    } catch {}
+  }, [])
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try { window.localStorage.setItem('ideaflow:sessionsGuideCollapsed', guideCollapsed ? '1' : '0') } catch {}
+  }, [guideCollapsed])
+
   // ── Initial load ───────────────────────────────────────────────────────────
   useEffect(() => {
     let alive = true
@@ -118,6 +135,10 @@ export default function SessionWorkspace({ sessionId, userId }: Props) {
       setConnections(d.connections)
       setSteps(d.steps)
       setMembers(d.members)
+      trackSessionEvent('session_started', {
+        sessionId:    d.session.id,
+        templateType: d.session.template_type,
+      })
     })
     return () => { alive = false }
   }, [userId, sessionId])
@@ -157,6 +178,45 @@ export default function SessionWorkspace({ sessionId, userId }: Props) {
     setCards(c => [...c, newCard])
     setSelectedCardId(newCard.id)
     setEditingCardId(newCard.id)
+    flashSaved()
+  }
+
+  /**
+   * The Guide panel's "Add card" form submits here. Title + details + (if
+   * custom) custom_label are persisted in one shot — no separate
+   * select-then-edit flow needed.
+   */
+  async function handleCreateCardFromForm(args: {
+    type: CardType
+    title: string
+    content: string
+    customLabel?: string
+  }) {
+    if (!session) return
+    setSaveStatus('saving')
+    const spawn = isCanvasMeasured(canvasSize)
+      ? nextCardSpawn(canvasSize, cards.length)
+      : { x: 0, y: 0 }
+    const newCard = await createCard({
+      userId, sessionId: session.id,
+      type:        args.type,
+      title:       args.title,
+      content:     args.content || null,
+      x:           spawn.x,
+      y:           spawn.y,
+      customLabel: args.type === 'custom' ? (args.customLabel ?? null) : null,
+    })
+    setCards(c => [...c, newCard])
+    // Select but don't enter inline edit — the form already captured the
+    // text, so the user shouldn't have to re-type on the canvas.
+    setSelectedCardId(newCard.id)
+    flashSaved()
+  }
+
+  async function handleChangeCardCustomLabel(id: string, label: string) {
+    setCards(cs => cs.map(c => c.id === id ? { ...c, custom_label: label } : c))
+    setSaveStatus('saving')
+    await updateCard(userId, id, { custom_label: label })
     flashSaved()
   }
 
@@ -317,6 +377,14 @@ export default function SessionWorkspace({ sessionId, userId }: Props) {
       summary: summaryMarkdown,
     })
     if (updated) setSession(updated)
+    trackSessionEvent('session_completed', {
+      sessionId:        session.id,
+      templateType:     session.template_type,
+      cardCount:        cards.length,
+      connectionCount:  connections.length,
+      stepsCompleted:   steps.filter(s => s.completed).length,
+      hasPriority:      cards.some(c => c.priority > 0),
+    })
     setShowSummary(false)
     flashSaved()
     router.push('/dashboard/sessions')
@@ -387,20 +455,8 @@ export default function SessionWorkspace({ sessionId, userId }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cards.length, session?.id])
 
-  // ── Derived data for the summary modal ─────────────────────────────────────
-  const summaryData = useMemo(() => {
-    const byType = (t: CardType) => cards.filter(c => c.type === t)
-    const ideas = byType('idea')
-    const topIdea = [...ideas].sort((a, b) => b.priority - a.priority)[0] ?? null
-    return {
-      problems: byType('problem'),
-      topIdea,
-      ideas,
-      decisions: byType('decision'),
-      risks:     byType('risk'),
-      tasks:     byType('task'),
-    }
-  }, [cards])
+  // SessionSummaryCard derives Top Insight / Key Decision / Biggest Risk /
+  // Next Actions from the raw cards array, so we just pass cards through.
 
   // ── Render ─────────────────────────────────────────────────────────────────
   if (loadError) {
@@ -520,10 +576,9 @@ export default function SessionWorkspace({ sessionId, userId }: Props) {
         style={{
           flex: 1, minHeight: 0,
           display: 'grid',
-          // Center column is minmax(0, 1fr) so the canvas grows greedily and
-          // never overflows its parent — both columns can shrink without
-          // the canvas pushing the layout.
-          gridTemplateColumns: `${sidebarCollapsed ? '3.5rem' : '15rem'} minmax(0, 1fr) 19rem`,
+          // Both side panels are independently collapsible. When either
+          // collapses the canvas (minmax(0, 1fr)) claims the freed width.
+          gridTemplateColumns: `${sidebarCollapsed ? '3.5rem' : '15rem'} minmax(0, 1fr) ${guideCollapsed ? '3.5rem' : '20rem'}`,
           transition: 'grid-template-columns 0.2s ease',
         }}
         className="session-workspace-grid"
@@ -547,6 +602,7 @@ export default function SessionWorkspace({ sessionId, userId }: Props) {
           selectedCardId={selectedCardId}
           editingCardId={editingCardId}
           canvasSize={canvasSize}
+          guideCollapsed={guideCollapsed}
           onMeasure={setCanvasSize}
           onSelectCard={setSelectedCardId}
           onEditCard={setEditingCardId}
@@ -564,31 +620,27 @@ export default function SessionWorkspace({ sessionId, userId }: Props) {
 
         <GuidePanel
           mode={selectedCardId ? 'card' : 'step'}
+          collapsed={guideCollapsed}
           stepKey={currentStep}
           guide={stepGuide}
           selectedCard={selectedCardId ? cards.find(c => c.id === selectedCardId) ?? null : null}
           members={members}
+          onToggleCollapse={() => setGuideCollapsed(v => !v)}
           onDeselect={() => setSelectedCardId(null)}
           onChangeCardType={handleChangeCardType}
+          onChangeCardCustomLabel={handleChangeCardCustomLabel}
           onChangeCardText={handleUpdateCardText}
           onTogglePriority={handleTogglePriority}
           onDuplicateCard={handleDuplicateCard}
           onDeleteCard={handleDeleteCard}
-          onAddCard={handleAddCard}
-          onSuggestAngles={handleAISuggestAngles}
-          onFindDuplicates={handleAIFindDuplicates}
-          onSummarize={() => setShowSummary(true)}
+          onCreateCard={handleCreateCardFromForm}
         />
       </div>
 
       {showSummary && (
         <SessionSummaryModal
           session={session}
-          problems={summaryData.problems}
-          topIdea={summaryData.topIdea}
-          decisions={summaryData.decisions}
-          risks={summaryData.risks}
-          tasks={summaryData.tasks}
+          cards={cards}
           onClose={() => setShowSummary(false)}
           onMarkFinished={handleMarkFinished}
         />
