@@ -23,6 +23,7 @@ import {
   createCard, createConnection, createSession,
 } from '@/lib/sessions/store'
 import { trackSessionEvent } from '@/lib/analytics/sessions'
+import { brainstormCirclePositions } from '@/lib/sessions/circleLayout'
 import type { CardType, SessionCard, TemplateType } from '@/types/sessions'
 
 interface Props {
@@ -78,11 +79,12 @@ export default function TemplatePicker({ userId, companyId }: Props) {
         templateType,
       })
 
-      // Starbursting: pre-seed the canvas with a Topic card + 6 question
-      // spokes connected back to it. Other frameworks land on a blank canvas
-      // for now — they'll get their own seeds in future passes.
+      // Frameworks that pre-seed the canvas. Other types (legacy or freeform)
+      // land on a blank canvas.
       if (templateType === 'starbursting') {
         await seedStarbursting(userId, session.id)
+      } else if (templateType === 'brainstorm-circle') {
+        await seedBrainstormCircle(userId, session.id)
       }
 
       trackSessionEvent('session_created', {
@@ -261,6 +263,54 @@ async function seedStarbursting(userId: string, sessionId: string) {
       userId, sessionId,
       sourceId: topic.id,
       targetId: spoke.id,
+    })
+  }
+}
+
+/**
+ * Seed Brainstorm Circle: 1 central admin card + 8 fixed member spokes +
+ * 8 connections from admin to each member. Positions are computed from a
+ * default 1000×680 canvas — the workspace's clamp-on-resize effect re-flows
+ * them once the real canvas measures.
+ */
+async function seedBrainstormCircle(userId: string, sessionId: string) {
+  const layout = brainstormCirclePositions()
+
+  // 1. Central admin card — custom type with the user-facing "Admin topic" chip.
+  const admin = await createCard({
+    userId, sessionId,
+    type:        'custom',
+    customLabel: 'Admin topic',
+    title:       'Your central topic',
+    content:     'Edit this card to ask the team a question.',
+    x:           layout.admin.x,
+    y:           layout.admin.y,
+  })
+
+  // 2. 8 member cards positioned clockwise from the top (Member 1 = top).
+  const members: SessionCard[] = []
+  for (let i = 0; i < 8; i++) {
+    const p = layout.members[i]!
+    // eslint-disable-next-line no-await-in-loop
+    const m = await createCard({
+      userId, sessionId,
+      type:        'custom',
+      customLabel: `Member ${i + 1}`,
+      title:       '',
+      content:     null,
+      x:           p.x,
+      y:           p.y,
+    })
+    members.push(m)
+  }
+
+  // 3. Connect admin → each member.
+  for (const m of members) {
+    // eslint-disable-next-line no-await-in-loop
+    await createConnection({
+      userId, sessionId,
+      sourceId: admin.id,
+      targetId: m.id,
     })
   }
 }

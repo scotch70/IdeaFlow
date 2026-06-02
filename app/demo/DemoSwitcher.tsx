@@ -10,14 +10,14 @@
  */
 
 import { useState } from 'react'
-import DemoStarbursting from './DemoStarbursting'
+import DemoBrainstormCircle from './DemoBrainstormCircle'
 import DemoWorkspace from './DemoWorkspace'
 
 type Tab = 'session' | 'ideaflow'
 
 export default function DemoSwitcher() {
   // IdeaFlow remains the core product, so the workspace demo is the default
-  // tab. The Guided Thinking Session is the premium layer one click away.
+  // tab. Brainstorm Circle is the premium framework one click away.
   const [tab, setTab] = useState<Tab>('ideaflow')
 
   return (
@@ -39,11 +39,11 @@ export default function DemoSwitcher() {
           onClick={() => setTab('session')}
           chip="Pro"
         >
-          ✦ Guided Thinking Session
+          ○ Brainstorm Circle
         </TabButton>
       </div>
 
-      {tab === 'session' ? <DemoStarbursting /> : <DemoWorkspace />}
+      {tab === 'session' ? <DemoBrainstormCircle /> : <DemoWorkspace />}
     </>
   )
 }

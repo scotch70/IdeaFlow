@@ -32,12 +32,13 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   createCard, createConnection, deleteCard, deleteConnection,
   duplicateCard,
-  getSession, updateCard, updateSession, updateStep,
+  getSession, toggleLike, updateCard, updateSession, updateStep,
 } from '@/lib/sessions/store'
 import { CARD_TYPE_META } from '@/lib/sessions/cardTypes'
 import {
   CanvasSize, clampToCanvas, gridResetPositions, isCanvasMeasured, nextCardSpawn,
 } from '@/lib/sessions/layout'
+import { brainstormCirclePositions } from '@/lib/sessions/circleLayout'
 import { trackSessionEvent } from '@/lib/analytics/sessions'
 import { getTemplate, STEP_LABEL, STEP_ORDER } from '@/lib/sessions/templates'
 import type {
@@ -70,6 +71,8 @@ export default function SessionWorkspace({ sessionId, userId }: Props) {
   const [connections, setConnections] = useState<SessionConnection[]>([])
   const [steps,       setSteps]       = useState<SessionStepRow[]>([])
   const [members,     setMembers]     = useState<Record<string, SessionMember>>({})
+  const [likeCounts,  setLikeCounts]  = useState<Record<string, number>>({})
+  const [myLikes,     setMyLikes]     = useState<Set<string>>(new Set())
   const [loadError,   setLoadError]   = useState<string | null>(null)
 
   const [currentStep,      setCurrentStep]      = useState<StepKey>('define')
@@ -135,6 +138,8 @@ export default function SessionWorkspace({ sessionId, userId }: Props) {
       setConnections(d.connections)
       setSteps(d.steps)
       setMembers(d.members)
+      setLikeCounts(d.likeCounts)
+      setMyLikes(d.myLikes)
       trackSessionEvent('session_started', {
         sessionId:    d.session.id,
         templateType: d.session.template_type,
@@ -213,6 +218,30 @@ export default function SessionWorkspace({ sessionId, userId }: Props) {
     flashSaved()
   }
 
+  /**
+   * Toggle the current user's heart on a card. Optimistic — local state
+   * flips immediately, the Supabase write happens in the background.
+   */
+  async function handleToggleLike(cardId: string, currentlyLiked: boolean) {
+    // Optimistic local state — the heart pill on the canvas reflects the
+    // change instantly without waiting for the round trip.
+    setLikeCounts(prev => {
+      const next = { ...prev }
+      const cur  = next[cardId] ?? 0
+      next[cardId] = currentlyLiked ? Math.max(0, cur - 1) : cur + 1
+      return next
+    })
+    setMyLikes(prev => {
+      const next = new Set(prev)
+      if (currentlyLiked) next.delete(cardId)
+      else                next.add(cardId)
+      return next
+    })
+    setSaveStatus('saving')
+    await toggleLike({ userId, cardId, currentlyLiked })
+    flashSaved()
+  }
+
   async function handleChangeCardCustomLabel(id: string, label: string) {
     setCards(cs => cs.map(c => c.id === id ? { ...c, custom_label: label } : c))
     setSaveStatus('saving')
@@ -249,22 +278,51 @@ export default function SessionWorkspace({ sessionId, userId }: Props) {
     flashSaved()
   }
 
-  // ── Reset view: lay all cards out in a tidy grid inside the canvas ─────────
+  // ── Reset view ──────────────────────────────────────────────────────────
+  // For Brainstorm Circle, restore the radial layout (admin in the centre,
+  // 8 members at the 45° spokes). The "admin" card is identified as the
+  // earliest custom card with the "Admin topic" custom_label; the members
+  // are the other custom cards in creation order. If we can't find them
+  // confidently we fall back to the generic grid layout.
+  // For every other template, lay all cards out in a tidy grid.
   async function handleResetView() {
     if (!session) return
     if (!isCanvasMeasured(canvasSize)) return
     if (cards.length === 0) return
 
-    const positions = gridResetPositions(cards.length, canvasSize)
-    setCards(prev => prev.map((c, i) => positions[i]
-      ? { ...c, x: positions[i].x, y: positions[i].y }
-      : c
-    ))
-    setSaveStatus('saving')
-    await Promise.all(cards.map((c, i) => {
-      const p = positions[i]
-      return p ? updateCard(userId, c.id, { x: p.x, y: p.y }) : Promise.resolve(null)
+    const isCircle = session.template_type === 'brainstorm-circle'
+    const updates: Array<{ card: SessionCard; x: number; y: number }> = []
+
+    if (isCircle) {
+      const layout = brainstormCirclePositions(canvasSize)
+      const customCards = cards.filter(c => c.type === 'custom')
+      const admin       = customCards.find(c => (c.custom_label ?? '').toLowerCase() === 'admin topic')
+                       ?? customCards[0]
+      const memberCards = customCards.filter(c => c.id !== (admin?.id ?? ''))
+
+      if (admin) updates.push({ card: admin, x: layout.admin.x, y: layout.admin.y })
+      memberCards.slice(0, 8).forEach((m, i) => {
+        const p = layout.members[i]
+        if (p) updates.push({ card: m, x: p.x, y: p.y })
+      })
+    } else {
+      const positions = gridResetPositions(cards.length, canvasSize)
+      cards.forEach((c, i) => {
+        const p = positions[i]
+        if (p) updates.push({ card: c, x: p.x, y: p.y })
+      })
+    }
+
+    if (updates.length === 0) return
+
+    // Apply optimistically, then persist in parallel.
+    const updateById = new Map(updates.map(u => [u.card.id, u]))
+    setCards(prev => prev.map(c => {
+      const u = updateById.get(c.id)
+      return u ? { ...c, x: u.x, y: u.y } : c
     }))
+    setSaveStatus('saving')
+    await Promise.all(updates.map(u => updateCard(userId, u.card.id, { x: u.x, y: u.y })))
     flashSaved()
   }
 
@@ -610,6 +668,11 @@ export default function SessionWorkspace({ sessionId, userId }: Props) {
           editingCardId={editingCardId}
           canvasSize={canvasSize}
           guideCollapsed={guideCollapsed}
+          lockedLayout={!!template.lockedLayout}
+          showHearts={!!template.showHearts}
+          likeCounts={likeCounts}
+          myLikes={myLikes}
+          onToggleLike={handleToggleLike}
           onMeasure={setCanvasSize}
           onSelectCard={setSelectedCardId}
           onEditCard={setEditingCardId}
@@ -630,6 +693,7 @@ export default function SessionWorkspace({ sessionId, userId }: Props) {
           collapsed={guideCollapsed}
           stepKey={currentStep}
           guide={stepGuide}
+          template={template}
           selectedCard={selectedCardId ? cards.find(c => c.id === selectedCardId) ?? null : null}
           members={members}
           onToggleCollapse={() => setGuideCollapsed(v => !v)}

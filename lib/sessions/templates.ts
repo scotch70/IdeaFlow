@@ -1,19 +1,22 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Guided Thinking Frameworks — the new shape of Sessions.
+// Guided Thinking Frameworks — current shape of Sessions.
 //
-// Sessions are no longer "pick a topic, get a blank canvas". Instead the user
-// picks a thinking method that gives the session structure from the start.
-// Each framework keeps the same 5-step backbone (Define → Action plan) so the
-// rest of the workspace UI continues to work, but the per-step copy is now
-// framework-specific and grounded in proven thinking techniques.
+// Two frameworks are visible in the picker today:
 //
-// Frameworks shipped here:
-//   1. Starbursting        — flagship, central topic + 6 question spokes
-//   2. SWOT Analysis       — Strengths / Weaknesses / Opportunities / Threats
-//   3. Decision Matrix     — score options across weighted criteria
-//   4. Customer Discovery  — probe a customer segment's pains and goals
-//   5. Problem Solving     — root cause → candidate solutions
-//   6. Freeform Canvas     — blank canvas, escape hatch for unstructured work
+//   1. Brainstorm Circle  (featured / default)
+//        One central admin topic + 8 fixed member spokes around it. Members
+//        write their input, everyone hearts the strongest ideas. Cards in this
+//        framework are locked in place and rendered with hearts (see
+//        SessionCanvas + SessionWorkspace which special-case the template).
+//
+//   2. Starbursting
+//        Central topic + 6 question spokes (Who/What/When/Where/Why/How).
+//        Free-form drag canvas behind the scenes.
+//
+// Legacy template types (swot, decision-matrix, customer-discovery,
+// problem-solving) live in TEMPLATE_TYPES so old session rows still type-check
+// and load; getTemplate() falls back to FREEFORM_FALLBACK for any unrecognised
+// value so legacy sessions render rather than crash.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { TemplateType, StepKey, CardType } from '@/types/sessions'
@@ -30,11 +33,6 @@ export const STEP_LABEL: Record<StepKey, string> = {
   action:     'Action plan',
 }
 
-/**
- * One-line plain-English summary of what each step is for. Shown in the
- * collapsible sidebar under the active step so users understand the meaning
- * at a glance, without reading the longer per-framework prompts.
- */
 export const STEP_HELPER: Record<StepKey, string> = {
   define:     'Clarify what you are solving — the topic, the audience, the goal.',
   explore:    'Open up the space — add ideas, angles, and questions.',
@@ -52,17 +50,25 @@ export interface StepGuide {
 }
 
 export interface SessionTemplate {
-  type:         TemplateType
-  name:         string
-  emoji:        string
-  description:  string
-  /** What the user will have when they finish — concrete, not hand-wavy. */
-  sampleOutcome: string
-  /** Rough minutes to completion — sets expectation up-front. */
+  type:           TemplateType
+  name:           string
+  emoji:          string
+  description:    string
+  sampleOutcome:  string
   estimateMinutes: number
-  /** Featured frameworks render with a subtle "Featured" highlight on the picker. */
-  featured?:    boolean
-  steps:        Record<StepKey, StepGuide>
+  /** Featured frameworks render with a subtle highlight on the picker. */
+  featured?:      boolean
+  /** Hide the Add Card form in the Guide panel and show an instructions
+   *  block instead — used by structured frameworks where the card set is
+   *  pre-seeded (e.g. Brainstorm Circle, Starbursting). */
+  hideAddCardForm?: boolean
+  /** Lock card positions on the canvas. Drag is suppressed; Reset View can
+   *  restore the original radial layout. */
+  lockedLayout?:    boolean
+  /** Hearts on cards in this session — likes are fetched from the
+   *  session_card_likes table. */
+  showHearts?:      boolean
+  steps:          Record<StepKey, StepGuide>
 }
 
 // ── Reusable guide blocks ────────────────────────────────────────────────────
@@ -96,189 +102,112 @@ const DEFAULT_ACTION: StepGuide = {
   suggested: ['task'],
 }
 
-// ── Frameworks ───────────────────────────────────────────────────────────────
+// ── The two visible frameworks ───────────────────────────────────────────────
 
+export const BRAINSTORM_CIRCLE_TEMPLATE: SessionTemplate = {
+  type:            'brainstorm-circle',
+  name:            'Brainstorm Circle',
+  emoji:           '○',
+  description:     'Collect input from up to 8 members around one central topic.',
+  sampleOutcome:   'A ranked set of member ideas around a shared question.',
+  estimateMinutes: 15,
+  featured:        true,
+  hideAddCardForm: true,
+  lockedLayout:    true,
+  showHearts:      true,
+  steps: {
+    define: {
+      title:  'Set the central topic',
+      prompt: 'Edit the admin card in the middle. What question do you want the team to weigh in on?',
+      tips:   [
+        'One concrete question works best ("Should we…", "How might we…").',
+        'You can rename the topic any time.',
+      ],
+      suggested: [],
+    },
+    explore: {
+      title:  'Gather member input',
+      prompt: 'Each member edits their card with their honest take. Short sentences read best.',
+      tips:   ['Eight members are pre-seeded; only fill the ones you have.'],
+      suggested: [],
+    },
+    connect: {
+      title:     'Heart the strongest ideas',
+      prompt:    'Read every member card and click the heart on the ideas you most agree with.',
+      tips:      ['One person, one heart per card — duplicates cancel out.'],
+      suggested: [],
+    },
+    prioritize: {
+      title:     'Surface the favourite',
+      prompt:    'The most-hearted member cards are your priorities. Star them too if you want them in the outcome.',
+      tips:      [],
+      suggested: ['decision'],
+    },
+    action:     DEFAULT_ACTION,
+  },
+}
+
+export const STARBURSTING_TEMPLATE: SessionTemplate = {
+  type:            'starbursting',
+  name:            'Starbursting',
+  emoji:           '✦',
+  description:     'Explore an idea from every angle with Who, What, When, Where, Why and How.',
+  sampleOutcome:   'A complete 360° view of the topic with the key questions surfaced and answered.',
+  estimateMinutes: 20,
+  steps: {
+    define: {
+      title:  'Name the central topic',
+      prompt: 'In one short phrase, what are you exploring? Example: "Launch IdeaFlow Pro".',
+      tips:   ['Keep it concrete — a decision, a launch, a problem.'],
+      suggested: ['problem'],
+    },
+    explore: {
+      title:  'Answer the six questions',
+      prompt: 'For each spoke (Who, What, When, Where, Why, How) capture the most important answers.',
+      tips:   ['Aim for 1–3 answers per spoke. Quality over quantity.'],
+      suggested: ['idea', 'audience'],
+    },
+    connect:    DEFAULT_CONNECT,
+    prioritize: DEFAULT_PRIORITIZE,
+    action:     DEFAULT_ACTION,
+  },
+}
+
+/** Fallback used for unknown / legacy template_type values. Not shown in the
+ *  picker but keeps old sessions from crashing. */
+const FREEFORM_FALLBACK: SessionTemplate = {
+  type:            'freeform',
+  name:            'Freeform',
+  emoji:           '◯',
+  description:     'A blank canvas.',
+  sampleOutcome:   'An open visual map of whatever’s in your head.',
+  estimateMinutes: 0,
+  steps: {
+    define:     { title: 'Start anywhere',     prompt: 'Drop a thought on the canvas.',  tips: [], suggested: ['idea'] },
+    explore:    { title: 'Expand',             prompt: 'Add more cards.',                tips: [], suggested: ['idea'] },
+    connect:    DEFAULT_CONNECT,
+    prioritize: DEFAULT_PRIORITIZE,
+    action:     DEFAULT_ACTION,
+  },
+}
+
+/** Ordered list shown in the picker. Featured templates first. */
 export const TEMPLATES: SessionTemplate[] = [
-  {
-    type:           'starbursting',
-    name:           'Starbursting',
-    emoji:          '✦',
-    description:    'Explore a topic from every angle — Who, What, When, Where, Why, How.',
-    sampleOutcome:  'A complete 360° view of the topic with the key questions surfaced and answered.',
-    estimateMinutes: 20,
-    featured:       true,
-    steps: {
-      define: {
-        title:  'Name the central topic',
-        prompt: 'In one short phrase, what are you exploring? Example: "Launch IdeaFlow Pro".',
-        tips:   [
-          'Keep it concrete — a decision, a launch, a problem.',
-          'You can rename the topic any time from the central card.',
-        ],
-        suggested: ['problem'],
-      },
-      explore: {
-        title:  'Answer the six questions',
-        prompt: 'For each spoke (Who, What, When, Where, Why, How) capture the most important answers.',
-        tips:   [
-          'Aim for 1–3 answers per spoke. Quality over quantity.',
-          'It’s OK to leave one spoke lighter than the others.',
-        ],
-        suggested: ['idea', 'audience'],
-      },
-      connect:    DEFAULT_CONNECT,
-      prioritize: DEFAULT_PRIORITIZE,
-      action:     DEFAULT_ACTION,
-    },
-  },
-  {
-    type:           'swot',
-    name:           'SWOT Analysis',
-    emoji:          '⊞',
-    description:    'Map Strengths, Weaknesses, Opportunities, and Threats for a decision.',
-    sampleOutcome:  'A balanced view of internal capabilities and external forces around the decision.',
-    estimateMinutes: 15,
-    steps: {
-      define: {
-        title:  'What are you analysing?',
-        prompt: 'State the decision, project, or product you’re weighing.',
-        tips:   ['Be specific — "Launch in Germany" beats "International expansion".'],
-        suggested: ['problem', 'decision'],
-      },
-      explore: {
-        title:  'Strengths, Weaknesses, Opportunities, Threats',
-        prompt: 'Add cards in each quadrant. Strengths and Weaknesses are internal; Opportunities and Threats are external.',
-        tips:   [
-          'Be honest about weaknesses — that’s where the real insight is.',
-          'Threats often hint at the next big opportunity.',
-        ],
-        suggested: ['idea', 'risk', 'cause'],
-      },
-      connect:    DEFAULT_CONNECT,
-      prioritize: DEFAULT_PRIORITIZE,
-      action:     DEFAULT_ACTION,
-    },
-  },
-  {
-    type:           'decision-matrix',
-    name:           'Decision Matrix',
-    emoji:          '⚖',
-    description:    'Score options across weighted criteria to find the clear winner.',
-    sampleOutcome:  'A ranked list of options with reasoning the team can stand behind.',
-    estimateMinutes: 15,
-    steps: {
-      define: {
-        title:  'List the options',
-        prompt: 'Add a card per option you’re choosing between. Then list the criteria you care about.',
-        tips:   ['Don’t skip "do nothing" — it’s a real option.'],
-        suggested: ['idea', 'decision'],
-      },
-      explore: {
-        title:  'Score each option',
-        prompt: 'Walk each criterion and rate each option (1–5). Note your reasoning in the card.',
-        tips:   ['Weight the criteria that matter most before scoring.'],
-        suggested: ['idea', 'risk'],
-      },
-      connect:    DEFAULT_CONNECT,
-      prioritize: {
-        title:     'Pick the winner',
-        prompt:    'Star the option with the strongest score. Add a Decision card to lock it in.',
-        tips:      ['If two options tie, your criteria are probably wrong.'],
-        suggested: ['decision'],
-      },
-      action:     DEFAULT_ACTION,
-    },
-  },
-  {
-    type:           'customer-discovery',
-    name:           'Customer Discovery',
-    emoji:          '◎',
-    description:    'Probe a customer segment — pains, goals, and existing solutions.',
-    sampleOutcome:  'Validated assumptions about a specific customer, ready to test in interviews.',
-    estimateMinutes: 25,
-    steps: {
-      define: {
-        title:  'Pin the customer',
-        prompt: 'One audience card. Be specific: "mid-market HR leaders", not "businesses".',
-        tips:   ['Anyone you can’t name is too generic.'],
-        suggested: ['audience', 'problem'],
-      },
-      explore: {
-        title:  'Pains, goals, current alternatives',
-        prompt: 'Add Pain Point cards for what they struggle with, Idea cards for goals, and Cause cards for what they use today.',
-        tips:   ['Walk through their day — what makes them sigh, what makes them smile.'],
-        suggested: ['pain', 'cause', 'idea'],
-      },
-      connect:    DEFAULT_CONNECT,
-      prioritize: DEFAULT_PRIORITIZE,
-      action:     {
-        title:     'Plan the interviews',
-        prompt:    'Add Task cards for the 5–10 people you should talk to next week.',
-        tips:      ['Use names if you have them.'],
-        suggested: ['task'],
-      },
-    },
-  },
-  {
-    type:           'problem-solving',
-    name:           'Problem Solving',
-    emoji:          '◇',
-    description:    'Trace a problem to its root causes and brainstorm fixes.',
-    sampleOutcome:  'A clear root cause plus 3 prioritised candidate solutions.',
-    estimateMinutes: 20,
-    steps: {
-      define: {
-        title:  'State the problem',
-        prompt: 'What’s broken? Who feels it? What’s the cost of leaving it alone?',
-        tips:   ['Avoid solutions disguised as problems.'],
-        suggested: ['problem', 'audience', 'pain'],
-      },
-      explore: {
-        title:  'Find the causes, then the fixes',
-        prompt: 'List underlying causes first. Only then brainstorm a wide set of possible fixes.',
-        tips:   ['Aim for 10 ideas at first — quantity, then editing.'],
-        suggested: ['cause', 'idea', 'risk'],
-      },
-      connect:    DEFAULT_CONNECT,
-      prioritize: DEFAULT_PRIORITIZE,
-      action:     DEFAULT_ACTION,
-    },
-  },
-  {
-    type:           'freeform',
-    name:           'Freeform Canvas',
-    emoji:          '◯',
-    description:    'A blank canvas. Bring your own structure.',
-    sampleOutcome:  'An open visual map of whatever’s in your head.',
-    estimateMinutes: 0,   // 0 = "open-ended"
-    steps: {
-      define: {
-        title:  'Start anywhere',
-        prompt: 'Drop a thought on the canvas. You can rename steps later.',
-        tips:   ['Use the card types as scaffolding when you need structure.'],
-        suggested: ['idea'],
-      },
-      explore: {
-        title:  'Expand',
-        prompt: 'Add more cards. Don’t edit yet — just get them out.',
-        tips:   ['Quantity first, polish later.'],
-        suggested: ['idea'],
-      },
-      connect:    DEFAULT_CONNECT,
-      prioritize: DEFAULT_PRIORITIZE,
-      action:     DEFAULT_ACTION,
-    },
-  },
+  BRAINSTORM_CIRCLE_TEMPLATE,
+  STARBURSTING_TEMPLATE,
 ]
 
-export const TEMPLATE_BY_TYPE: Record<TemplateType, SessionTemplate> =
-  TEMPLATES.reduce((acc, t) => { acc[t.type] = t; return acc }, {} as Record<TemplateType, SessionTemplate>)
+const TEMPLATE_BY_TYPE: Record<string, SessionTemplate> = {
+  [BRAINSTORM_CIRCLE_TEMPLATE.type]: BRAINSTORM_CIRCLE_TEMPLATE,
+  [STARBURSTING_TEMPLATE.type]:      STARBURSTING_TEMPLATE,
+  freeform:                          FREEFORM_FALLBACK,
+}
 
 /**
- * Look up a template by type. Returns the freeform template for any
- * unknown / legacy value (e.g. old 'startup-idea' rows still in the DB),
- * so old sessions continue to load without crashing.
+ * Look up a template by type. Returns the freeform fallback for any unknown /
+ * legacy value (e.g. old 'swot' / 'startup-idea' rows still in the DB), so old
+ * sessions continue to load without crashing.
  */
 export function getTemplate(type: TemplateType | string): SessionTemplate {
-  return (TEMPLATE_BY_TYPE as Record<string, SessionTemplate>)[type] ?? TEMPLATE_BY_TYPE['freeform']
+  return TEMPLATE_BY_TYPE[type] ?? FREEFORM_FALLBACK
 }

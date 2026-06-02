@@ -24,7 +24,7 @@
 
 import { useEffect, useState } from 'react'
 import { cardChipLabel, CARD_TYPES_ORDERED, CARD_TYPE_META } from '@/lib/sessions/cardTypes'
-import type { StepGuide } from '@/lib/sessions/templates'
+import type { SessionTemplate, StepGuide } from '@/lib/sessions/templates'
 import type { CardType, SessionCard, SessionMember, StepKey } from '@/types/sessions'
 
 interface Props {
@@ -32,6 +32,8 @@ interface Props {
   collapsed:  boolean
   stepKey:    StepKey
   guide:      StepGuide
+  /** Used to read template-level flags like `hideAddCardForm` (Brainstorm Circle). */
+  template:   SessionTemplate
 
   // Card-mode props
   selectedCard:    SessionCard | null
@@ -99,7 +101,9 @@ export default function GuidePanel(props: Props) {
 
       {props.mode === 'card' && props.selectedCard
         ? <CardEditor {...props} selectedCard={props.selectedCard} />
-        : <AddCardForm {...props} />}
+        : props.template.hideAddCardForm
+          ? <InstructionsView template={props.template} />
+          : <AddCardForm {...props} />}
     </aside>
   )
 }
@@ -613,4 +617,73 @@ function formatTime(iso: string): string {
   } catch {
     return iso
   }
+}
+
+// ─── Instructions view (Brainstorm Circle, no card selected) ─────────────────
+// Replaces the Add Card form for templates whose card set is pre-seeded.
+// The user shouldn't be adding arbitrary cards — they should be editing the
+// admin topic, then asking members to fill in their cards.
+function InstructionsView({ template }: { template: SessionTemplate }) {
+  const STEPS = [
+    'Edit the central admin topic.',
+    'Ask members to add their input.',
+    'Heart the strongest ideas.',
+    'Finish and export the result.',
+  ]
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
+      <div>
+        <p style={{ fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#9faab8', marginBottom: '0.25rem' }}>
+          {template.emoji} {template.name}
+        </p>
+        <p style={{ fontSize: '0.92rem', fontWeight: 800, color: '#0d1f35', letterSpacing: '-0.01em', lineHeight: 1.3 }}>
+          Edit the central topic, then let members add their input around it.
+        </p>
+        <p style={{ fontSize: '0.8rem', color: '#5d667a', lineHeight: 1.55, marginTop: '0.35rem' }}>
+          {template.description}
+        </p>
+      </div>
+
+      <ol style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.55rem' }}>
+        {STEPS.map((step, i) => (
+          <li
+            key={step}
+            style={{
+              display: 'flex', gap: '0.55rem', alignItems: 'flex-start',
+              fontSize: '0.82rem', color: '#3d4758', lineHeight: 1.5,
+            }}
+          >
+            <span
+              aria-hidden
+              style={{
+                flexShrink: 0, marginTop: '0.1rem',
+                width: '1.3rem', height: '1.3rem', borderRadius: '999px',
+                background: 'rgba(249,115,22,0.10)', color: '#c2540a',
+                fontSize: '0.65rem', fontWeight: 800,
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                border: '1px solid rgba(249,115,22,0.22)',
+              }}
+            >
+              {i + 1}
+            </span>
+            <span>{step}</span>
+          </li>
+        ))}
+      </ol>
+
+      <p
+        style={{
+          marginTop: '0.25rem',
+          padding: '0.7rem 0.75rem',
+          borderRadius: '0.55rem',
+          background: 'rgba(15,23,42,0.03)',
+          border: '1px solid rgba(15,23,42,0.06)',
+          fontSize: '0.78rem', color: '#5d667a', lineHeight: 1.5,
+        }}
+      >
+        Click any card on the canvas to edit it. Card positions are fixed —
+        use <strong style={{ color: '#0d1f35' }}>Reset view</strong> in the canvas to restore the layout if needed.
+      </p>
+    </div>
+  )
 }

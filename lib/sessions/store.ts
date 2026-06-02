@@ -70,12 +70,11 @@ export async function listSessions(_userId: string, _companyId: string): Promise
   return (data ?? []) as Session[]
 }
 
-export async function getSession(_userId: string, sessionId: string): Promise<SessionDetail | null> {
+export async function getSession(userId: string, sessionId: string): Promise<SessionDetail | null> {
   const supabase = db()
 
   // Fetch session metadata first so we can scope the profiles query to its
-  // company. Then in parallel pull the four child resources (cards,
-  // connections, steps, workspace profiles).
+  // company. Then in parallel pull every child resource.
   const sessionRes = await supabase
     .from('sessions').select('*').eq('id', sessionId).maybeSingle()
   if (sessionRes.error) throwIfError(sessionRes.error, 'getSession')
@@ -103,12 +102,70 @@ export async function getSession(_userId: string, sessionId: string): Promise<Se
     members[row.id] = { id: row.id, fullName: row.full_name, role: row.role }
   }
 
+  // Likes — one extra query, grouped client-side. Skip entirely on sessions
+  // that have no cards.
+  const cards = (cardsRes.data ?? []) as SessionCard[]
+  const cardIds = cards.map(c => c.id)
+  const likeCounts: Record<string, number> = {}
+  const myLikes:    Set<string>            = new Set()
+  if (cardIds.length > 0) {
+    const likesRes = await supabase
+      .from('session_card_likes')
+      .select('card_id, user_id')
+      .in('card_id', cardIds)
+    throwIfError(likesRes.error, 'getSession.likes')
+    type LikeRow = { card_id: string; user_id: string }
+    for (const row of ((likesRes.data ?? []) as LikeRow[])) {
+      likeCounts[row.card_id] = (likeCounts[row.card_id] ?? 0) + 1
+      if (row.user_id === userId) myLikes.add(row.card_id)
+    }
+  }
+
   return {
     session,
-    cards:       (cardsRes.data       ?? []) as SessionCard[],
+    cards,
     connections: (connectionsRes.data ?? []) as SessionConnection[],
     steps:       (stepsRes.data       ?? []) as SessionStepRow[],
     members,
+    likeCounts,
+    myLikes,
+  }
+}
+
+// ── Likes ────────────────────────────────────────────────────────────────────
+
+/**
+ * Toggle the current user's like on a card. If `currentlyLiked` is true the
+ * row is deleted; otherwise it's inserted. Returns the new state so the
+ * caller can update local state without an extra fetch.
+ *
+ * Idempotent: if the user double-clicks the heart, the second call's outcome
+ * is whatever the unique constraint allows (insert silently ignored, delete
+ * removes nothing) — local state stays correct.
+ */
+export async function toggleLike(args: {
+  userId:          string
+  cardId:          string
+  currentlyLiked:  boolean
+}): Promise<{ liked: boolean }> {
+  const supabase = db()
+  if (args.currentlyLiked) {
+    const { error } = await supabase
+      .from('session_card_likes')
+      .delete()
+      .eq('card_id', args.cardId)
+      .eq('user_id', args.userId)
+    throwIfError(error, 'toggleLike.delete')
+    return { liked: false }
+  } else {
+    const { error } = await supabase
+      .from('session_card_likes')
+      .insert({ card_id: args.cardId, user_id: args.userId })
+    // Duplicate insert (the user already liked) is benign — treat as liked.
+    if (error && (error as { code?: string }).code !== PG_UNIQUE_VIOLATION) {
+      throwIfError(error, 'toggleLike.insert')
+    }
+    return { liked: true }
   }
 }
 

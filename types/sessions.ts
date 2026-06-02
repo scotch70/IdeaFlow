@@ -10,7 +10,11 @@ export type SessionStatus = typeof SESSION_STATUSES[number]
 
 // Thinking frameworks. Old session rows with legacy template_type values
 // (e.g. 'startup-idea') still load — getTemplate() falls back to 'freeform'.
+// Order matches what the picker shows first. Legacy types (swot, decision-matrix,
+// customer-discovery, problem-solving) are kept so old session rows still type-check
+// and load; getTemplate() falls back to freeform for any unrecognised value.
 export const TEMPLATE_TYPES = [
+  'brainstorm-circle',
   'starbursting',
   'swot',
   'decision-matrix',
@@ -105,4 +109,8 @@ export interface SessionDetail {
    *  Used to render card avatar initials + the "Admin / Member" hint without
    *  having to refetch profiles per card. */
   members:     Record<string, SessionMember>
+  /** card_id → total like count (across all users in the workspace). */
+  likeCounts:  Record<string, number>
+  /** Set of card ids the current user has hearted, by id. */
+  myLikes:     Set<string>
 }

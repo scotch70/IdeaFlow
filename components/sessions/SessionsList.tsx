@@ -10,7 +10,7 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { deleteSession, listSessions } from '@/lib/sessions/store'
-import { TEMPLATE_BY_TYPE } from '@/lib/sessions/templates'
+import { getTemplate } from '@/lib/sessions/templates'
 import type { Session } from '@/types/sessions'
 
 interface Props {
@@ -91,7 +91,7 @@ export default function SessionsList({ userId, companyId }: Props) {
           }}
         >
           {sessions.map(s => {
-            const tpl = TEMPLATE_BY_TYPE[s.template_type] ?? TEMPLATE_BY_TYPE['freeform']
+            const tpl = getTemplate(s.template_type)
             return (
               <div
                 key={s.id}

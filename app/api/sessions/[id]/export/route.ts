@@ -96,11 +96,18 @@ function chip(text: string, accent: string, bg: string, ink: string): string {
     padding:2px 7px;border-radius:999px;">${escapeHtml(text)}</span>`
 }
 
-function cardBlock(card: SessionCard): string {
-  const meta = CARD_TYPE_META[card.type]
+function cardBlock(card: SessionCard, likeCount: number): string {
+  const meta  = CARD_TYPE_META[card.type]
   const label = cardChipLabel(card)
-  const star = card.priority > 0
+  const star  = card.priority > 0
     ? `<span style="display:inline-block;color:#b45309;font-weight:800;margin-left:6px;">★</span>`
+    : ''
+  const heart = likeCount > 0
+    ? `<span style="display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;
+        color:#c2540a;background:rgba(249,115,22,0.08);
+        border:1px solid rgba(249,115,22,0.22);border-radius:999px;padding:2px 7px;margin-left:auto;">
+        <span style="color:#f97316;">♥</span> ${likeCount}
+      </span>`
     : ''
   const content = card.content?.trim()
     ? `<p style="margin:6px 0 0 0;font-size:11.5px;color:${T.muted};line-height:1.6;">${escapeHtml(card.content)}</p>`
@@ -110,6 +117,7 @@ function cardBlock(card: SessionCard): string {
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
       ${chip(label, meta.accent, meta.bg, meta.ink)}
       ${star}
+      ${heart}
     </div>
     <p style="margin:0;font-size:12.5px;font-weight:700;color:${T.ink};line-height:1.4;">
       ${escapeHtml(card.title || '(untitled)')}
@@ -206,6 +214,21 @@ export async function GET(
   const outcomes    = deriveOutcomes(cards)
   const template    = getTemplate(session.template_type)
 
+  // 3. Likes — fetched once, grouped client-side. Shown as ♥ + count next to
+  //    each card, and used to sort Brainstorm Circle members by popularity.
+  const likeCounts: Record<string, number> = {}
+  if (cards.length > 0) {
+    const likesRes = await sb
+      .from('session_card_likes')
+      .select('card_id')
+      .in('card_id', cards.map(c => c.id))
+    type LikeRow = { card_id: string }
+    for (const row of ((likesRes.data ?? []) as LikeRow[])) {
+      likeCounts[row.card_id] = (likeCounts[row.card_id] ?? 0) + 1
+    }
+  }
+  const isCircle = session.template_type === 'brainstorm-circle'
+
   // 3. Build the HTML page.
   const filename = `ideaflow-session-${slugify(session.title)}.pdf`
   const exportedAt = new Date().toLocaleString(undefined, {
@@ -214,8 +237,18 @@ export async function GET(
   })
 
   const cardLookup = new Map(cards.map(c => [c.id, c]))
+  // For Brainstorm Circle the most useful ordering is "most-liked first" so
+  // the reader sees the team's favourite ideas at the top. For other
+  // templates we keep creation order so the narrative reads naturally.
+  function rowsFor(type: CardType): SessionCard[] {
+    const rows = cards.filter(c => c.type === type)
+    if (isCircle && type === 'custom') {
+      return [...rows].sort((a, b) => (likeCounts[b.id] ?? 0) - (likeCounts[a.id] ?? 0))
+    }
+    return rows
+  }
   const grouped: Array<{ type: CardType; rows: SessionCard[] }> = TYPE_ORDER
-    .map(type => ({ type, rows: cards.filter(c => c.type === type) }))
+    .map(type => ({ type, rows: rowsFor(type) }))
     .filter(g => g.rows.length > 0)
 
   const connectionsList = connections
@@ -319,7 +352,7 @@ export async function GET(
       ${grouped.map(g => `
         <div style="margin-bottom: 16px;">
           ${sectionHeader(CARD_TYPE_META[g.type].label)}
-          ${g.rows.map(cardBlock).join('')}
+          ${g.rows.map(c => cardBlock(c, likeCounts[c.id] ?? 0)).join('')}
         </div>
       `).join('')}
     </section>`}
