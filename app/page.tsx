@@ -334,7 +334,7 @@ export default async function HomePage() {
                     marginBottom: '1.25rem',
                   }}
                 >
-                  Turn ideas into decisions.
+                  Stop sending surveys.<br />Start collecting ideas with IdeaFlow.
                 </h1>
 
                 <p
@@ -344,10 +344,10 @@ export default async function HomePage() {
                     lineHeight: 1.75,
                     color: P.slate,
                     marginBottom: '2.25rem',
-                    maxWidth: '28rem',
+                    maxWidth: '26rem',
                   }}
                 >
-                  IdeaFlow gives your team one place to share ideas, rank them by vote, and run guided thinking sessions that end with clear next steps — not another stuck Slack thread.
+                  Most team feedback gets lost in meetings and Slack threads. IdeaFlow gives everyone a voice, ranks ideas by vote, and shows you exactly what matters most.
                 </p>
 
                 <div
@@ -624,7 +624,20 @@ export default async function HomePage() {
                     marginBottom: '1rem',
                   }}
                 >
-                  <span>✦</span> Pro feature
+                  {/* Inline SVG sparkle — the previous Unicode "✦" (U+2726)
+                      lacks font coverage on some systems and rendered as a
+                      tiny dot next to the headline. */}
+                  <svg
+                    width="9" height="9" viewBox="0 0 24 24"
+                    aria-hidden focusable="false"
+                    style={{ flexShrink: 0 }}
+                  >
+                    <path
+                      d="M12 2 L13.5 9.5 L21 11 L13.5 12.5 L12 22 L10.5 12.5 L3 11 L10.5 9.5 Z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                  Pro feature
                 </div>
 
                 <h2
@@ -988,7 +1001,7 @@ export default async function HomePage() {
                       border: '1px solid rgba(249,115,22,0.32)',
                       display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
                     }}>
-                      <span>✦</span> Guided Thinking Sessions
+                      <span>✦</span> Brainstorm Sessions
                     </span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.375rem', marginBottom: '0.25rem' }}>
@@ -996,19 +1009,18 @@ export default async function HomePage() {
                     <p style={{ fontSize: '0.875rem', fontWeight: 500, color: 'rgba(255,255,255,0.35)' }}>/year</p>
                   </div>
                   <p style={{ fontSize: '0.825rem', color: 'rgba(255,255,255,0.50)', lineHeight: 1.5 }}>
-                    Structured frameworks for brainstorming, planning and decisions.
+                    Structured brainstorming and team decision-making.
                   </p>
                 </div>
 
                 <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: '1.5rem', marginBottom: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', flex: 1, position: 'relative' }}>
                   {([
                     { label: 'Everything in Standard',  icon: '✓' as const },
+                    { label: 'Brainstorm Circle',       icon: '✦' as const },
                     { label: 'Starbursting Sessions',   icon: '✦' as const },
-                    { label: 'SWOT Analysis',           icon: '✦' as const },
-                    { label: 'Decision Frameworks',     icon: '✦' as const },
-                    { label: 'Guided Workflows',        icon: '✦' as const },
-                    { label: 'Session Summaries',       icon: '✦' as const },
-                    { label: 'Action Plans',            icon: '✦' as const },
+                    { label: 'Team collaboration',      icon: '✦' as const },
+                    { label: 'Session summaries',       icon: '✦' as const },
+                    { label: 'PDF exports',             icon: '✦' as const },
                     { label: 'Up to 100 members',       icon: '✓' as const },
                   ]).map(({ label, icon }, i) => {
                     const isFirst    = i === 0

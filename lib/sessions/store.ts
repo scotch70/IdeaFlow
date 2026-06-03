@@ -104,6 +104,12 @@ export async function getSession(userId: string, sessionId: string): Promise<Ses
 
   // Likes — one extra query, grouped client-side. Skip entirely on sessions
   // that have no cards.
+  //
+  // The likes query is treated as NON-FATAL: if the session_card_likes table
+  // doesn't exist yet (the migration hasn't been applied) or RLS denies the
+  // read, we log a warning and return empty likes instead of failing the
+  // whole session load. Without this guard, the workspace stays on
+  // "Loading session…" forever because the calling effect has no .catch.
   const cards = (cardsRes.data ?? []) as SessionCard[]
   const cardIds = cards.map(c => c.id)
   const likeCounts: Record<string, number> = {}
@@ -113,11 +119,15 @@ export async function getSession(userId: string, sessionId: string): Promise<Ses
       .from('session_card_likes')
       .select('card_id, user_id')
       .in('card_id', cardIds)
-    throwIfError(likesRes.error, 'getSession.likes')
-    type LikeRow = { card_id: string; user_id: string }
-    for (const row of ((likesRes.data ?? []) as LikeRow[])) {
-      likeCounts[row.card_id] = (likeCounts[row.card_id] ?? 0) + 1
-      if (row.user_id === userId) myLikes.add(row.card_id)
+    if (likesRes.error) {
+      // eslint-disable-next-line no-console
+      console.warn('[sessions] likes fetch failed (continuing without likes):', likesRes.error)
+    } else {
+      type LikeRow = { card_id: string; user_id: string }
+      for (const row of ((likesRes.data ?? []) as LikeRow[])) {
+        likeCounts[row.card_id] = (likeCounts[row.card_id] ?? 0) + 1
+        if (row.user_id === userId) myLikes.add(row.card_id)
+      }
     }
   }
 

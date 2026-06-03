@@ -128,23 +128,38 @@ export default function SessionWorkspace({ sessionId, userId }: Props) {
   }, [guideCollapsed])
 
   // ── Initial load ───────────────────────────────────────────────────────────
+  // The .catch is critical — without it a rejected promise leaves the page
+  // permanently on "Loading session…" because state never updates. We surface
+  // the underlying error message to setLoadError so we get a useful screen
+  // instead of an infinite spinner.
   useEffect(() => {
     let alive = true
-    getSession(userId, sessionId).then(d => {
-      if (!alive) return
-      if (!d) { setLoadError('This session could not be found.'); return }
-      setSession(d.session)
-      setCards(d.cards)
-      setConnections(d.connections)
-      setSteps(d.steps)
-      setMembers(d.members)
-      setLikeCounts(d.likeCounts)
-      setMyLikes(d.myLikes)
-      trackSessionEvent('session_started', {
-        sessionId:    d.session.id,
-        templateType: d.session.template_type,
+    getSession(userId, sessionId)
+      .then(d => {
+        if (!alive) return
+        if (!d) { setLoadError('This session could not be found.'); return }
+        setSession(d.session)
+        setCards(d.cards)
+        setConnections(d.connections)
+        setSteps(d.steps)
+        setMembers(d.members)
+        setLikeCounts(d.likeCounts)
+        setMyLikes(d.myLikes)
+        trackSessionEvent('session_started', {
+          sessionId:    d.session.id,
+          templateType: d.session.template_type,
+        })
       })
-    })
+      .catch(err => {
+        if (!alive) return
+        // eslint-disable-next-line no-console
+        console.error('[sessions] failed to load session', err)
+        setLoadError(
+          err instanceof Error
+            ? `Couldn’t load this session — ${err.message}`
+            : 'Couldn’t load this session.'
+        )
+      })
     return () => { alive = false }
   }, [userId, sessionId])
 
