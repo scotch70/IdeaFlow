@@ -30,6 +30,7 @@ import { cardChipLabel, CARD_TYPE_META } from '@/lib/sessions/cardTypes'
 import {
   CANVAS_INSET, CARD_H, CARD_W, CanvasSize, clampToCanvas, isCanvasMeasured,
 } from '@/lib/sessions/layout'
+import { ADMIN_CARD_H, ADMIN_CARD_W } from '@/lib/sessions/circleLayout'
 import { CANVAS_BG, CANVAS_BORDER, CANVAS_DOT, CANVAS_SURFACE } from './SessionWorkspace'
 
 // ─── Props ───────────────────────────────────────────────────────────────────
@@ -400,15 +401,24 @@ const CardOnCanvas = memo(function CardOnCanvas({
 
   const starred = card.priority > 0
 
-  // ── Drag constraints in motion-offset space ─────────────────────────────
-  // framer-motion lets a `drag` element accept a `{left,right,top,bottom}`
-  // object whose values are relative to its origin position. We compute
-  // these from the clamped position so the card cannot leave the canvas
-  // viewport during the drag itself — clamp on every frame, not just end.
+  // ── Admin card detection ────────────────────────────────────────────────
+  // The Brainstorm Circle admin topic is a regular `custom` card with the
+  // label "Admin topic". When detected we render it bigger, ivory, with an
+  // orange border + dark text so it reads as the focal point — matching the
+  // demo's central card. lockedLayout guards us from misfiring on any other
+  // freeform card a user might title that way.
+  const isAdmin = lockedLayout
+    && card.type === 'custom'
+    && (card.custom_label ?? '').toLowerCase() === 'admin topic'
+
+  const visualW = isAdmin ? ADMIN_CARD_W : CARD_W
+  const visualH = isAdmin ? ADMIN_CARD_H : CARD_H
+
+  // ── Drag constraints in motion-offset space (non-admin only) ────────────
   const dragLeft   = CANVAS_INSET - safeX
-  const dragRight  = Math.max(0, canvasSize.w - CARD_W - CANVAS_INSET - safeX)
+  const dragRight  = Math.max(0, canvasSize.w - visualW - CANVAS_INSET - safeX)
   const dragTop    = CANVAS_INSET - safeY
-  const dragBottom = Math.max(0, canvasSize.h - CARD_H - CANVAS_INSET - safeY)
+  const dragBottom = Math.max(0, canvasSize.h - visualH - CANVAS_INSET - safeY)
 
   function handleClick(e: React.MouseEvent) {
     if (isConnectTarget) {
@@ -458,27 +468,33 @@ const CardOnCanvas = memo(function CardOnCanvas({
         position: 'absolute',
         top: safeY,
         left: safeX,
-        width: CARD_W,
-        minHeight: CARD_H,
-        background: CANVAS_SURFACE,
-        backgroundImage: `linear-gradient(180deg, ${meta.bg}, transparent 65%)`,
+        width: visualW,
+        minHeight: visualH,
+        background: isAdmin ? '#fbfaf7' : CANVAS_SURFACE,
+        backgroundImage: isAdmin
+          ? 'none'
+          : `linear-gradient(180deg, ${meta.bg}, transparent 65%)`,
         border: isConnectSource
           ? '1px solid rgba(249,115,22,0.55)'
+          : isAdmin
+            ? '1.5px solid #f97316'
           : isSelected
             ? `1px solid ${meta.accent}`
             : isConnectTarget
               ? '1px dashed rgba(99,179,237,0.55)'
               : `1px solid ${CANVAS_BORDER}`,
-        borderRadius: '0.7rem',
-        padding: '0.65rem 0.75rem 0.7rem 0.9rem',
-        color: '#e6ecf5',
+        borderRadius: isAdmin ? '0.9rem' : '0.7rem',
+        padding: isAdmin ? '1rem 1.15rem' : '0.65rem 0.75rem 0.7rem 0.9rem',
+        color: isAdmin ? '#0d1f35' : '#e6ecf5',
         cursor: lockedLayout ? 'pointer' : 'grab',
         userSelect: isEditing ? 'text' : 'none',
-        boxShadow: isSelected
-          ? `0 0 0 3px ${meta.accent}33, 0 6px 18px rgba(0,0,0,0.45)`
-          : isConnectSource
-            ? '0 0 0 4px rgba(249,115,22,0.18), 0 6px 18px rgba(0,0,0,0.45)'
-            : '0 4px 18px rgba(0,0,0,0.32)',
+        boxShadow: isAdmin
+          ? '0 6px 28px rgba(249,115,22,0.18), 0 1px 4px rgba(6,14,38,0.06)'
+          : isSelected
+            ? `0 0 0 3px ${meta.accent}33, 0 6px 18px rgba(0,0,0,0.45)`
+            : isConnectSource
+              ? '0 0 0 4px rgba(249,115,22,0.18), 0 6px 18px rgba(0,0,0,0.45)'
+              : '0 4px 18px rgba(0,0,0,0.32)',
         zIndex: isSelected ? 5 : isConnectSource ? 4 : 2,
         // Hint the compositor — drag transforms stay smooth.
         willChange: 'transform',
@@ -492,14 +508,16 @@ const CardOnCanvas = memo(function CardOnCanvas({
         }}
       />
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.35rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: isAdmin ? '0.5rem' : '0.35rem' }}>
         <span
           style={{
-            fontSize: '0.55rem', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase',
-            color: meta.ink, background: meta.bg,
-            border: `1px solid ${meta.accent}33`,
-            padding: '0.12rem 0.4rem', borderRadius: '999px',
-            maxWidth: '8.5rem',
+            fontSize: isAdmin ? '0.58rem' : '0.55rem',
+            fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase',
+            color: isAdmin ? '#c2540a' : meta.ink,
+            background: isAdmin ? 'rgba(249,115,22,0.10)' : meta.bg,
+            border: `1px solid ${isAdmin ? 'rgba(249,115,22,0.30)' : `${meta.accent}33`}`,
+            padding: isAdmin ? '0.15rem 0.55rem' : '0.12rem 0.4rem', borderRadius: '999px',
+            maxWidth: isAdmin ? 'none' : '8.5rem',
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
           }}
         >{cardChipLabel(card)}</span>
@@ -603,8 +621,9 @@ const CardOnCanvas = memo(function CardOnCanvas({
           width: '100%',
           background: 'transparent',
           border: 'none', outline: 'none',
-          color: '#f4f7fb',
-          fontSize: '0.86rem', fontWeight: 700,
+          color: isAdmin ? '#0d1f35' : '#f4f7fb',
+          fontSize: isAdmin ? '1.05rem' : '0.86rem',
+          fontWeight: isAdmin ? 800 : 700,
           letterSpacing: '-0.01em',
           padding: '0.05rem 0',
           fontFamily: 'inherit',
@@ -620,23 +639,23 @@ const CardOnCanvas = memo(function CardOnCanvas({
         onMouseDown={e => e.stopPropagation()}
         onDoubleClick={e => e.stopPropagation()}
         readOnly={!isEditing && !isSelected}
-        rows={2}
+        rows={isAdmin ? 3 : 2}
         style={{
           width: '100%',
           background: 'transparent',
           border: 'none', outline: 'none',
           resize: 'none',
-          color: 'rgba(230,236,245,0.78)',
-          fontSize: '0.76rem',
-          lineHeight: 1.45,
-          padding: '0.15rem 0 0',
+          color: isAdmin ? '#5d667a' : 'rgba(230,236,245,0.78)',
+          fontSize: isAdmin ? '0.85rem' : '0.76rem',
+          lineHeight: 1.5,
+          padding: '0.25rem 0 0',
           fontFamily: 'inherit',
           cursor: isEditing ? 'text' : 'inherit',
         }}
       />
 
-      {/* Footer row — owner on the left, heart on the right (Brainstorm Circle) */}
-      {(owner || showHeart) && (
+      {/* Footer row — owner on the left, heart on the right (members only) */}
+      {!isAdmin && (owner || showHeart) && (
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.45rem' }}>
           {owner && (
             <>
@@ -809,7 +828,7 @@ function ConnectionPath({
       />
       <path
         d={path} fill="none"
-        stroke={hover ? 'rgba(252,165,165,0.85)' : 'rgba(148,163,184,0.55)'}
+        stroke={hover ? 'rgba(252,165,165,0.85)' : 'rgba(190,205,225,0.50)'}
         strokeWidth={hover ? 2 : 1.5}
         markerEnd="url(#conn-arrow)"
         style={{ pointerEvents: 'none', transition: 'stroke 0.12s, stroke-width 0.12s' }}

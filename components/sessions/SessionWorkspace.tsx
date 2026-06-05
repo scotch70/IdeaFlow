@@ -100,8 +100,19 @@ export default function SessionWorkspace({ sessionId, userId }: Props) {
 
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  // Brainstorm Circle force-collapses both panels on first session load.
+  // The override:
+  //   • runs once per mount (guarded by didBcOverrideRef so the user can
+  //     re-expand without us fighting back)
+  //   • does NOT persist to localStorage — the user's per-browser preference
+  //     for other templates stays untouched (the persist effects below skip
+  //     writing whenever the current session is a Brainstorm Circle)
+  const didBcOverrideRef = useRef(false)
+  const isBrainstormCircle = session?.template_type === 'brainstorm-circle'
+
   // Persist collapsed state per browser (not per session) — feels like a UI
-  // preference, not session data.
+  // preference, not session data. Skipped for Brainstorm Circle so the
+  // force-collapse doesn't pollute the user's preference for other templates.
   useEffect(() => {
     if (typeof window === 'undefined') return
     try {
@@ -111,8 +122,9 @@ export default function SessionWorkspace({ sessionId, userId }: Props) {
   }, [])
   useEffect(() => {
     if (typeof window === 'undefined') return
+    if (isBrainstormCircle) return
     try { window.localStorage.setItem('ideaflow:sessions:sidebarCollapsed', sidebarCollapsed ? '1' : '0') } catch {}
-  }, [sidebarCollapsed])
+  }, [sidebarCollapsed, isBrainstormCircle])
 
   // Same pattern for the right Guide panel.
   useEffect(() => {
@@ -124,8 +136,20 @@ export default function SessionWorkspace({ sessionId, userId }: Props) {
   }, [])
   useEffect(() => {
     if (typeof window === 'undefined') return
+    if (isBrainstormCircle) return
     try { window.localStorage.setItem('ideaflow:sessionsGuideCollapsed', guideCollapsed ? '1' : '0') } catch {}
-  }, [guideCollapsed])
+  }, [guideCollapsed, isBrainstormCircle])
+
+  // One-shot override: when the session resolves as Brainstorm Circle, force
+  // both side panels closed so the user sees the radial canvas with maximum
+  // breathing room. Fires once per mount; manual toggles afterwards win.
+  useEffect(() => {
+    if (!session || didBcOverrideRef.current) return
+    if (session.template_type !== 'brainstorm-circle') return
+    didBcOverrideRef.current = true
+    setSidebarCollapsed(true)
+    setGuideCollapsed(true)
+  }, [session])
 
   // ── Initial load ───────────────────────────────────────────────────────────
   // The .catch is critical — without it a rejected promise leaves the page
