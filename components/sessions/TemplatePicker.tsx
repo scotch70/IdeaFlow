@@ -277,16 +277,17 @@ async function seedBrainstormCircle(userId: string, sessionId: string) {
   const layout = brainstormCirclePositions()
 
   // 1. Central admin card — custom type with the user-facing "Admin topic"
-  // chip. The seeded title is intentionally directive ("Ask the team…") so
-  // the user immediately understands this is their question to write, and
-  // the content sentence explains the pattern that the 8 satellites collect
-  // different angles on it.
+  // chip. Title is directive so the user knows immediately what to do; the
+  // content seed is left empty so the admin card renders at exactly the
+  // same height as the 8 member cards (no multi-line content pushing it
+  // taller). The session GuidePanel already explains the broader pattern,
+  // so we don't repeat it on the canvas.
   const admin = await createCard({
     userId, sessionId,
     type:        'custom',
     customLabel: 'Admin topic',
     title:       'Ask the team a question',
-    content:     'Each card around you collects a different angle.',
+    content:     null,
     x:           layout.admin.x,
     y:           layout.admin.y,
   })
