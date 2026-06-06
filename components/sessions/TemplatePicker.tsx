@@ -276,13 +276,17 @@ async function seedStarbursting(userId: string, sessionId: string) {
 async function seedBrainstormCircle(userId: string, sessionId: string) {
   const layout = brainstormCirclePositions()
 
-  // 1. Central admin card — custom type with the user-facing "Admin topic" chip.
+  // 1. Central admin card — custom type with the user-facing "Admin topic"
+  // chip. The seeded title is intentionally directive ("Ask the team…") so
+  // the user immediately understands this is their question to write, and
+  // the content sentence explains the pattern that the 8 satellites collect
+  // different angles on it.
   const admin = await createCard({
     userId, sessionId,
     type:        'custom',
     customLabel: 'Admin topic',
-    title:       'Your central topic',
-    content:     'Edit this card to ask the team a question.',
+    title:       'Ask the team a question',
+    content:     'Each card around you collects a different angle.',
     x:           layout.admin.x,
     y:           layout.admin.y,
   })
