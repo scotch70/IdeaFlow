@@ -82,6 +82,11 @@ function AuthFormInner() {
   const [companyName, setCompanyName] = useState('')
   const [error, setError]           = useState('')
   const [loading, setLoading]       = useState(false)
+  // Remember me — sign-in only. Checked by default so the existing
+  // "stay signed in" behaviour is unchanged for users who never touch
+  // the box. When unchecked we set a sessionStorage flag that
+  // RememberMeWatcher reads to sign the user out on tab close.
+  const [rememberMe, setRememberMe] = useState(true)
 
   /**
    * Navigate to a different auth mode by updating the URL.
@@ -134,6 +139,18 @@ function AuthFormInner() {
         if (!signInData?.session) {
           throw new Error('Sign-in did not return a session. Please try again.')
         }
+        // Remember-me flag — stored in sessionStorage so it dies with the
+        // tab. RememberMeWatcher (mounted globally) reads it and registers
+        // a pagehide handler that signs the user out when they close the
+        // tab. Default (checked) clears the flag so future sessions are
+        // persistent again.
+        try {
+          if (rememberMe) {
+            window.sessionStorage.removeItem('ideaflow:no-persist')
+          } else {
+            window.sessionStorage.setItem('ideaflow:no-persist', '1')
+          }
+        } catch { /* private-mode etc. — fall through to default persist */ }
       }
       // ── Critical: full document navigation, NOT router.push ──────────────────
       // signInWithPassword on @supabase/ssr writes the session into document.cookie
@@ -432,7 +449,41 @@ function AuthFormInner() {
           )}
 
           {mode === 'signin' && (
-            <div style={{ textAlign: 'right', marginTop: '-0.125rem' }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '0.75rem',
+                marginTop: '-0.125rem',
+              }}
+            >
+              <label
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.45rem',
+                  fontSize: '0.8rem',
+                  color: '#5d667a',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  userSelect: 'none',
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={e => setRememberMe(e.target.checked)}
+                  style={{
+                    width: '0.95rem',
+                    height: '0.95rem',
+                    accentColor: '#f97316',
+                    cursor: 'pointer',
+                    margin: 0,
+                  }}
+                />
+                Remember me
+              </label>
               <Link
                 href="/forgot-password"
                 style={{ fontSize: '0.8rem', color: '#8b96a8', fontWeight: 500, textDecoration: 'none' }}

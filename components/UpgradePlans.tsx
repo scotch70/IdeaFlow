@@ -287,21 +287,6 @@ export default function UpgradePlans({ compact = false, currentPlan }: UpgradePl
           })}
         </ul>
 
-        {/* AI — one muted line. Sits below the features list so it reads as
-            "and a small extra thing", not as the headline. */}
-        <p
-          style={{
-            fontSize: '0.7rem',
-            color: 'rgba(255,255,255,0.32)',
-            display: 'inline-flex', alignItems: 'center', gap: '0.35rem',
-            position: 'relative',
-            marginTop: '-0.25rem',
-          }}
-        >
-          <span style={{ color: 'rgba(255,255,255,0.20)', fontSize: '0.65rem' }}>+</span>
-          Optional AI helpers
-        </p>
-
         {currentPlan === 'pro' ? (
           <span style={{
             fontSize: '0.75rem', fontWeight: 700,

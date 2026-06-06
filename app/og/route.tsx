@@ -14,7 +14,7 @@ import { NextRequest }   from 'next/server'
 
 export const runtime = 'edge'
 
-const DEFAULT_TITLE = 'AI-powered employee insight platform'
+const DEFAULT_TITLE = 'Collect ideas, run sessions, decide together'
 
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl
@@ -150,7 +150,7 @@ export async function GET(req: NextRequest) {
 
             {/* Feature pills */}
             <div style={{ display: 'flex', gap: '8px' }}>
-              {['AI Insights', 'Executive Reports', 'Team Analytics'].map(label => (
+              {['Ideas', 'Sessions', 'Decisions'].map(label => (
                 <div key={label} style={{
                   fontSize: '12px',
                   fontWeight: 600,

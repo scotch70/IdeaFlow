@@ -54,7 +54,7 @@ export default function SiteFooter() {
                 </span>
               </div>
               <p style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.2)', lineHeight: 1.6, maxWidth: '16rem' }}>
-                AI-powered employee insight platform.<br />
+                Collect ideas, run sessions, decide together.<br />
                 Made for modern teams that want to improve.
               </p>
               <a

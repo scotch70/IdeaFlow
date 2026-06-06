@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import AnalyticsProvider from '@/components/AnalyticsProvider'
+import RememberMeWatcher from '@/components/RememberMeWatcher'
 import SiteFooter from '@/components/SiteFooter'
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://app.useideaflow.com'
@@ -15,15 +16,16 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
   title: {
-    default: 'IdeaFlow — AI-Powered Employee Insight Platform',
+    default: 'IdeaFlow — Collect ideas, run sessions, decide together',
     template: '%s · IdeaFlow',
   },
   description:
-    "Turn your team's ideas into real impact. IdeaFlow is the AI-powered employee insight platform that surfaces what your team is really thinking — and helps leaders act on it.",
+    "IdeaFlow gives every teammate a voice. Submit and vote on ideas, run structured brainstorm sessions, and end every discussion with a written decision.",
   keywords: [
-    'employee ideas', 'idea management', 'team feedback', 'employee engagement',
-    'AI insights', 'employee insight platform', 'idea board', 'team collaboration',
-    'leadership intelligence', 'company feedback tool',
+    'idea management', 'brainstorming software', 'employee suggestion software',
+    'innovation management', 'decision making software', 'team feedback',
+    'employee engagement', 'idea board', 'team collaboration',
+    'brainstorm sessions',
   ],
   authors: [{ name: 'IdeaFlow' }],
   creator: 'IdeaFlow',
@@ -38,23 +40,23 @@ export const metadata: Metadata = {
     locale: 'en_US',
     url: SITE_URL,
     siteName: 'IdeaFlow',
-    title: 'IdeaFlow — AI-Powered Employee Insight Platform',
+    title: 'IdeaFlow — Collect ideas, run sessions, decide together',
     description:
-      "The AI-powered platform that turns employee ideas into leadership intelligence. Collect ideas, surface insights, and act with confidence.",
+      "Collect ideas, vote on what matters, and run structured brainstorm sessions that end with a written decision.",
     images: [
       {
         url: '/og',
         width: 1200,
         height: 630,
-        alt: 'IdeaFlow — AI-Powered Employee Insight Platform',
+        alt: 'IdeaFlow — Collect ideas, run sessions, decide together',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'IdeaFlow — AI-Powered Employee Insight Platform',
+    title: 'IdeaFlow — Collect ideas, run sessions, decide together',
     description:
-      "Turn your team's ideas into leadership intelligence. Collect, rank, and act on employee insights with AI.",
+      "Collect ideas, vote on what matters, and run brainstorm sessions that end with a written decision.",
     images: ['/og'],
     creator: '@useideaflow',
   },
@@ -93,6 +95,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {children}
         <SiteFooter />
         <AnalyticsProvider />
+        <RememberMeWatcher />
       </body>
     </html>
   )

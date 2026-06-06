@@ -193,6 +193,163 @@ export default function ContactPage() {
           </PageContainer>
         </section>
 
+        {/* ── What teams say ────────────────────────────────────────────
+            Moved off the landing page so the homepage flows hero →
+            sessions → pricing without a social-proof detour. Lives here
+            so visitors who want to read what others think find it
+            alongside the form, and can add their own via the link at
+            the bottom of the block.
+            ─────────────────────────────────────────────────────────── */}
+        <section
+          style={{
+            background: P.surface,
+            borderTop: `1px solid ${P.border}`,
+            padding: 'clamp(4rem,8vw,6rem) 0',
+          }}
+        >
+          <PageContainer>
+            <div style={{ maxWidth: '22rem', marginBottom: '3rem' }}>
+              <p
+                style={{
+                  fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.12em',
+                  textTransform: 'uppercase', color: P.faint, marginBottom: '0.75rem',
+                }}
+              >
+                What teams say
+              </p>
+              <h2
+                style={{
+                  fontFamily: "'Instrument Serif', serif", fontStyle: 'italic',
+                  fontSize: 'clamp(1.625rem, 3vw, 2.25rem)',
+                  letterSpacing: '-0.02em', color: P.ink, lineHeight: 1.15,
+                }}
+              >
+                Teams that actually listen to each other.
+              </h2>
+            </div>
+
+            <div className="testimonials-grid">
+              {([
+                {
+                  quote:
+                    'IdeaFlow changed how we run retros. Ideas that used to get lost in Notion docs now bubble up through votes. Our team actually trusts the process now.',
+                  name:    'Sander T.',
+                  role:    'Head of Product',
+                  company: 'Forma',
+                },
+                {
+                  quote:
+                    'I was skeptical about another feedback tool. But the vote-ranking model is genuinely different — the best ideas win, not the loudest voices in the room. We ship better decisions for it.',
+                  name:    'Maya R.',
+                  role:    'Engineering Manager',
+                  company: 'Lumio',
+                },
+                {
+                  quote:
+                    "We run separate IdeaFlows for HR, engineering, and ops each quarter. It's become a real part of how we stay connected to what the team actually needs.",
+                  name:    'Lotte V.',
+                  role:    'Operations Lead',
+                  company: 'Kantu · 120 people',
+                },
+              ] as { quote: string; name: string; role: string; company: string }[]).map(
+                ({ quote, name, role, company }) => (
+                  <div key={name} className="testimonial-card">
+                    <div style={{ marginBottom: '1.25rem' }}>
+                      {[0, 1, 2, 3, 4].map((i) => (
+                        <svg
+                          key={i}
+                          width="12" height="12" viewBox="0 0 24 24"
+                          fill={P.accent}
+                          style={{ display: 'inline-block', marginRight: '2px' }}
+                        >
+                          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                        </svg>
+                      ))}
+                    </div>
+                    <p
+                      style={{
+                        fontSize: '0.9375rem', lineHeight: 1.7,
+                        color: P.slate, marginBottom: '1.5rem', fontStyle: 'italic',
+                      }}
+                    >
+                      &ldquo;{quote}&rdquo;
+                    </p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+                      <div
+                        style={{
+                          width: '2rem', height: '2rem', borderRadius: '50%',
+                          background: P.raised, border: `1px solid ${P.border}`,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: '0.7rem', fontWeight: 700, color: P.slate,
+                          flexShrink: 0,
+                        }}
+                      >
+                        {name.charAt(0)}
+                      </div>
+                      <div>
+                        <p style={{ fontSize: '0.825rem', fontWeight: 700, color: P.ink, lineHeight: 1.2 }}>
+                          {name}
+                        </p>
+                        <p style={{ fontSize: '0.75rem', color: P.faint, lineHeight: 1.3 }}>
+                          {role} · {company}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ),
+              )}
+            </div>
+
+            {/* ── Leave a review ─────────────────────────────────────────
+                Simple mailto so any visitor can send their review. The
+                contact form above also works — this is the lighter path
+                for someone who just wants to drop a sentence.
+                ─────────────────────────────────────────────────────── */}
+            <div
+              style={{
+                marginTop: '3rem',
+                paddingTop: '2rem',
+                borderTop: `1px solid ${P.border}`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '1.25rem',
+                flexWrap: 'wrap',
+              }}
+            >
+              <div style={{ maxWidth: '28rem' }}>
+                <p
+                  style={{
+                    fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.12em',
+                    textTransform: 'uppercase', color: P.faint, marginBottom: '0.5rem',
+                  }}
+                >
+                  Used IdeaFlow?
+                </p>
+                <p style={{ fontSize: '1rem', color: P.ink, lineHeight: 1.5, fontWeight: 600 }}>
+                  Leave a review.
+                </p>
+                <p style={{ fontSize: '0.875rem', color: P.slate, lineHeight: 1.6, marginTop: '0.35rem' }}>
+                  A sentence is plenty. We&apos;ll ask before quoting you here.
+                </p>
+              </div>
+              <a
+                href="mailto:ideaflow@appstimize.nl?subject=IdeaFlow%20review&body=I%20used%20IdeaFlow%20for…"
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
+                  background: P.dark, color: '#fff',
+                  fontSize: '0.9rem', fontWeight: 700,
+                  padding: '0.7rem 1.2rem', borderRadius: '0.625rem',
+                  textDecoration: 'none',
+                  boxShadow: '0 4px 18px rgba(13,22,42,0.18)',
+                }}
+              >
+                Leave a review →
+              </a>
+            </div>
+          </PageContainer>
+        </section>
+
         {/* ── FAQ ───────────────────────────────────────────────────────── */}
         <section style={{ background: P.surface, borderTop: `1px solid ${P.border}`, padding: 'clamp(3.5rem, 7vw, 5.5rem) 0' }}>
           <PageContainer>

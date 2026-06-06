@@ -9,11 +9,11 @@
 import Link from 'next/link'
 
 const FEATURE_BULLETS = [
-  'Guided brainstorming with structured steps',
-  '7 templates — startup idea, product feature, decision making, and more',
+  'Brainstorm Circle — one central question, eight team perspectives',
+  'Starbursting — six question lenses around any idea',
   'Visual canvas with draggable cards and connections',
-  'AI helpers — suggest angles, summarize, generate next steps',
-  'Export a clean session summary when you finish',
+  'Team collaboration with hearts and comments',
+  'Export a clean PDF summary when you finish',
 ]
 
 export default function ProLockScreen() {

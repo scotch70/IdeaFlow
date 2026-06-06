@@ -55,7 +55,7 @@ const MEMBERS: Member[] = [
   { index: 1, title: 'Yes, but focus on teams.',             hearts: 14, liked: true  },
   { index: 2, title: 'Pricing needs to be simple.',           hearts: 9                 },
   { index: 3, title: 'Show Sessions in the demo.',            hearts: 12                },
-  { index: 4, title: 'Avoid too much AI language.',           hearts: 8                 },
+  { index: 4, title: 'Keep the marketing concrete.',          hearts: 8                 },
   { index: 5, title: 'Start with founders.',                  hearts: 6                 },
   { index: 6, title: 'Use Starbursting as a second option.',  hearts: 5                 },
   { index: 7, title: 'Export PDF is important.',              hearts: 11, liked: true   },

@@ -47,7 +47,7 @@ export default function PrivacyPage() {
           <LegalProse>
 
             <Section title="1. Who we are">
-              <p>IdeaFlow (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) operates the platform at <strong>useideaflow.com</strong> and <strong>app.useideaflow.com</strong>. IdeaFlow is an AI-powered employee insight platform that helps organisations collect, surface, and act on team ideas.</p>
+              <p>IdeaFlow (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) operates the platform at <strong>useideaflow.com</strong> and <strong>app.useideaflow.com</strong>. IdeaFlow is a team platform that helps organisations collect ideas, run structured brainstorm sessions, and decide together.</p>
               <p>For questions about this policy, contact us at <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.</p>
             </Section>
 
@@ -76,7 +76,7 @@ export default function PrivacyPage() {
                 <li>Send weekly digest emails to workspace administrators (paid plans)</li>
                 <li>Process billing through Stripe</li>
                 <li>Respond to support requests and inquiries</li>
-                <li>Generate AI-powered insights and summaries for your workspace (Pro plan)</li>
+                <li>Generate optional summaries and insights for your workspace (Pro plan)</li>
                 <li>Detect and prevent fraud or abuse</li>
               </ul>
               <p>We do not use your workspace content to train general AI models or share it with third parties for marketing purposes.</p>

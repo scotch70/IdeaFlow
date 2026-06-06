@@ -651,10 +651,10 @@ export default async function HomePage() {
                     marginBottom: '0.85rem',
                   }}
                 >
-                  Turn ideas into decisions with guided thinking
+                  Every brainstorm should end with a decision.
                 </h2>
                 <p style={{ fontSize: '1rem', lineHeight: 1.65, color: P.slate, marginBottom: '1.5rem' }}>
-                  Sessions guide your team through proven thinking frameworks — Starbursting, SWOT, Decision Matrix — so every brainstorm ends with a clear next step.
+                  Brainstorm Circle gives every team member one card and one vote. Starbursting forces the question from every angle. You leave with a written summary, not another Slack thread.
                 </p>
 
                 <ol
@@ -732,76 +732,7 @@ export default async function HomePage() {
         </section>
 
 
-        {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-            TESTIMONIALS
-        ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-        <section style={{ background: P.surface, borderTop: `1px solid ${P.border}`, padding: 'clamp(4rem,8vw,6rem) 0' }}>
-          <PageContainer>
-            <div style={{ maxWidth: '22rem', marginBottom: '3rem' }}>
-              <p style={{ fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: P.faint, marginBottom: '0.75rem' }}>
-                What teams say
-              </p>
-              <h2 style={{
-                fontFamily: "'Instrument Serif', serif", fontStyle: 'italic',
-                fontSize: 'clamp(1.625rem, 3vw, 2.25rem)',
-                letterSpacing: '-0.02em', color: P.ink, lineHeight: 1.15,
-              }}>
-                Teams that actually listen to each other.
-              </h2>
-            </div>
-
-            <div className="testimonials-grid">
-              {([
-                {
-                  quote: "IdeaFlow changed how we run retros. Ideas that used to get lost in Notion docs now bubble up through votes. Our team actually trusts the process now.",
-                  name: 'Sander T.',
-                  role: 'Head of Product',
-                  company: 'Forma',
-                },
-                {
-                  quote: "I was skeptical about another feedback tool. But the vote-ranking model is genuinely different — the best ideas win, not the loudest voices in the room. We ship better decisions for it.",
-                  name: 'Maya R.',
-                  role: 'Engineering Manager',
-                  company: 'Lumio',
-                },
-                {
-                  quote: "We run separate IdeaFlows for HR, engineering, and ops each quarter. It's become a real part of how we stay connected to what the team actually needs.",
-                  name: 'Lotte V.',
-                  role: 'Operations Lead',
-                  company: 'Kantu · 120 people',
-                },
-              ] as { quote: string; name: string; role: string; company: string }[]).map(({ quote, name, role, company }) => (
-                <div key={name} className="testimonial-card">
-                  <div style={{ marginBottom: '1.25rem' }}>
-                    {[0,1,2,3,4].map(i => (
-                      <svg key={i} width="12" height="12" viewBox="0 0 24 24" fill={P.accent} style={{ display: 'inline-block', marginRight: '2px' }}>
-                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-                      </svg>
-                    ))}
-                  </div>
-                  <p style={{ fontSize: '0.9375rem', lineHeight: 1.7, color: P.slate, marginBottom: '1.5rem', fontStyle: 'italic' }}>
-                    &ldquo;{quote}&rdquo;
-                  </p>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-                    <div style={{
-                      width: '2rem', height: '2rem', borderRadius: '50%',
-                      background: P.raised, border: `1px solid ${P.border}`,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: '0.7rem', fontWeight: 700, color: P.slate,
-                      flexShrink: 0,
-                    }}>
-                      {name.charAt(0)}
-                    </div>
-                    <div>
-                      <p style={{ fontSize: '0.825rem', fontWeight: 700, color: P.ink, lineHeight: 1.2 }}>{name}</p>
-                      <p style={{ fontSize: '0.75rem', color: P.faint, lineHeight: 1.3 }}>{role} · {company}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </PageContainer>
-        </section>
+        {/* Testimonials moved to /contact — see the "What teams say" section there. */}
 
         {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
             PRICING
@@ -1035,12 +966,6 @@ export default async function HomePage() {
                     )
                   })}
                 </div>
-
-                {/* AI — single muted line below the bullets so it never reads as the headline */}
-                <p style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.32)', display: 'inline-flex', alignItems: 'center', gap: '0.35rem', marginBottom: '1.25rem' }}>
-                  <span style={{ color: 'rgba(255,255,255,0.20)', fontSize: '0.72rem' }}>+</span>
-                  Optional AI helpers
-                </p>
 
                 {!user ? (
                   <Link href="/auth?mode=signup" style={{
