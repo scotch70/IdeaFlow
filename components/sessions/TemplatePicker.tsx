@@ -288,6 +288,27 @@ async function seedBrainstormCircle(userId: string, sessionId: string) {
   })
 
   // 2. 8 member cards positioned clockwise from the top (Member 1 = top).
+  //
+  // Each member is seeded with a different prompt so the user immediately
+  // understands the session pattern (one admin question, 8 different angles
+  // around it) without having to read instructions. The prompts cover the
+  // common lenses a team would naturally explore: opportunity, concern,
+  // improvement, risk, customer voice, team voice, blind spots, next step.
+  //
+  // Titles are fully editable — once the user types over them the prompt is
+  // gone. This only affects newly seeded sessions; saved sessions read
+  // their own persisted title strings and are untouched.
+  const MEMBER_PROMPTS = [
+    'Biggest opportunity?',         // 1  top centre
+    'Biggest concern?',             // 2  top right
+    'What would you improve?',      // 3  middle right
+    'What should we avoid?',        // 4  bottom right
+    'What would customers say?',    // 5  bottom centre
+    'What would the team say?',     // 6  bottom left
+    "What's missing?",              // 7  middle left
+    'Best next step?',              // 8  top left
+  ]
+
   const members: SessionCard[] = []
   for (let i = 0; i < 8; i++) {
     const p = layout.members[i]!
@@ -296,7 +317,7 @@ async function seedBrainstormCircle(userId: string, sessionId: string) {
       userId, sessionId,
       type:        'custom',
       customLabel: `Member ${i + 1}`,
-      title:       '',
+      title:       MEMBER_PROMPTS[i] ?? '',
       content:     null,
       x:           p.x,
       y:           p.y,
