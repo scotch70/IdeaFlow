@@ -4,13 +4,22 @@
  * DemoBrainstormCircle — public, non-interactive Brainstorm Circle demo.
  *
  * Mirrors the framework's visual language: a dark dotted canvas, an ivory
- * admin card in the centre, 8 fixed member cards on a radial layout, and a
- * heart pill on every member card with a realistic like count. Used as the
- * second tab on /demo (IdeaFlow Workspace stays as the primary tab).
+ * admin card in the centre, 8 fixed member cards on a 3×3 grid layout, and
+ * a heart pill on every member card with a realistic like count. Used as
+ * the second tab on /demo (IdeaFlow Workspace stays as the primary tab).
  *
- * Mock content:
- *   Central admin topic: "Should we launch IdeaFlow Pro?"
- *   8 member cards with the brief's example copy + realistic counts.
+ * Layout matches the in-app `circleLayout.ts` exactly:
+ *   ┌──────────┬──────────┬──────────┐
+ *   │ Member 8 │ Member 1 │ Member 2 │
+ *   ├──────────┼──────────┼──────────┤
+ *   │ Member 7 │  ADMIN   │ Member 3 │
+ *   ├──────────┼──────────┼──────────┤
+ *   │ Member 6 │ Member 5 │ Member 4 │
+ *   └──────────┴──────────┴──────────┘
+ *
+ * Admin card uses the same physical size as the members — the ivory
+ * background + orange border carry the focal-point job on their own,
+ * matching the in-app render.
  */
 
 import Link from 'next/link'
@@ -21,11 +30,18 @@ const CANVAS_DOT  = 'rgba(255,255,255,0.05)'
 const VBX = 1000
 const VBY = 600
 
-// Layout inside the viewBox — admin centred, 8 members on a radial path.
-const ADMIN_W = 240, ADMIN_H = 130
+// All 9 cards (admin + 8 members) share one size — same composition logic
+// as the real app, scaled to fit the demo viewBox.
 const CARD_W  = 188, CARD_H  = 88
+const ADMIN_W = CARD_W, ADMIN_H = CARD_H
+
 const CX = VBX / 2, CY = VBY / 2
-const R  = 230
+
+// Grid gaps: distance from canvas centre to side / top-bottom member
+// centres. Tuned to keep an admin–member breathing buffer (~92px hg,
+// ~82px vg between adjacent card edges) on the 1000×600 viewBox.
+const HG = 280
+const VG = 170
 
 interface Member {
   index:   number
@@ -34,7 +50,7 @@ interface Member {
   liked?:  boolean
 }
 
-// Member 1 (top) → clockwise.
+// Member 1 (top centre) → clockwise around the grid.
 const MEMBERS: Member[] = [
   { index: 1, title: 'Yes, but focus on teams.',             hearts: 14, liked: true  },
   { index: 2, title: 'Pricing needs to be simple.',           hearts: 9                 },
@@ -46,13 +62,22 @@ const MEMBERS: Member[] = [
   { index: 8, title: 'Keep the workspace as the core product.', hearts: 7               },
 ]
 
+// Member centres on the 3×3 grid, in the same order as MEMBERS.
+const MEMBER_CENTERS: Array<{ x: number; y: number }> = [
+  { x: CX,      y: CY - VG },  // 1  top centre
+  { x: CX + HG, y: CY - VG },  // 2  top right
+  { x: CX + HG, y: CY      },  // 3  middle right
+  { x: CX + HG, y: CY + VG },  // 4  bottom right
+  { x: CX,      y: CY + VG },  // 5  bottom centre
+  { x: CX - HG, y: CY + VG },  // 6  bottom left
+  { x: CX - HG, y: CY      },  // 7  middle left
+  { x: CX - HG, y: CY - VG },  // 8  top left
+]
+
 // Returns the top-left position of the i-th (0-based) member.
 function memberPos(i: number): { x: number; y: number } {
-  const angle = -Math.PI / 2 + i * (Math.PI / 4)
-  return {
-    x: CX + Math.cos(angle) * R - CARD_W / 2,
-    y: CY + Math.sin(angle) * R - CARD_H / 2,
-  }
+  const c = MEMBER_CENTERS[i]
+  return { x: c.x - CARD_W / 2, y: c.y - CARD_H / 2 }
 }
 
 const ADMIN = { x: CX - ADMIN_W / 2, y: CY - ADMIN_H / 2 }
@@ -196,39 +221,49 @@ export default function DemoBrainstormCircle() {
               )
             })}
 
-            {/* Admin card — ivory with an orange accent so it reads as "the topic" */}
+            {/* Admin card — ivory with an orange accent so it reads as "the
+                topic". Same physical size as the members; the colour
+                contrast carries the focal-point job, matching the in-app
+                render. */}
             <g>
               <rect
                 x={ADMIN.x} y={ADMIN.y} width={ADMIN_W} height={ADMIN_H}
-                rx={14} ry={14}
+                rx={10} ry={10}
                 fill="#fbfaf7"
                 stroke="#f97316" strokeWidth={1.6}
               />
+              {/* "ADMIN TOPIC" chip — orange-tinted, mirrors the in-app chip */}
+              <rect
+                x={ADMIN.x + 10} y={ADMIN.y + 10} width={68} height={14}
+                rx={7} ry={7}
+                fill="rgba(249,115,22,0.14)"
+                stroke="rgba(249,115,22,0.45)" strokeWidth={0.6}
+              />
               <text
-                x={CX} y={ADMIN.y + 26}
+                x={ADMIN.x + 44} y={ADMIN.y + 20}
                 textAnchor="middle"
-                fontSize={10} fontWeight={800}
-                letterSpacing="2"
+                fontSize={8} fontWeight={800}
+                letterSpacing="1"
                 fill="#c2540a"
               >ADMIN TOPIC</text>
-              <text
-                x={CX} y={ADMIN.y + 52}
-                textAnchor="middle"
-                fontSize={15} fontWeight={800}
-                fill="#0d1f35"
-              >Should we launch</text>
-              <text
-                x={CX} y={ADMIN.y + 72}
-                textAnchor="middle"
-                fontSize={15} fontWeight={800}
-                fill="#0d1f35"
-              >IdeaFlow Pro?</text>
-              <text
-                x={CX} y={ADMIN.y + 100}
-                textAnchor="middle"
-                fontSize={10}
-                fill="#5d667a"
-              >Members vote with hearts.</text>
+
+              {/* Title — wrapped so the question fits inside the smaller card */}
+              <foreignObject x={ADMIN.x + 10} y={ADMIN.y + 30} width={ADMIN_W - 20} height={ADMIN_H - 38}>
+                <div
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  {...({ xmlns: 'http://www.w3.org/1999/xhtml' } as any)}
+                  style={{
+                    fontFamily: 'inherit',
+                    fontSize: '12px',
+                    color: '#0d1f35',
+                    fontWeight: 800,
+                    lineHeight: 1.25,
+                    letterSpacing: '-0.01em',
+                  }}
+                >
+                  Should we launch IdeaFlow Pro?
+                </div>
+              </foreignObject>
             </g>
 
             {/* Member cards */}
