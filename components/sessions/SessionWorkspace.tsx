@@ -141,15 +141,36 @@ export default function SessionWorkspace({ sessionId, userId }: Props) {
   }, [guideCollapsed, isBrainstormCircle])
 
   // One-shot override: when the session resolves as Brainstorm Circle, force
-  // both side panels closed so the user sees the radial canvas with maximum
-  // breathing room. Fires once per mount; manual toggles afterwards win.
+  // both session-local side panels closed AND tell the dashboard sidebar to
+  // collapse, so the canvas claims maximum width on first open. Fires once
+  // per mount; manual toggles afterwards win.
+  //
+  // The dashboard sidebar owns its own state (it lives outside this
+  // component tree), so we communicate via a window-level custom event.
+  // Non-BC sessions never dispatch this event, so dashboard preferences for
+  // Starbursting, IdeaFlow, Members etc. stay untouched.
   useEffect(() => {
     if (!session || didBcOverrideRef.current) return
     if (session.template_type !== 'brainstorm-circle') return
     didBcOverrideRef.current = true
     setSidebarCollapsed(true)
     setGuideCollapsed(true)
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('ideaflow:dashboardSidebarForce', {
+        detail: { collapsed: true },
+      }))
+    }
   }, [session])
+
+  // Mark the document as "in a session" so the global SiteFooter hides and
+  // the page can't scroll past the workspace. Applies to every session
+  // template — it's a workspace concern, not BC-specific. The data attribute
+  // is removed on unmount so dashboard / marketing pages render normally.
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+    document.body.dataset.sessionView = '1'
+    return () => { delete document.body.dataset.sessionView }
+  }, [])
 
   // ── Initial load ───────────────────────────────────────────────────────────
   // The .catch is critical — without it a rejected promise leaves the page

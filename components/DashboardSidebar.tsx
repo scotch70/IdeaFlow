@@ -213,6 +213,24 @@ export default function DashboardSidebar({
     try { window.localStorage.setItem(LS_KEY, collapsed ? '1' : '0') } catch {}
   }, [collapsed])
 
+  // External "force collapse / expand" hook. SessionWorkspace dispatches
+  // `ideaflow:dashboardSidebarForce` when opening Brainstorm Circle so the
+  // canvas claims maximum width without the user having to collapse this
+  // rail manually. We update local state only — the persist effect above
+  // then writes the new value to localStorage so the choice survives
+  // reloads inside the session.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    function onForce(e: Event) {
+      const detail = (e as CustomEvent<{ collapsed?: boolean }>).detail
+      if (typeof detail?.collapsed === 'boolean') {
+        setCollapsed(detail.collapsed)
+      }
+    }
+    window.addEventListener('ideaflow:dashboardSidebarForce', onForce as EventListener)
+    return () => window.removeEventListener('ideaflow:dashboardSidebarForce', onForce as EventListener)
+  }, [])
+
   const isAdmin = userRole === 'admin'
   const firstName = userName.split(' ')[0] || 'You'
   const initials = userName

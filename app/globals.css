@@ -1509,3 +1509,20 @@ button, a {
     top: auto;
   }
 }
+
+/* ── Sessions workspace ──────────────────────────────────────────────────
+   When inside a session (Brainstorm Circle or Starbursting) we hide the
+   global SiteFooter and lock the body so the canvas fills the viewport
+   exactly and the page never scrolls past the workspace.
+
+   `data-session-view` is toggled by SessionWorkspace on mount / unmount.
+   The selector `body > footer` deliberately scopes to the top-level
+   <footer> (SiteFooter is the only one rendered there) and doesn't
+   catch any future inner-page <footer> elements.
+   ───────────────────────────────────────────────────────────────────── */
+body[data-session-view="1"] {
+  overflow: hidden;
+}
+body[data-session-view="1"] > footer {
+  display: none;
+}

@@ -483,8 +483,8 @@ const CardOnCanvas = memo(function CardOnCanvas({
             : isConnectTarget
               ? '1px dashed rgba(99,179,237,0.55)'
               : `1px solid ${CANVAS_BORDER}`,
-        borderRadius: isAdmin ? '0.9rem' : '0.7rem',
-        padding: isAdmin ? '1rem 1.15rem' : '0.65rem 0.75rem 0.7rem 0.9rem',
+        borderRadius: '0.7rem',
+        padding: '0.65rem 0.75rem 0.7rem 0.9rem',
         color: isAdmin ? '#0d1f35' : '#e6ecf5',
         cursor: lockedLayout ? 'pointer' : 'grab',
         userSelect: isEditing ? 'text' : 'none',
@@ -508,16 +508,16 @@ const CardOnCanvas = memo(function CardOnCanvas({
         }}
       />
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: isAdmin ? '0.5rem' : '0.35rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.35rem' }}>
         <span
           style={{
-            fontSize: isAdmin ? '0.58rem' : '0.55rem',
+            fontSize: '0.55rem',
             fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase',
             color: isAdmin ? '#c2540a' : meta.ink,
             background: isAdmin ? 'rgba(249,115,22,0.10)' : meta.bg,
             border: `1px solid ${isAdmin ? 'rgba(249,115,22,0.30)' : `${meta.accent}33`}`,
-            padding: isAdmin ? '0.15rem 0.55rem' : '0.12rem 0.4rem', borderRadius: '999px',
-            maxWidth: isAdmin ? 'none' : '8.5rem',
+            padding: '0.12rem 0.4rem', borderRadius: '999px',
+            maxWidth: '8.5rem',
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
           }}
         >{cardChipLabel(card)}</span>
@@ -621,8 +621,11 @@ const CardOnCanvas = memo(function CardOnCanvas({
           width: '100%',
           background: 'transparent',
           border: 'none', outline: 'none',
+          // Admin keeps the dark-on-ivory ink so it pops against its bg, and
+          // bumps to fontWeight 800 for emphasis without changing font size —
+          // same metric size as members so the card stays the same height.
           color: isAdmin ? '#0d1f35' : '#f4f7fb',
-          fontSize: isAdmin ? '1.05rem' : '0.86rem',
+          fontSize: '0.86rem',
           fontWeight: isAdmin ? 800 : 700,
           letterSpacing: '-0.01em',
           padding: '0.05rem 0',
@@ -639,14 +642,14 @@ const CardOnCanvas = memo(function CardOnCanvas({
         onMouseDown={e => e.stopPropagation()}
         onDoubleClick={e => e.stopPropagation()}
         readOnly={!isEditing && !isSelected}
-        rows={isAdmin ? 3 : 2}
+        rows={2}
         style={{
           width: '100%',
           background: 'transparent',
           border: 'none', outline: 'none',
           resize: 'none',
           color: isAdmin ? '#5d667a' : 'rgba(230,236,245,0.78)',
-          fontSize: isAdmin ? '0.85rem' : '0.76rem',
+          fontSize: '0.76rem',
           lineHeight: 1.5,
           padding: '0.25rem 0 0',
           fontFamily: 'inherit',
