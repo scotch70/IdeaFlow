@@ -654,7 +654,7 @@ export default async function HomePage() {
                   Every brainstorm should end with a decision.
                 </h2>
                 <p style={{ fontSize: '1rem', lineHeight: 1.65, color: P.slate, marginBottom: '1.5rem' }}>
-                  Brainstorm Circle gives every team member one card and one vote. Starbursting forces the question from every angle. You leave with a written summary, not another Slack thread.
+                  Brainstorm Circle and Starbursting are the two collaborative brainstorming sessions inside IdeaFlow. Brainstorm Circle gives every team member one card and one vote. Starbursting forces the question from every angle. You leave with a written decision, not another Slack thread.
                 </p>
 
                 <ol

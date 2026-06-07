@@ -1,7 +1,11 @@
 import SiteHeader from '@/components/SiteHeader'
 import DemoSwitcher from './DemoSwitcher'
 
-export const metadata = { title: 'Live Demo — IdeaFlow' }
+export const metadata = {
+  title: 'Try the brainstorming software demo',
+  description:
+    'Click through a live demo of IdeaFlow — the team brainstorming tool that turns ideas into decisions. No sign-up needed.',
+}
 
 export default function DemoPage() {
   return (
@@ -45,6 +49,33 @@ export default function DemoPage() {
         >
           Start free →
         </a>
+      </div>
+
+      {/* Page H1 — small, above the switcher. Present primarily so the demo
+          page has a proper indexable headline + supporting sentence (the
+          embedded demo content otherwise carries the only large heading). */}
+      <div
+        style={{
+          maxWidth: '40rem',
+          margin: '0 auto',
+          padding: '1.5rem 1rem 0.5rem',
+        }}
+      >
+        <h1
+          style={{
+            fontSize: '1.5rem',
+            fontWeight: 800,
+            color: '#0d1f35',
+            letterSpacing: '-0.02em',
+            marginBottom: '0.35rem',
+          }}
+        >
+          Try the IdeaFlow demo
+        </h1>
+        <p style={{ fontSize: '0.95rem', color: '#5d667a', lineHeight: 1.6 }}>
+          A live preview of the team brainstorming tool — explore the workspace
+          and run a Brainstorm Circle without signing up.
+        </p>
       </div>
 
       <DemoSwitcher />

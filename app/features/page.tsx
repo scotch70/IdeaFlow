@@ -4,9 +4,9 @@ import PageContainer from '@/components/PageContainer'
 import SiteHeader from '@/components/SiteHeader'
 
 export const metadata = {
-  title: 'Features — IdeaFlow',
+  title: 'Idea management software features for teams',
   description:
-    'Explore every IdeaFlow feature: idea capture, voting, status tracking, manager accountability, and team analytics.',
+    'Every IdeaFlow feature in one place — idea collection, voting, status tracking, brainstorming sessions, analytics, and team management. Built for startups and scaleups.',
 }
 
 // ── Tiny shared primitives ────────────────────────────────────────────────────
@@ -49,7 +49,7 @@ export default async function FeaturesPage() {
                 letterSpacing: '-0.02em', color: '#1c1f2e',
                 lineHeight: 1.15, maxWidth: '28rem',
               }}>
-                Everything your team needs to make ideas count
+                Idea management software for teams that want every voice heard
               </h1>
             </div>
             {user ? (

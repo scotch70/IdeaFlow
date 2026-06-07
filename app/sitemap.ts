@@ -42,12 +42,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'monthly',
       priority: 0.7,
     },
-    {
-      url: `${SITE_URL}/auth`,
-      lastModified: now,
-      changeFrequency: 'yearly',
-      priority: 0.6,
-    },
+    // /auth is intentionally excluded — the route sets `robots: noindex`
+    // so listing it in the sitemap would be a contradictory crawl signal.
     {
       url: `${SITE_URL}/cookies`,
       lastModified: now,
