@@ -3,32 +3,37 @@
 /**
  * RememberMeWatcher
  *
- * Mounted once globally from app/layout.tsx. Reads the
- * `ideaflow:no-persist` flag that AuthForm sets when a user signs in
- * with "Remember me" unchecked. If the flag is set, registers a
- * `pagehide` handler that calls `supabase.auth.signOut()` so the
- * session cookies are cleared when the user closes the tab — the
- * effective "session-only" behaviour a Remember-me toggle is expected
- * to provide.
+ * Mounted once globally from app/layout.tsx. Enforces the "Remember me
+ * unchecked" path of the login form by signing the user out when they
+ * close the tab.
+ *
+ * How it actually works (and why this isn't just `signOut()`):
+ *
+ *   1. AuthForm writes `ideaflow:no-persist=1` to sessionStorage when
+ *      the user signs in with the box unchecked. sessionStorage is
+ *      tab-scoped so the flag survives in-tab navigations but dies
+ *      with the tab.
+ *
+ *   2. On every page we check the flag. If set, we register a
+ *      `pagehide` listener.
+ *
+ *   3. When the tab is closing, the listener uses
+ *      `navigator.sendBeacon('/api/auth/signout')`. Beacon is the ONE
+ *      mechanism browsers guarantee will deliver a request during
+ *      unload — `fetch(..., { keepalive: true })` is close but
+ *      unreliable; plain async `supabase.auth.signOut()` is routinely
+ *      aborted mid-flight.
+ *
+ *   4. The /api/auth/signout server route runs `supabase.auth.signOut()`
+ *      with the @supabase/ssr server client, which writes the
+ *      `Set-Cookie: …; Max-Age=0` headers that actually clear the
+ *      HTTP-only auth cookies. Without this server round-trip the
+ *      session lingers because client JS can't touch HTTP-only cookies.
  *
  * Renders nothing.
- *
- * Notes:
- *   • sessionStorage is tab-scoped, so the flag dies naturally when the
- *     tab does. The pagehide listener is the belt; clearing the flag is
- *     the suspenders.
- *   • `pagehide` is fired more reliably than `beforeunload` for the
- *     "tab is closing" case on modern browsers. We use pagehide.
- *   • signOut() is fire-and-forget. Cookie deletion is fast enough that
- *     it typically completes before the browser tears the tab down. The
- *     worst case is the session lingers for one more visit, then the
- *     user signs in again — still correct, not catastrophic.
- *   • Wrapped in try/catch because private-mode browsers may throw on
- *     sessionStorage access.
  */
 
 import { useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
 
 export default function RememberMeWatcher() {
   useEffect(() => {
@@ -42,10 +47,25 @@ export default function RememberMeWatcher() {
     }
     if (!armed) return
 
-    const supabase = createClient()
     function onPageHide() {
-      // Fire-and-forget; we cannot await inside pagehide reliably.
-      supabase.auth.signOut().catch(() => { /* ignore */ })
+      // sendBeacon returns false if the browser refuses the call (size
+      // limit, no body type recognised, etc.) — in that case fall back
+      // to a keepalive fetch as a best-effort. Both target the same
+      // server endpoint that clears cookies via Set-Cookie headers.
+      const ok = navigator.sendBeacon?.(
+        '/api/auth/signout',
+        new Blob([JSON.stringify({})], { type: 'application/json' }),
+      )
+      if (!ok) {
+        try {
+          fetch('/api/auth/signout', {
+            method: 'POST',
+            keepalive: true,
+            headers: { 'Content-Type': 'application/json' },
+            body: '{}',
+          }).catch(() => { /* ignore — best effort */ })
+        } catch { /* navigator gone, page is dying */ }
+      }
     }
 
     window.addEventListener('pagehide', onPageHide)

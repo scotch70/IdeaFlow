@@ -347,7 +347,7 @@ export default async function HomePage() {
                     maxWidth: '26rem',
                   }}
                 >
-                  Most team feedback gets lost in meetings and Slack threads. IdeaFlow gives everyone a voice, ranks ideas by vote, and shows you exactly what matters most.
+                  IdeaFlow is idea management software for teams that want to stop losing good thinking in Slack threads. Collect ideas, vote on what matters, and run brainstorming sessions that end with a written decision.
                 </p>
 
                 <div
@@ -500,7 +500,7 @@ export default async function HomePage() {
                 color: P.ink,
                 lineHeight: 1.15,
               }}>
-                No lost ideas. No loudest voice wins. Just your team's thinking, ranked.
+                Team idea management without the loudest-voice-wins meeting.
               </h2>
             </div>
 
