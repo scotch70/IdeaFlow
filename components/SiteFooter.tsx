@@ -101,6 +101,30 @@ export default function SiteFooter() {
                     marginBottom: '0.75rem',
                   }}
                 >
+                  Resources
+                </p>
+                {(
+                  [
+                    ['Idea Management Software', '/idea-management-software'],
+                    ['Brainstorming Software',   '/brainstorming-software'],
+                  ] as [string, string][]
+                ).map(([label, href]) => (
+                  <div key={label} style={{ marginBottom: '0.4rem' }}>
+                    <a href={href} className="footer-nav-link">
+                      {label}
+                    </a>
+                  </div>
+                ))}
+              </div>
+
+              <div>
+                <p
+                  style={{
+                    fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.1em',
+                    textTransform: 'uppercase', color: 'rgba(255,255,255,0.22)',
+                    marginBottom: '0.75rem',
+                  }}
+                >
                   Legal
                 </p>
                 {(
