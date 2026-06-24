@@ -82,6 +82,7 @@ export default function SiteFooter() {
                     ['Features',  '/features'],
                     ['Pricing',   '/#pricing'],
                     ['Demo',      '/demo'],
+                    ['About',     '/about'],
                     ['Contact',   '/contact'],
                   ] as [string, string][]
                 ).map(([label, href]) => (
