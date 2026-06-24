@@ -64,6 +64,7 @@ function SessionShowcase() {
         padding: '1rem',
         overflow: 'hidden',
         aspectRatio: '5 / 4',
+        width: '100%',
         maxWidth: '34rem',
         marginLeft: 'auto',
       }}
